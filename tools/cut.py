@@ -44,7 +44,7 @@ for s, e in keep:
     if total >= a.max - 0.05:
         break
 
-parts = "".join(f"[0:v]trim={s:.3f}:{e:.3f},setpts=PTS-STARTPTS[v{i}];[0:a]atrim={s:.3f}:{e:.3f},asetpts=PTS-STARTPTS[a{i}];" for i, (s, e) in enumerate(out))
+parts = "".join(f"[0:v]trim={s:.3f}:{e:.3f},setpts=PTS-STARTPTS[v{i}];[0:a:0]atrim={s:.3f}:{e:.3f},asetpts=PTS-STARTPTS[a{i}];" for i, (s, e) in enumerate(out))
 cat = "".join(f"[v{i}][a{i}]" for i in range(len(out))) + f"concat=n={len(out)}:v=1:a=1[cv][ca]"
 if a.frame == "crop":
     frame = "[cv]scale=1080:1920:force_original_aspect_ratio=increase,crop=1080:1920,setsar=1[v]"

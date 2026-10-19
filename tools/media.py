@@ -27,13 +27,13 @@ def probe(path):
 
 def audio(path, sr=16000):
     """Mono float32 audio samples of a media file."""
-    raw = subprocess.run([FFMPEG, "-hide_banner", "-i", path, "-vn", "-ac", "1", "-ar", str(sr), "-f", "f32le", "-"], capture_output=True).stdout
+    raw = subprocess.run([FFMPEG, "-hide_banner", "-i", path, "-map", "0:a:0", "-vn", "-ac", "1", "-ar", str(sr), "-f", "f32le", "-"], capture_output=True).stdout
     return np.frombuffer(raw, np.float32).copy()
 
 
 def speech_segments(path, noise_db=-32, min_silence=0.45):
     """[(start, end)] of the non-silent parts, from ffmpeg's silencedetect."""
-    err = run(["-i", path, "-vn", "-af", f"silencedetect=noise={noise_db}dB:d={min_silence}", "-f", "null", "-"]).stderr
+    err = run(["-i", path, "-map", "0:a:0", "-vn", "-af", f"silencedetect=noise={noise_db}dB:d={min_silence}", "-f", "null", "-"]).stderr
     dur = probe(path)["duration"]
     starts = [float(x) for x in re.findall(r"silence_start: ([\d.]+)", err)]
     ends = [float(x) for x in re.findall(r"silence_end: ([\d.]+)", err)]
