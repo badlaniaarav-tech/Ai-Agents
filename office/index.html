@@ -96,6 +96,9 @@
   .wcard { width:min(420px, 100%); background:var(--panel); border:1px solid var(--line); border-radius:16px; padding:20px; box-shadow:0 20px 60px rgba(0,0,0,.5) }
   .wcard label { display:block; font-size:12px; color:var(--muted); margin:10px 0 0 } .wcard label input[type=text], .wcard label input:not([type=radio]) { display:block; width:100%; margin-top:4px; background:var(--well); color:var(--text); border:1px solid var(--line); border-radius:8px; padding:8px 10px; font:inherit; font-size:13px }
   .wopts { display:flex; gap:14px; font-size:13px } .wopts label { display:flex; align-items:center; gap:6px; margin:0; color:var(--text) }
+  .wcard .two { display:grid; grid-template-columns:1fr 1fr; gap:8px } .wcard label.chk { display:flex; align-items:center; gap:8px; color:var(--text); font-size:13px; margin-top:10px }
+  .people { display:flex; flex-wrap:wrap; gap:8px; margin:8px 0 } .person { display:flex; flex-direction:column; align-items:center; gap:4px; width:110px; padding:10px 6px; background:var(--well); border:1px solid var(--line); border-radius:10px; color:var(--text); font:inherit; font-size:12px; cursor:pointer } .person small { color:var(--muted); font-size:10px; max-width:100%; overflow:hidden; text-overflow:ellipsis } .person.on { border-color:var(--accent); background:var(--well2) }
+  .wcard a { color:var(--accent) }
   .wcard button.primary { width:100%; margin-top:14px; background:var(--accent); color:#06121c; font-weight:600; border:0; border-radius:9px; padding:10px; font:inherit; font-size:14px; cursor:pointer }
   .mic { background:var(--well); color:var(--muted); border:1px solid var(--line); border-radius:7px; width:34px; cursor:pointer; font-size:14px } .mic.on { color:#fff; background:#e64a4a; border-color:#e64a4a; animation:pulse 1s infinite } @keyframes pulse { 50% { opacity:.6 } }
   #ask .mic { border:0; border-left:1px solid var(--line); border-radius:0; height:100%; width:32px }
@@ -134,14 +137,20 @@
 <div id="welcome">
   <div class="wcard">
     <div class="logo" style="width:40px; height:40px; font-size:16px; margin-bottom:10px">HQ</div>
-    <h2 style="margin:0 0 4px; font-size:18px">Welcome to your office</h2>
-    <p class="kv" id="w-account">Your work here is saved to your claude.ai account and only you can see it.</p>
-    <label>Your name<input id="w-name" placeholder="Name" autocomplete="name"></label>
-    <label>Email for notifications and approvals<input id="w-email" type="email" placeholder="you@example.com" autocomplete="email"></label>
-    <label>Name your office<input id="w-office" placeholder="Agent HQ" maxlength="32"></label>
-    <div class="kv" style="margin:10px 0 4px">Would you like to connect your social media through Metricool, so the office can schedule posts for your approval and read your numbers?</div>
-    <div class="wopts"><label><input type="radio" name="w-social" value="yes"> Yes, show me how</label><label><input type="radio" name="w-social" value="later" checked> Not now</label></div>
-    <button id="w-go" class="primary">Enter the office</button>
+    <h2 style="margin:0 0 4px; font-size:18px">Sign in to your office</h2>
+    <p class="kv" id="w-account">This claude.ai account can hold several people. Each person has their own password, board and clips.</p>
+    <div id="w-pick"></div>
+    <div id="w-create">
+      <label>Your name<input id="w-name" placeholder="Name" autocomplete="name"></label>
+      <label>Your email (your sign-in here, and where approvals go)<input id="w-email" type="email" placeholder="you@example.com" autocomplete="email"></label>
+      <div class="two"><label>Password<input id="w-pass2" type="password" autocomplete="new-password"></label><label>Again<input id="w-pass3" type="password" autocomplete="new-password"></label></div>
+      <label>Name your office<input id="w-office" placeholder="Agent HQ" maxlength="32"></label>
+      <div class="kv" style="margin:10px 0 4px">Connect your social media through Metricool, so the office can schedule posts for your approval and read your numbers?</div>
+      <div class="wopts"><label><input type="radio" name="w-social" value="yes"> Yes, show me how</label><label><input type="radio" name="w-social" value="later" checked> Not now</label></div>
+      <label class="chk"><input id="w-stay2" type="checkbox" checked> Stay signed in on this device</label>
+      <button id="w-go" class="primary">Create my profile and enter</button>
+      <p class="kv" id="w-err2"></p><p class="kv"><a href="#" id="w-cancel">Back to the list</a></p>
+    </div>
   </div>
 </div>
 <div id="menu">
@@ -153,6 +162,9 @@
   <div class="row"><div class="kv">Alerts on this device</div><button id="menu-alerts">Enable</button></div>
   <div class="row"><div class="kv">Page permissions (Claude, Metricool, database)</div><button id="menu-perms">Manage</button></div>
   <div class="row"><div class="kv">Backup of the board</div><button id="menu-export">Export</button></div>
+  <div class="row"><div class="kv">Change password</div></div>
+  <div class="row"><input id="menu-cur" type="password" placeholder="current" style="width:48%"><input id="menu-new" type="password" placeholder="new" style="width:48%"><button id="menu-pass">Set</button></div>
+  <div class="row"><div class="kv">Not you?</div><button id="menu-switch">Switch person</button></div>
 </div>
 <div id="hint">drag to orbit · right-drag or arrows to pan · wheel to zoom · click a room or agent · O overview · 1–8 rooms</div>
 <div id="toast"><div class="ic" id="toastic">▥</div><div><div id="toastt">Analytics</div><small id="toasts">Weekly report is ready</small></div><span class="hide">now</span></div>
@@ -511,27 +523,20 @@
   const STATUSES = ['todo', 'doing', 'review', 'done'], SLABEL = { todo: 'To do', doing: 'Doing', review: 'Review', done: 'Done' };
   const teamColor = t => hex(COLORS[t] || 0x5ee0ff), esc = s => String(s || '').replace(/[<>&]/g, c => ({ '<': '&lt;', '>': '&gt;', '&': '&amp;' }[c]));
   // the board lives in office/tasks.json through serve.py; without the server (the published page) it lives in this browser
-  let serverTasks = null, db = null, dbUnsub = null, uid = null, boardCol = null, profileDoc = null, profile = null; const LS = 'agent-hq-tasks';
+  let serverTasks = null, db = null, dbUnsub = null, uid = null, boardCol = null, profileDoc = null, profile = null, membersCol = null, mid = null; const LS = 'agent-hq-tasks';
   const dbPromise = (window.claude && window.claude.use) ? window.claude.use('db').catch(() => null) : Promise.resolve(null);
   const userPromise = (window.claude && window.claude.use) ? window.claude.use('user').catch(() => null) : Promise.resolve(null);
-  function saveLocal() { try { localStorage.setItem(LS, JSON.stringify({ items })); } catch (e) { } }
+  function saveLocal() { try { localStorage.setItem(mid ? LS + '-' + mid : LS, JSON.stringify({ items })); } catch (e) { } }
   async function loadTasks() {
     try { const j = await fetch('/tasks', { cache: 'no-store' }).then(r => r.ok ? r.json() : Promise.reject()); items = j.items || []; serverTasks = true; }
     catch (e) { if (serverTasks === null) { serverTasks = false; db = await dbPromise; const u = await userPromise; try { uid = u ? await u.id() : null; } catch (e2) { uid = null; }
-      if (db && uid) { // each person's own workspace in the artifact's database, private to their claude.ai account
-        boardCol = db.doc(`data/users/${uid}/board`).collection('tasks'); profileDoc = db.doc(`data/users/${uid}/profile`);
-        try { const ps = await profileDoc.get(); profile = ps.exists ? ps.data() : null; } catch (e3) { profile = null; }
-        if (profile && profile.office) { officeName = profile.office; applyOffice(); }
-        try { // the owner's earlier shared board moves into their private workspace once
-          const mine = await boardCol.limit(1).get(); let isOwner = false; try { isOwner = !!(await u.isOwner()); } catch (e4) { }
-          if (mine.empty && isOwner) { const shared = await db.collection('tasks').get(); for (const d of shared.docs) if (d.exists) await boardCol.doc(d.id).set(d.data()); }
-        } catch (e5) { }
-        dbUnsub = boardCol.onSnapshot(snap => { items = snap.docs.filter(d => d.exists).map(d => ({ id: d.id, ...d.data() })); afterTasks(); }, err => { if (err.code === 'revoked' || err.code === 'not_granted') { db = null; boardCol = null; } });
-        onboard(); return;
+      if (db && uid) { // one claude.ai login can be a whole family: people are members with their own password and board
+        membersCol = db.doc(`data/users/${uid}/members`).collection('list');
+        await signIn(); return;
       }
       if (db && !uid) notify('Workspace', 'Sign in to claude.ai to keep your work. Until then it stays in this browser.', '#e8902a');
       let local = null; try { local = JSON.parse(localStorage.getItem(LS) || 'null'); } catch (e2) { }
-      if (local && local.items) items = local.items; else { try { const j = await fetch('tasks.json', { cache: 'no-store' }).then(r => r.json()); items = j.items || []; } catch (e3) { } } } }
+      if (localMembers.length) { items = []; } else if (local && local.items) items = local.items; else { try { const j = await fetch('tasks.json', { cache: 'no-store' }).then(r => r.json()); items = j.items || []; } catch (e3) { } } } }
     afterTasks();
   }
   const dbErr = { quota_exceeded: 'The board is full. Remove some done tasks first.', invalid_argument: 'You can view this office but not change its board.', unavailable: 'Could not reach the database just now. Try again.' };
@@ -553,7 +558,7 @@
   }
   function afterTasks() {
     const open = items.filter(i => i.status !== 'done'); document.getElementById('taskn').textContent = open.length; if (tab === 'tasks') renderClips();
-    const w = document.getElementById('where'); if (w) w.textContent = serverTasks ? 'saved to office/tasks.json' : boardCol ? `saved to your claude.ai account${profile?.email ? ' (' + profile.email + ')' : ''}` : 'saved in this browser only';
+    const w = document.getElementById('where'); if (w) w.textContent = serverTasks ? 'saved to office/tasks.json' : boardCol ? `saved for ${profile?.email || 'you'}` : profile ? `saved in this browser for ${profile.email}` : 'saved in this browser only';
     if (tab === 'tasks') renderBoard(); if (tab === 'calendar') renderCal(); refreshCounts();
   }
   document.getElementById('t-import-btn').onclick = () => document.getElementById('t-import').click();
@@ -633,6 +638,7 @@
     document.getElementById('placeposts').onclick = async () => { const posts = items.filter(i => i.type === 'post' && i.status !== 'done' && (!i.date || i.date < new Date().toISOString().slice(0, 10))); const slots = Object.values(best.nets).flat().sort((a, b) => b.value - a.value); let k = 0; for (const p of posts) { const s = slots[k++ % Math.max(1, slots.length)]; if (!s) break; const d = nextDate(s.day, s.hour); await postTask('update', { id: p.id, date: d.toISOString().slice(0, 10), notes: `${(p.notes || '').replace(/ · best slot.*$/, '')} · best slot ${d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`.replace(/^ · /, '') }); } notify('Calendar', `${posts.length} post${posts.length === 1 ? '' : 's'} placed on the best slots`); renderCal(); };
   }
   document.getElementById('besttime').onclick = async function () {
+    if (!metricoolAllowed()) { renderBest(`Metricool here is linked to ${brandInfo?.email || 'its owner'}. Sign in as that person to use it.`); return; }
     const mcp = await mcpPromise; if (!mcp) { renderBest('Best times need this page open on claude.ai with the Metricool connector. In Claude Code, type /best-time instead.'); return; }
     this.disabled = true; renderBest('Asking Metricool…');
     try {
@@ -687,6 +693,7 @@
     } catch (e) { out.innerHTML = `<p class="kv">${esc(errCopy[e.code] || 'Could not get suggestions. Try again.')}</p>`; }
   }
   document.getElementById('cmp-load').onclick = async function () {
+    if (!metricoolAllowed()) { renderCmp(`Metricool here is linked to ${brandInfo?.email || 'its owner'}. Sign in as that person to use it.`); return; }
     const mcp = await mcpPromise; if (!mcp) { renderCmp('Competitors need this page open on claude.ai with the Metricool connector. In Claude Code, type /competitors instead.'); return; }
     this.disabled = true; renderCmp('Asking Metricool…'); const days = +document.getElementById('cmp-range').value;
     try {
@@ -706,7 +713,7 @@
   document.getElementById('cprev').onclick = () => { calMonth.setMonth(calMonth.getMonth() - 1); renderCal(); };
   document.getElementById('cnext').onclick = () => { calMonth.setMonth(calMonth.getMonth() + 1); renderCal(); };
   document.getElementById('ctoday').onclick = () => { calMonth = new Date(); calMonth.setDate(1); selDay = new Date().toISOString().slice(0, 10); renderCal(); };
-  loadTasks().then(() => { if (!boardCol) onboard(); }); setInterval(loadTasks, 5000);
+  loadTasks().then(() => { if (!membersCol && !serverTasks) signIn(); }); setInterval(loadTasks, 5000);
   const dlPromise = (window.claude && window.claude.use) ? window.claude.use('downloads').catch(() => null) : Promise.resolve(null);
   const assetsPromise = (window.claude && window.claude.use) ? window.claude.use('assets').catch(() => null) : Promise.resolve(null);
   const localClips = new Map(); // object URLs for videos kept only in this browser session (no asset store)
@@ -810,7 +817,7 @@
     if (tab !== 'task') showTab('task'); document.getElementById('res-back').onclick = () => showTab('tasks');
   }
   async function sendForApproval(i) { // Metricool holds the post until you approve it; it emails you (and the Metricool app notifies you)
-    const box = document.getElementById('review-box'); const mcp = await mcpPromise; if (!mcp) { box.textContent = 'Needs this page open on claude.ai with the Metricool connector.'; return; }
+    const box = document.getElementById('review-box'); if (!metricoolAllowed()) { box.textContent = `Metricool here is linked to ${brandInfo?.email || 'its owner'}. Sign in as that person to send posts.`; return; } const mcp = await mcpPromise; if (!mcp) { box.textContent = 'Needs this page open on claude.ai with the Metricool connector.'; return; }
     const r = i.result || {}; const text = r.caption ? `${r.caption}\n\n${(r.tags || []).map(x => '#' + String(x).replace(/^#/, '')).join(' ')}` : ((r.outputs || []).map(o => o.text).filter(Boolean).join('\n\n') || i.notes || i.title);
     box.innerHTML = `<p>Instagram needs an image or video. Paste a public link to the media (a Google Drive or Dropbox share link works if Metricool has Drive linked).${i.type === 'clip' ? ' The clip uploaded here is private to this page, so Metricool cannot fetch it: share the file from Drive and paste that link.' : ''}</p><div class="addrow" style="margin:6px 0"><input id="rv-media" placeholder="https://… .mp4 or .jpg"><select id="rv-type"><option>REEL</option><option>POST</option><option>STORY</option></select><input id="rv-when" type="datetime-local"><button id="rv-go">Send for approval</button></div><p>Caption to send (edit the task result to change it):</p><pre style="white-space:pre-wrap">${esc(text.slice(0, 1200))}</pre><div id="rv-out"></div>`;
     const when = document.getElementById('rv-when'); const d = new Date(Date.now() + 36e5); when.value = (i.date && i.date > new Date().toISOString().slice(0, 10) ? i.date + 'T10:00' : d.toISOString().slice(0, 16));
@@ -904,7 +911,7 @@
   // account menu: who you are, the office name and logo, where things save, alerts, permissions
   const menu = document.getElementById('menu'); document.getElementById('me').onclick = e => { e.stopPropagation(); menu.classList.toggle('on'); fillMenu(); }; document.addEventListener('click', e => { if (!menu.contains(e.target)) menu.classList.remove('on'); });
   async function fillMenu() {
-    const u = await userPromise; if (u) { try { const me = await u.me(); const name = profile?.name || me?.name || ''; const email = profile?.email || me?.email || ''; if (name) { document.getElementById('menu-name').textContent = name; document.getElementById('menu-av').textContent = document.getElementById('me').textContent = name.trim()[0].toUpperCase(); } if (email) document.getElementById('menu-email').textContent = email; } catch (e) { } }
+    const u = await userPromise; { try { const me = u ? await u.me() : {}; const name = profile?.name || me?.name || ''; const email = profile?.email || me?.email || ''; if (name) { document.getElementById('menu-name').textContent = name; document.getElementById('menu-av').textContent = document.getElementById('me').textContent = name.trim()[0].toUpperCase(); } if (email) document.getElementById('menu-email').textContent = email; } catch (e) { } }
     document.getElementById('menu-where').textContent = 'saving: ' + (document.getElementById('where')?.textContent || '…');
     document.getElementById('menu-brand').textContent = brandInfo ? `Metricool: @${brandInfo.handle || '?'} · ${brandInfo.tz}` : 'Metricool: connect on the Calendar or Competitors tab';
     document.getElementById('menu-email').textContent = profile?.email || document.getElementById('menu-email').textContent; document.getElementById('menu-office').value = officeName; document.getElementById('menu-alerts').textContent = ('Notification' in window && Notification.permission === 'granted') ? 'On' : 'Enable';
@@ -914,20 +921,53 @@
   applyOffice();
   document.getElementById('menu-save').onclick = async () => { officeName = document.getElementById('menu-office').value.trim() || 'Agent HQ'; applyOffice(); try { localStorage.setItem('agent-hq-name', officeName); } catch (e) { } await saveProfile({ office: officeName }); notify('Office', `Renamed to ${officeName}`); };
   document.getElementById('menu-export').onclick = () => document.getElementById('t-export').click();
-  async function saveProfile(patch) { profile = { ...(profile || {}), ...patch }; if (profileDoc) { try { await profileDoc.set(profile); } catch (e) { notify('Workspace', dbErr[e?.code] || 'Could not save your profile. You need Contributor access to this page.', '#e64a4a'); } } else { try { localStorage.setItem('agent-hq-profile', JSON.stringify(profile)); } catch (e) { } } }
-  async function onboard() {
-    if (profile && profile.onboarded) return; const u = await userPromise; let me = {}; try { me = u ? (await u.me()) || {} : {}; } catch (e) { }
-    const w = document.getElementById('welcome'); w.classList.add('on');
-    document.getElementById('w-name').value = profile?.name || me.name || ''; document.getElementById('w-email').value = profile?.email || me.email || ''; document.getElementById('w-office').value = profile?.office || officeName;
-    document.getElementById('w-account').textContent = me.email ? `Signed in to claude.ai as ${me.email}. Your work here is saved to that account and only you can see it.` : 'Your work here is saved to your claude.ai account and only you can see it.';
-    document.getElementById('w-go').onclick = async () => {
-      const name = document.getElementById('w-name').value.trim(), email = document.getElementById('w-email').value.trim(); if (!name) { document.getElementById('w-name').focus(); return; }
-      const social = document.querySelector('input[name=w-social]:checked')?.value || 'later'; officeName = document.getElementById('w-office').value.trim() || 'Agent HQ'; applyOffice();
-      await saveProfile({ name, email, office: officeName, social, onboarded: true, joined: Date.now() }); w.classList.remove('on'); fillMenu();
-      if (social === 'yes') { notify('Metricool', 'Add the Metricool connector in claude.ai Settings → Connectors, then connect your networks in Metricool. The Calendar and Competitors tabs use it.', '#e8902a'); showTab('calendar'); }
-      else notify(officeName, `Welcome, ${name}. Add a task or ask any agent.`);
-    };
+  async function saveProfile(patch) { profile = { ...(profile || {}), ...patch }; if (profileDoc) { try { await profileDoc.update(JSON.parse(JSON.stringify(patch))); } catch (e) { try { await profileDoc.set(profile); } catch (e2) { notify('Workspace', dbErr[e2?.code] || 'Could not save your profile. You need Contributor access to this page.', '#e64a4a'); } } } else { saveLocalMembers(); } }
+  // ---- members: sign-in inside the page, because a family can share one claude.ai login
+  const MEMBERS_LS = 'agent-hq-members', STAY_LS = 'agent-hq-stay';
+  let localMembers = []; try { localMembers = JSON.parse(localStorage.getItem(MEMBERS_LS) || '[]'); } catch (e) { }
+  function saveLocalMembers() { if (membersCol) return; const i = localMembers.findIndex(m => m.id === mid); if (i >= 0) localMembers[i] = { ...localMembers[i], ...profile }; try { localStorage.setItem(MEMBERS_LS, JSON.stringify(localMembers)); } catch (e) { } }
+  async function sha(s) { const b = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(s)); return [...new Uint8Array(b)].map(x => x.toString(16).padStart(2, '0')).join(''); }
+  const memberId = async email => 'm_' + (await sha(email.trim().toLowerCase())).slice(0, 16);
+  async function listMembers() { if (membersCol) { try { const s = await membersCol.get(); return s.docs.filter(d => d.exists).map(d => ({ id: d.id, ...d.data() })); } catch (e) { return []; } } return localMembers; }
+  async function openMember(m, remember) {
+    mid = m.id; profile = m; if (dbUnsub) { dbUnsub(); dbUnsub = null; }
+    if (membersCol) { profileDoc = membersCol.doc(mid); boardCol = profileDoc.collection('tasks');
+      try { // the owner's earlier board (before members existed) moves into the first member's board once
+        const mine = await boardCol.limit(1).get(); if (mine.empty && !m.migrated && m.metricoolOwner) { const old = await db.doc(`data/users/${uid}/board`).collection('tasks').get(); for (const d of old.docs) if (d.exists) await boardCol.doc(d.id).set(d.data()); if (old.empty) { const shared = await db.collection('tasks').get(); for (const d of shared.docs) if (d.exists) await boardCol.doc(d.id).set(d.data()); } await profileDoc.update({ migrated: true }); }
+      } catch (e) { }
+      dbUnsub = boardCol.onSnapshot(snap => { items = snap.docs.filter(d => d.exists).map(d => ({ id: d.id, ...d.data() })); afterTasks(); }, err => { if (err.code === 'revoked' || err.code === 'not_granted') { db = null; boardCol = null; } });
+    } else { boardCol = null; let local = null; try { local = JSON.parse(localStorage.getItem(LS + '-' + mid) || 'null'); } catch (e) { } items = local?.items || []; afterTasks(); }
+    try { if (remember) localStorage.setItem(STAY_LS, JSON.stringify({ mid, token: m.hash })); else localStorage.removeItem(STAY_LS); } catch (e) { }
+    officeName = m.office || 'Agent HQ'; applyOffice(); fillMenu(); document.getElementById('welcome').classList.remove('on');
+    notify(officeName, `Signed in as ${m.name}. ${m.social === 'yes' && !metricoolAllowed() ? 'Metricool stays on its owner\'s profile.' : ''}`.trim());
   }
+  function metricoolAllowed() { return !profile || !!profile.metricoolOwner || (!!brandInfo?.email && (profile.email || '').toLowerCase() === brandInfo.email.toLowerCase()); }
+  async function signIn() {
+    const members = await listMembers(); let stay = null; try { stay = JSON.parse(localStorage.getItem(STAY_LS) || 'null'); } catch (e) { }
+    if (stay) { const m = members.find(x => x.id === stay.mid && x.hash === stay.token); if (m) { await openMember(m, true); return; } }
+    showLogin(members);
+  }
+  function showLogin(members) {
+    const w = document.getElementById('welcome'); w.classList.add('on'); const pick = document.getElementById('w-pick'), create = document.getElementById('w-create');
+    pick.innerHTML = members.length ? `<div class="kv">Who is this?</div><div class="people">${members.map(m => `<button class="person" data-mid="${m.id}"><span class="me">${esc((m.name || '?')[0].toUpperCase())}</span><span>${esc(m.name)}</span><small>${esc(m.email || '')}</small></button>`).join('')}</div><div id="w-unlock" hidden><label>Password<input id="w-pass" type="password" autocomplete="current-password"></label><label class="chk"><input id="w-stay" type="checkbox" checked> Stay signed in on this device</label><button id="w-enter" class="primary">Enter</button><p class="kv" id="w-err"></p></div><p class="kv"><a href="#" id="w-new">Add another person</a></p>` : '';
+    create.hidden = members.length > 0; pick.hidden = !members.length; let chosen = null; ['w-name', 'w-email', 'w-pass2', 'w-pass3', 'w-office'].forEach(id => { document.getElementById(id).value = ''; }); document.getElementById('w-err2').textContent = '';
+    pick.querySelectorAll('.person').forEach(b => b.onclick = () => { chosen = members.find(m => m.id === b.dataset.mid); pick.querySelectorAll('.person').forEach(x => x.classList.toggle('on', x === b)); document.getElementById('w-unlock').hidden = false; document.getElementById('w-pass').focus(); });
+    const tryEnter = async () => { if (!chosen) return; const h = await sha(chosen.salt + document.getElementById('w-pass').value); if (h !== chosen.hash) { document.getElementById('w-err').textContent = 'That password does not match.'; return; } await openMember(chosen, document.getElementById('w-stay').checked); };
+    pick.querySelector('#w-enter') && (pick.querySelector('#w-enter').onclick = tryEnter); pick.querySelector('#w-pass') && pick.querySelector('#w-pass').addEventListener('keydown', e => { if (e.key === 'Enter') tryEnter(); });
+    pick.querySelector('#w-new') && (pick.querySelector('#w-new').onclick = e => { e.preventDefault(); pick.hidden = true; create.hidden = false; });
+    document.getElementById('w-go').onclick = async () => {
+      const name = document.getElementById('w-name').value.trim(), email = document.getElementById('w-email').value.trim().toLowerCase(), pass = document.getElementById('w-pass2').value, pass2 = document.getElementById('w-pass3').value;
+      const err = document.getElementById('w-err2'); if (!name || !email || !pass) { err.textContent = 'Name, email and a password are needed.'; return; } if (pass !== pass2) { err.textContent = 'The two passwords differ.'; return; } if (pass.length < 4) { err.textContent = 'Use at least 4 characters.'; return; }
+      const id = await memberId(email); if (members.some(m => m.id === id)) { err.textContent = 'That email already has a profile. Pick it from the list.'; return; }
+      const salt = Math.random().toString(36).slice(2, 12); const m = { id, name, email, salt, hash: await sha(salt + pass), office: document.getElementById('w-office').value.trim() || 'Agent HQ', social: document.querySelector('input[name=w-social]:checked')?.value || 'later', onboarded: true, joined: Date.now(), metricoolOwner: members.length === 0 };
+      if (membersCol) { try { await membersCol.doc(id).set(m); } catch (e2) { err.textContent = dbErr[e2?.code] || 'Could not save this profile. You need Contributor access to this page.'; return; } } else { localMembers.push(m); try { localStorage.setItem(MEMBERS_LS, JSON.stringify(localMembers)); } catch (e) { } }
+      await openMember(m, document.getElementById('w-stay2').checked);
+      if (m.social === 'yes') { notify('Metricool', metricoolAllowed() ? 'Add the Metricool connector in claude.ai Settings → Connectors, then connect your networks in Metricool. The Calendar and Competitors tabs use it.' : `Metricool here belongs to ${brandInfo?.email || 'the owner'}. Only that profile can post with it.`, '#e8902a'); }
+    };
+    document.getElementById('w-cancel').onclick = e => { e.preventDefault(); if (members.length) { create.hidden = true; pick.hidden = false; } };
+  }
+  document.getElementById('menu-switch').onclick = async () => { try { localStorage.removeItem(STAY_LS); } catch (e) { } mid = null; profile = null; boardCol = null; items = []; afterTasks(); menu.classList.remove('on'); showLogin(await listMembers()); };
+  document.getElementById('menu-pass').onclick = async () => { const cur = document.getElementById('menu-cur').value, nw = document.getElementById('menu-new').value; if (!profile) return; if ((await sha(profile.salt + cur)) !== profile.hash) { notify('Password', 'Current password does not match.', '#e64a4a'); return; } if (nw.length < 4) { notify('Password', 'Use at least 4 characters.', '#e64a4a'); return; } const hash = await sha(profile.salt + nw); await saveProfile({ hash }); try { const s = JSON.parse(localStorage.getItem(STAY_LS) || 'null'); if (s && s.mid === mid) localStorage.setItem(STAY_LS, JSON.stringify({ mid, token: hash })); } catch (e) { } document.getElementById('menu-cur').value = document.getElementById('menu-new').value = ''; notify('Password', 'Changed.'); };
   if (!(window.claude && window.claude.use)) { try { profile = JSON.parse(localStorage.getItem('agent-hq-profile') || 'null'); } catch (e) { } }
   document.getElementById('menu-perms').onclick = async () => { try { const perms = await window.claude.use('permissions'); await perms.manage(); } catch (e) { notify('Permissions', 'Open the artifact menu on claude.ai → Permissions.', '#e8902a'); } };
   document.getElementById('menu-alerts').onclick = async function () {
