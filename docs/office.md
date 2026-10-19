@@ -50,6 +50,10 @@ owner  ->  chief of staff  ->  department head  ->  workers (parallel)
 
 `.mcp.json` starts the memory MCP server with its file at `brain/memory.jsonl`. Two entities: **Company** and **Brand rules**. Every agent reads them before working. When the owner says "from now on…", the chief of staff writes it there, so every agent remembers it on the next run. Edit the JSONL by hand to seed it.
 
+## The 3D office
+
+`office/index.html` draws this chart as a 3D floor: one room per department, one desk and character per agent, heads wear a hat. `office/build.py` turns the table in `CLAUDE.md` plus the agent files into `office/agents.json`; `office/serve.py` serves the page and streams `office/events.jsonl`, which the hooks in `.claude/settings.json` write on every sub-agent start and stop.
+
 ## Adding an agent
 
 `/hire <name>: <job>` writes the file and updates this chart. Keep one job per agent, say when to use it in the description (that is how the chief of staff picks it), and give it only the tools it needs.

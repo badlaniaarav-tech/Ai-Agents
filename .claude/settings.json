@@ -27,7 +27,10 @@
       "Edit(brain/**)",
       "WebSearch",
       "WebFetch",
-      "mcp__memory"
+      "mcp__memory",
+      "Bash(python3 office/build.py:*)",
+      "Bash(python3 office/serve.py:*)",
+      "Edit(office/agents.json)"
     ],
     "ask": [
       "Bash(git push:*)",
@@ -44,5 +47,11 @@
       "Read(.env.*)"
     ]
   },
-  "enableAllProjectMcpServers": true
+  "enableAllProjectMcpServers": true,
+  "hooks": {
+    "UserPromptSubmit": [{ "hooks": [{ "type": "command", "command": "bash \"$CLAUDE_PROJECT_DIR\"/office/hook.sh" }] }],
+    "SubagentStart":    [{ "hooks": [{ "type": "command", "command": "bash \"$CLAUDE_PROJECT_DIR\"/office/hook.sh" }] }],
+    "SubagentStop":     [{ "hooks": [{ "type": "command", "command": "bash \"$CLAUDE_PROJECT_DIR\"/office/hook.sh" }] }],
+    "Stop":             [{ "hooks": [{ "type": "command", "command": "bash \"$CLAUDE_PROJECT_DIR\"/office/hook.sh" }] }]
+  }
 }

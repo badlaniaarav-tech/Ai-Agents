@@ -36,7 +36,7 @@ Company facts, brand rules and the owner's preferences live in the memory MCP se
 - `tools/` the video tools: `cut.py`, `captions.py`, `thumbnail.py`, `frames.py`. Each prints one JSON line with its result.
 
 ## Commands
-`/edit-clips` edit every clip in `inbox/` · `/brief <task>` route any task through the office · `/standup` every department reports · `/research <topic>` · `/campaign <launch>` · `/hire <name>` add an agent
+`/edit-clips` edit every clip in `inbox/` · `/brief <task>` route any task through the office · `/standup` every department reports · `/research <topic>` · `/campaign <launch>` · `/hire <name>` add an agent · `/office` refresh the 3D office
 
 ## Rules
 - Nothing gets published, uploaded, posted, emailed or pushed. Finished work waits for the owner's OK.

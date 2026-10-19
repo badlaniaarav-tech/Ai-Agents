@@ -10,3 +10,4 @@ tools/models/
 __pycache__/
 .env
 .env.*
+office/events.jsonl

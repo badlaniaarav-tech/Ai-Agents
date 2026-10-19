@@ -21,8 +21,19 @@ Built from three Bekhruz AI videos:
 | Approvals | `.claude/settings.json` | What agents may do alone, what asks you, what is never allowed |
 | Shared brain | `.mcp.json` + `brain/memory.jsonl` | Memory MCP server with the **Company** and **Brand rules** entities |
 | Video tools | `tools/` | `cut.py`, `captions.py`, `thumbnail.py`, `frames.py` for the creative pipeline |
+| 3D office | `office/` | A Three.js page: each room is a department, each character is an agent, and characters light up while their sub-agent runs |
 
 Departments: Leadership, Creative, Marketing, Sales, Research, Engineering, Operations. See `docs/office.md`.
+
+## See the office in 3D
+
+```bash
+python3 office/serve.py        # then open http://localhost:8787
+```
+
+Drag to orbit, wheel to zoom, click a character for its job, tools and model. Click a department in the side panel to fly to its room. Press "Demo activity" to see what it looks like when agents are busy.
+
+It is live: hooks in `.claude/settings.json` append every sub-agent start and stop to `office/events.jsonl`, and the page polls that file. Run Claude Code in this repo in another terminal, give it a task, and watch the characters work. After `/hire`, run `/office` (or `python3 office/build.py`) to regenerate `office/agents.json`.
 
 ## Setup (once)
 
