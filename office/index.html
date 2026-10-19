@@ -103,6 +103,16 @@
   .mic { background:var(--well); color:var(--muted); border:1px solid var(--line); border-radius:7px; width:34px; cursor:pointer; font-size:14px } .mic.on { color:#fff; background:#e64a4a; border-color:#e64a4a; animation:pulse 1s infinite } @keyframes pulse { 50% { opacity:.6 } }
   #ask .mic { border:0; border-left:1px solid var(--line); border-radius:0; height:100%; width:32px }
   .addrow button { cursor:pointer; background:var(--well2) }
+  .addrow.simple { grid-template-columns:1fr } .addrow.simple .withmic input { font-size:14px; padding:11px 12px; border-radius:10px } .addrow.simple .mic { width:44px; border-radius:10px }
+  .addrow button.big { font-size:14px; padding:11px; border-radius:10px; cursor:pointer } .addrow button.big:hover { filter:brightness(1.08) }
+  .hintline { margin:2px 0 0; text-transform:none; letter-spacing:0; font-size:12px; line-height:1.5 } .hintline a { color:var(--accent); text-decoration:none }
+  #t-opts { display:grid; grid-template-columns:1fr 1fr 1fr; gap:6px; margin-top:6px } #t-opts label { font-size:11px; color:var(--muted); display:flex; flex-direction:column; gap:3px } #t-opts select, #t-opts input { background:var(--bg); color:var(--text); border:1px solid var(--line); border-radius:7px; padding:6px 8px; font:inherit; font-size:12px; min-width:0 }
+  .drop { display:flex; flex-direction:column; align-items:center; gap:4px; width:100%; padding:22px 12px; background:var(--bg); color:var(--text); border:2px dashed var(--line); border-radius:12px; font:inherit; cursor:pointer; transition:border-color .15s, background .15s } .drop:hover, .drop.over { border-color:var(--accent); background:var(--well2) } .drop.busy { opacity:.6; cursor:progress }
+  .drop .ic { font-size:26px; line-height:1; color:var(--accent) } .drop .big { font-size:15px; font-weight:600 } .drop .sub { font-size:12px; color:var(--muted) }
+  .card .note { width:100%; margin-top:8px; background:var(--bg); color:var(--text); border:1px solid var(--line); border-radius:9px; padding:9px 11px; font:inherit; font-size:13px }
+  #t-opts[hidden] { display:none } .card .addrow button.primary { background:var(--accent); color:#06121c }
+  #runbox:not(.on) { display:none }
+  details.more summary { cursor:pointer; font-size:12px; color:var(--muted); text-transform:uppercase; letter-spacing:.06em; font-weight:600; list-style:none } details.more summary::before { content:'▸ '; } details.more[open] summary::before { content:'▾ '; }
   .col { margin-top:10px } .col h3 { font-size:11px; text-transform:uppercase; letter-spacing:.08em; color:var(--muted); margin:0 0 4px; display:flex; justify-content:space-between }
   .task { display:grid; grid-template-columns:4px 1fr auto; gap:8px; align-items:center; background:var(--well); border:1px solid var(--line); border-radius:9px; padding:7px 8px; margin-bottom:5px }
   .task .bar { width:4px; height:100%; min-height:26px; border-radius:2px }
@@ -181,25 +191,29 @@
   </div>
   <div data-view="tasks" style="display:none">
     <section class="card">
-      <h2>New task</h2>
-      <form id="addtask" class="addrow"><div class="withmic"><input id="t-title" placeholder="What should the office do? Type or press the mic" required><button type="button" id="t-mic" class="mic" title="Dictate">🎤</button></div><select id="t-team"></select><input id="t-date" type="date" title="Optional: a due date or post date"><select id="t-type"><option value="task">task</option><option value="post">post</option><option value="meeting">meeting</option></select><button type="submit" class="primary">Add and run</button></form>
+      <h2>Give the office a task</h2>
+      <form id="addtask" class="addrow simple"><div class="withmic"><input id="t-title" placeholder="Tell the office what you need, like “write a caption for my swing video”" required><button type="button" id="t-mic" class="mic" title="Say it instead">🎤</button></div>
+        <button type="submit" class="primary big">Send to the office</button>
+        <p class="kv hintline">The chief of staff picks the team and starts right away. <a href="#" id="t-more">More options</a></p>
+        <div id="t-opts" hidden><label>Team <select id="t-team"></select></label><label>Date <input id="t-date" type="date" title="Optional: a due date or post date"></label><label>Kind <select id="t-type"><option value="task">task</option><option value="post">post</option><option value="meeting">meeting</option></select></label></div>
+      </form>
     </section>
     <section class="card">
       <h2>Golf clips</h2>
-      <p class="kv">Upload a swing video. The Creative team looks at frames of it and writes the title, caption, hooks, tags and cover text. The cut and captioned video itself is made by <b>/edit-clips</b> in Claude Code (drop the file in inbox/).</p>
-      <div class="addrow" style="margin:8px 0 6px"><input id="clip-note" placeholder="What happens in it, what you want to say (optional)"><button type="button" id="clip-up" class="primary">Upload a video</button><input id="clip-file" type="file" accept="video/*" hidden></div>
+      <button type="button" id="clip-up" class="drop"><span class="ic">⬆</span><span class="big">Upload a swing video</span><span class="sub">or drop it here · mp4 or mov, under 20 MB</span></button><input id="clip-file" type="file" accept="video/*" hidden>
+      <input id="clip-note" class="note" placeholder="Anything to mention? (optional) e.g. “new driver, first round back”">
+      <p class="kv hintline">You get a caption, hooks, tags and cover text back in about a minute. The edited video with captions and music comes from <b>/edit-clips</b> in Claude Code.</p>
       <div id="clips"></div>
     </section>
     <section class="card">
       <h2>Board <span id="where" class="kv" style="text-transform:none; letter-spacing:0; float:right"></span></h2>
-      <div class="kv" style="margin-bottom:6px">Running now</div><ul id="runlist"><li style="color:var(--muted)">nobody</li></ul>
+      <div id="runbox"><div class="kv" style="margin-bottom:6px">Running now</div><ul id="runlist"><li style="color:var(--muted)">nobody</li></ul></div>
       <div id="board"></div>
     </section>
-    <section class="card">
-      <h2>Log &amp; backup</h2>
-      <div class="resacts" style="margin:0 0 8px"><button id="t-export" title="Save a copy of the board and results as a file">Export backup</button><button type="button" id="t-import-btn">Import backup</button><input id="t-import" type="file" accept="application/json" hidden></div>
+    <details class="card more"><summary>Log &amp; backup</summary>
+      <div class="resacts" style="margin:8px 0"><button id="t-export" title="Save a copy of the board and results as a file">Export backup</button><button type="button" id="t-import-btn">Import backup</button><input id="t-import" type="file" accept="application/json" hidden></div>
       <div id="log" style="font-size:12px; color:var(--muted)"></div>
-    </section>
+    </details>
   </div>
   <div data-view="calendar" style="display:none">
     <div class="calhead"><button id="cprev">‹</button><h2 id="calmonth" style="margin:0"></h2><button id="cnext">›</button><button id="ctoday">today</button><button id="besttime" title="Best times to post, from Metricool">Best times</button></div>
@@ -585,6 +599,7 @@
     rec.onend = () => { btn.classList.remove('on'); btn.rec = null; if (input.value.trim() && input.value !== before && then) then(); };
     try { rec.start(); } catch (e) { btn.classList.remove('on'); btn.rec = null; }
   }
+  document.getElementById('t-more').onclick = e => { e.preventDefault(); const o = document.getElementById('t-opts'); o.hidden = !o.hidden; e.target.textContent = o.hidden ? 'More options' : 'Fewer options'; };
   document.getElementById('t-mic').onclick = e => { e.preventDefault(); dictate(e.currentTarget, document.getElementById('t-title')); };
   document.getElementById('ask-mic').onclick = e => { e.preventDefault(); dictate(e.currentTarget, askQ, () => document.getElementById('ask').requestSubmit()); };
   function taskCard(i) {
@@ -718,16 +733,21 @@
   const dlPromise = (window.claude && window.claude.use) ? window.claude.use('downloads').catch(() => null) : Promise.resolve(null);
   const assetsPromise = (window.claude && window.claude.use) ? window.claude.use('assets').catch(() => null) : Promise.resolve(null);
   const localClips = new Map(); // object URLs for videos kept only in this browser session (no asset store)
-  document.getElementById('clip-up').onclick = () => document.getElementById('clip-file').click();
-  document.getElementById('clip-file').onchange = async e => {
-    const f = e.target.files[0]; e.target.value = ''; if (!f) return;
+  const dropBtn = document.getElementById('clip-up');
+  dropBtn.onclick = () => document.getElementById('clip-file').click();
+  dropBtn.ondragover = e => { e.preventDefault(); dropBtn.classList.add('over'); }; dropBtn.ondragleave = () => dropBtn.classList.remove('over');
+  dropBtn.ondrop = e => { e.preventDefault(); dropBtn.classList.remove('over'); const f = e.dataTransfer.files[0]; if (f) addClip(f); };
+  document.getElementById('clip-file').onchange = e => { const f = e.target.files[0]; e.target.value = ''; if (f) addClip(f); };
+  async function addClip(f) {
+    if (!f.type.startsWith('video/')) { notify('Golf clips', 'That is not a video. Use an mp4 or mov.', '#e64a4a'); return; }
     if (f.size > 20 * 1024 * 1024) { notify('Golf clips', 'Keep uploads under 20 MB here: trim the clip or export it smaller. Bigger files go in inbox/ for /edit-clips.', '#e64a4a'); return; }
     const assets = await assetsPromise; let media = '', assetId = '';
-    if (assets) { try { notify('Golf clips', `Uploading ${f.name}…`); const up = await assets.upload(f); media = up.url; assetId = up.id; } catch (err) { notify('Golf clips', `Upload failed (${err?.code || 'error'}). Try a smaller file.`, '#e64a4a'); return; } }
+    const label = dropBtn.querySelector('.big'), was = label.textContent; dropBtn.classList.add('busy'); label.textContent = `Uploading ${f.name}…`;
+    try { if (assets) { const up = await assets.upload(f); media = up.url; assetId = up.id; } } catch (err) { notify('Golf clips', `Upload failed (${err?.code || 'error'}). Try a smaller file.`, '#e64a4a'); return; } finally { dropBtn.classList.remove('busy'); label.textContent = was; }
     const added = await postTask('add', { type: 'clip', title: `Clip: ${f.name.replace(/\.[^.]+$/, '')}`, team: 'Creative', agent: 'creative-director', date: new Date().toISOString().slice(0, 10), notes: document.getElementById('clip-note').value.trim(), media, assetId, fileName: f.name, size: f.size });
     if (!added) return; if (!media) { localClips.set(added.id, URL.createObjectURL(f)); notify('Golf clips', 'Kept in this browser only (no asset store here). Run it now.'); }
-    document.getElementById('clip-note').value = ''; renderClips(); runTask(added);
-  };
+    document.getElementById('clip-note').value = ''; renderClips(); runTask(added); notify('Golf clips', `${f.name} is in. The Creative team is on it.`, teamColor('Creative'));
+  }
   const clipSrc = i => i.media || localClips.get(i.id) || '';
   function renderClips() {
     const el = document.getElementById('clips'); if (!el) return; const clips = items.filter(i => i.type === 'clip').sort((a, b) => (b.created || 0) - (a.created || 0));
@@ -989,6 +1009,7 @@
   function refreshCounts() {
     const run = agents.filter(a => a.working); document.getElementById('running').textContent = run.length;
     runlist.innerHTML = run.length ? run.map(a => `<li><b>${a.name}</b> <span class="kv">${a.team}</span></li>`).join('') : '<li style="color:var(--muted)">nobody</li>';
+    document.getElementById('runbox').classList.toggle('on', run.length > 0);
     const today = new Date().toISOString().slice(0, 10);
     roomInfo.forEach(r => {
       const n = r.d.agents.filter(a => byName.get(a.name)?.working).length;
