@@ -80,6 +80,7 @@
   @media (max-width:1180px) { #ask input { width:140px } #ask select { max-width:110px } }
   @media (max-width:980px) { #ask select { display:none } }
   .addrow { display:grid; grid-template-columns:1fr auto; gap:6px; margin:8px 0 10px }
+  .addrow input[type=date]:invalid, .addrow input[type=date]:not(:valid) { color:var(--muted) }
   .addrow input, .addrow select, .addrow button { background:var(--well); color:var(--text); border:1px solid var(--line); border-radius:7px; padding:6px 8px; font:inherit; font-size:12px; min-width:0 }
   .addrow .withmic { grid-column:1 / -1; display:flex; gap:6px } .addrow .withmic input { flex:1 }
   .addrow button.primary { grid-column:1 / -1; background:var(--accent); color:#06121c; font-weight:600; border-color:transparent }
@@ -150,7 +151,7 @@
   <div data-view="tasks" style="display:none">
     <section class="card">
       <h2>New task</h2>
-      <form id="addtask" class="addrow"><div class="withmic"><input id="t-title" placeholder="What should the office do? Type or press the mic" required><button type="button" id="t-mic" class="mic" title="Dictate">🎤</button></div><select id="t-team"></select><input id="t-date" type="date"><select id="t-type"><option value="task">task</option><option value="post">post</option><option value="meeting">meeting</option></select><button type="submit" class="primary">Add and run</button></form>
+      <form id="addtask" class="addrow"><div class="withmic"><input id="t-title" placeholder="What should the office do? Type or press the mic" required><button type="button" id="t-mic" class="mic" title="Dictate">🎤</button></div><select id="t-team"></select><input id="t-date" type="date" title="Optional: a due date or post date"><select id="t-type"><option value="task">task</option><option value="post">post</option><option value="meeting">meeting</option></select><button type="submit" class="primary">Add and run</button></form>
     </section>
     <section class="card">
       <h2>Golf clips</h2>
@@ -536,7 +537,6 @@
     if (sample) { try { const r = await sample.json(`Route this task to one team of Agent HQ. Teams:\n${roster()}\nTask: "${title}"\nReply with only JSON {"team": "<exact team name>", "why": "<six words>"}.`, { modelTier: 'quick' }); if (r && roomInfo.some(x => x.d.name === r.team)) return r.team; } catch (e) { } }
     for (const [team, re] of Object.entries(HINTS)) if (re.test(title)) return team; return 'Research';
   }
-  document.getElementById('t-date').value = selDay;
   document.getElementById('addtask').onsubmit = async e => { e.preventDefault(); const t = document.getElementById('t-title'); if (!t.value.trim()) return;
     const title = t.value.trim(); t.value = ''; const team = tTeam.value || await pickTeam(title); if (!tTeam.value) notify('Chief of staff', `"${title}" goes to ${team}`, teamColor(team));
     const added = await postTask('add', { title, team, date: document.getElementById('t-date').value, type: document.getElementById('t-type').value, agent: (roomInfo.find(r => r.d.name === team)?.d.agents.find(a => a.role === 'head') || {}).name || '' });
