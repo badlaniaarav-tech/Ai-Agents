@@ -1,0 +1,308 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Agent HQ</title>
+<style>
+  :root { --bg:#0b0f1a; --panel:rgba(20,25,38,.92); --line:#273047; --text:#e8edf5; --muted:#8e9ab0; --accent:#5ee0ff; --ok:#3fd27f }
+  * { box-sizing:border-box }
+  html, body { margin:0; height:100%; background:var(--bg); color:var(--text); font:14px/1.45 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; overflow:hidden }
+  #scene { position:fixed; inset:0 }
+  #nav { position:fixed; top:12px; left:12px; right:12px; height:52px; display:flex; align-items:center; gap:10px; padding:0 14px; background:var(--panel); border:1px solid var(--line); border-radius:14px; backdrop-filter:blur(8px) }
+  #nav .logo { width:28px; height:28px; border-radius:8px; background:linear-gradient(135deg,#5ee0ff,#7c6cff); display:grid; place-items:center; font-weight:700; color:#0b0f1a; font-size:13px }
+  #nav h1 { font-size:15px; margin:0 10px 0 0; font-weight:600 }
+  #nav .owner { color:var(--muted); font-size:12px; padding:4px 10px; border:1px solid var(--line); border-radius:999px }
+  #tabs { margin:0 auto; display:flex; gap:4px; background:#0e1322; border:1px solid var(--line); border-radius:10px; padding:3px }
+  #tabs button { background:transparent; color:var(--muted); border:0; border-radius:8px; padding:6px 14px; font:inherit; font-size:13px; cursor:pointer }
+  #tabs button.on { background:#1c2436; color:var(--text) }
+  #tabs button b { font-weight:600; color:var(--accent); margin-left:6px; font-size:11px }
+  .pill { padding:5px 11px; border:1px solid var(--line); border-radius:999px; background:#0e1322; color:var(--muted); font-size:12px; white-space:nowrap }
+  .pill b { color:var(--text); font-weight:600 }
+  .pill.live::before { content:""; display:inline-block; width:8px; height:8px; border-radius:50%; background:#5a6472; margin-right:7px }
+  .pill.live.on::before { background:var(--ok); box-shadow:0 0 8px var(--ok) }
+  #demo { cursor:pointer; background:#0e1322; color:var(--text); border:1px solid var(--line); border-radius:8px; padding:6px 10px; font:inherit; font-size:12px }
+  #panel { position:fixed; top:76px; right:12px; width:320px; max-height:calc(100% - 170px); overflow:auto; background:var(--panel); border:1px solid var(--line); border-radius:14px; padding:14px; display:none }
+  #panel.on { display:block }
+  #panel h2 { font-size:12px; text-transform:uppercase; letter-spacing:.06em; color:var(--muted); margin:0 0 8px }
+  #panel h3 { font-size:13px; margin:12px 0 4px }
+  #panel p, #panel li { margin:4px 0; color:var(--text) }
+  #panel ul { padding-left:18px; margin:4px 0 }
+  #panel .row { display:flex; gap:8px; align-items:center; padding:5px 0; border-bottom:1px solid var(--line); cursor:pointer }
+  #panel .row:last-child { border:0 }
+  .sw { width:10px; height:10px; border-radius:3px; flex:none }
+  #panel .n { flex:1 } #panel .c { color:var(--muted); font-size:12px }
+  #panel .kv { font-size:12px; color:var(--muted); word-break:break-word }
+  #toast { position:fixed; top:76px; right:12px; width:320px; background:var(--panel); border:1px solid var(--line); border-radius:14px; padding:10px 12px; display:flex; gap:10px; align-items:center; font-size:13px; transition:opacity .4s; opacity:0; pointer-events:none }
+  #toast.on { opacity:1 }
+  #toast .ic { width:30px; height:30px; border-radius:8px; display:grid; place-items:center; font-size:14px; flex:none }
+  #toast small { display:block; color:var(--muted) }
+  #chips { position:fixed; left:12px; bottom:12px; display:flex; gap:6px; align-items:center; font-size:11px; color:var(--muted) }
+  #chips span { padding:4px 9px; border:1px solid var(--line); border-radius:7px; background:#0e1322; color:var(--text) }
+  #hint { position:fixed; left:12px; top:76px; font-size:12px; color:var(--muted); background:var(--panel); border:1px solid var(--line); border-radius:8px; padding:6px 10px }
+  #map { position:fixed; right:12px; bottom:12px; width:190px; background:var(--panel); border:1px solid var(--line); border-radius:12px; padding:8px }
+  #map .t { display:flex; justify-content:space-between; font-size:10px; letter-spacing:.1em; color:var(--muted); margin-bottom:6px }
+  #map canvas { width:100%; height:110px; display:block; background:#0e1322; border-radius:8px; border:1px solid var(--line) }
+  #map .b { display:flex; gap:4px; margin-top:6px }
+  #map button { flex:1; background:#0e1322; color:var(--text); border:1px solid var(--line); border-radius:6px; font:inherit; font-size:12px; cursor:pointer; padding:3px 0 }
+  @media (max-width:860px) { #panel { width:min(320px, calc(100% - 24px)) } #tabs button b, #nav .owner { display:none } #map { display:none } }
+</style>
+</head>
+<body>
+<canvas id="scene"></canvas>
+
+<div id="nav">
+  <div class="logo">HQ</div><h1>Agent HQ</h1><span class="owner" id="owner">Aarav</span>
+  <div id="tabs"><button class="on" data-tab="office">Office</button><button data-tab="tasks">Tasks<b id="taskn">0</b></button><button data-tab="brain">Brain</button></div>
+  <span class="pill live" id="live"><b id="count">0</b> agents · <b id="running">0</b> running</span>
+  <button id="demo">Demo</button>
+</div>
+<div id="hint">drag to orbit · wheel to zoom · click a character or a room</div>
+<div id="toast"><div class="ic" id="toastic">●</div><div><div id="toastt">Analytics</div><small id="toasts">Weekly report is ready</small></div></div>
+
+<div id="panel">
+  <div data-view="office">
+    <h2>Teams</h2><div id="teams"></div>
+    <div id="card" style="display:none; margin-top:12px; padding-top:12px; border-top:1px solid var(--line)">
+      <div class="name" style="font-weight:600; font-size:15px"></div>
+      <div class="role" style="color:var(--muted); font-size:12px; margin-bottom:6px"></div>
+      <p class="desc"></p><div class="kv tools"></div><div class="kv model"></div>
+    </div>
+  </div>
+  <div data-view="tasks" style="display:none"><h2>Running now</h2><ul id="runlist"><li style="color:var(--muted)">nobody</li></ul><h2 style="margin-top:12px">Log</h2><div id="log" style="font-size:12px; color:var(--muted)"></div></div>
+  <div data-view="brain" style="display:none"><h2>The Brain</h2><p id="brainsum" style="color:var(--muted)">Start <b>python3 office/serve.py</b> to read brain/memory.jsonl here.</p><div id="brainlist"></div></div>
+</div>
+
+<div id="chips">RUNS ON <span>Opus</span><span>Sonnet</span><span>Haiku</span><span>headless · cloud</span></div>
+<div id="map"><div class="t"><span>MAP</span><span id="zoom">100%</span></div><canvas id="mapc" width="340" height="200"></canvas><div class="b"><button id="zout">−</button><button id="zin">+</button><button id="zfit">⤢</button></div></div>
+
+<script src="vendor/three.min.js"></script>
+<script>
+(async function () {
+  const COLORS = { Research:0x3b7bff, Inbox:0xe8902a, Scripts:0xe9c02e, Dev:0x3fbf5f, 'TBX Shop':0xe64a4a, Social:0xd04fd6, Creative:0x7b5cff, Analytics:0x2bbfa8 };
+  const ICONS = { Research:'🔍', Inbox:'✉', Scripts:'✎', Dev:'⌘', 'TBX Shop':'🛍', Social:'♥', Creative:'▶', Analytics:'▤' };
+  const data = await fetch('agents.json').then(r => r.json()).catch(() => ({ departments: [] }));
+  const hex = c => '#' + c.toString(16).padStart(6, '0');
+
+  // ---------- renderer ----------
+  const canvas = document.getElementById('scene');
+  const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
+  renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+  renderer.shadowMap.enabled = true; renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+  const scene = new THREE.Scene(); scene.background = new THREE.Color(0x0b0f1a); scene.fog = new THREE.Fog(0x0b0f1a, 70, 160);
+  const camera = new THREE.PerspectiveCamera(42, 1, 0.1, 400);
+  scene.add(new THREE.HemisphereLight(0xdfe8ff, 0x141a2a, 0.75));
+  const sun = new THREE.DirectionalLight(0xffffff, 0.85); sun.position.set(25, 45, 20); sun.castShadow = true; sun.shadow.mapSize.set(2048, 2048);
+  Object.assign(sun.shadow.camera, { left: -60, right: 60, top: 60, bottom: -60, far: 150 }); scene.add(sun);
+  // starfield floor: points scattered on a big plane under the rooms
+  const stars = new THREE.BufferGeometry(); const sp = [];
+  for (let i = 0; i < 900; i++) sp.push((Math.random() - .5) * 260, -3 - Math.random() * 20, (Math.random() - .5) * 260);
+  stars.setAttribute('position', new THREE.Float32BufferAttribute(sp, 3));
+  scene.add(new THREE.Points(stars, new THREE.PointsMaterial({ color: 0x9fb4ff, size: .25, transparent: true, opacity: .6 })));
+
+  // ---------- helpers ----------
+  function textSprite(lines, opts) {
+    const o = Object.assign({ size: 40, color: '#fff', sub: '#9aa6bd', bg: 'rgba(12,16,26,0.86)', scale: 0.012 }, opts);
+    const c = document.createElement('canvas'); const ctx = c.getContext('2d');
+    const f1 = `600 ${o.size}px system-ui, sans-serif`, f2 = `500 ${o.size * .7}px system-ui, sans-serif`;
+    ctx.font = f1; let w = ctx.measureText(lines[0]).width; ctx.font = f2; if (lines[1]) w = Math.max(w, ctx.measureText(lines[1]).width);
+    c.width = Math.ceil(w) + 48; c.height = lines[1] ? o.size * 2.1 : o.size + 26;
+    ctx.fillStyle = o.bg; ctx.beginPath(); ctx.roundRect(0, 0, c.width, c.height, 16); ctx.fill();
+    if (o.stripe) { ctx.fillStyle = o.stripe; ctx.beginPath(); ctx.roundRect(0, 0, 10, c.height, [16, 0, 0, 16]); ctx.fill(); }
+    ctx.font = f1; ctx.fillStyle = o.color; ctx.textBaseline = 'middle'; ctx.fillText(lines[0], 24, lines[1] ? o.size * .65 : c.height / 2);
+    if (lines[1]) { ctx.font = f2; ctx.fillStyle = o.sub; ctx.fillText(lines[1], 24, o.size * 1.5); }
+    const tex = new THREE.CanvasTexture(c); tex.minFilter = THREE.LinearFilter;
+    const s = new THREE.Sprite(new THREE.SpriteMaterial({ map: tex, transparent: true, depthTest: false }));
+    s.scale.set(c.width * o.scale, c.height * o.scale, 1); s.userData.update = (nl, no) => { const n = textSprite(nl, Object.assign({}, o, no)); s.material.map.dispose(); s.material.map = n.material.map; s.scale.copy(n.scale); };
+    return s;
+  }
+  function desk(x, z, rot, color) {
+    const g = new THREE.Group();
+    const top = new THREE.Mesh(new THREE.BoxGeometry(1.7, .1, .8), new THREE.MeshStandardMaterial({ color: 0xd9d4c7, roughness: .8 })); top.position.y = .74; top.castShadow = true; g.add(top);
+    for (const [dx, dz] of [[-.75, -.3], [.75, -.3], [-.75, .3], [.75, .3]]) { const l = new THREE.Mesh(new THREE.BoxGeometry(.07, .74, .07), new THREE.MeshStandardMaterial({ color: 0x2b2f3a })); l.position.set(dx, .37, dz); g.add(l); }
+    const screen = new THREE.Mesh(new THREE.BoxGeometry(.8, .5, .05), new THREE.MeshStandardMaterial({ color: 0x0b0d12, emissive: color, emissiveIntensity: .15 })); screen.position.set(0, 1.08, -.22); g.add(screen);
+    const chair = new THREE.Mesh(new THREE.BoxGeometry(.5, .08, .5), new THREE.MeshStandardMaterial({ color: 0x1f2430 })); chair.position.set(0, .45, .75); g.add(chair);
+    const back = new THREE.Mesh(new THREE.BoxGeometry(.5, .5, .08), chair.material); back.position.set(0, .72, .98); g.add(back);
+    g.userData.screen = screen; g.position.set(x, 0, z); g.rotation.y = rot; return g;
+  }
+  function character(color, isHead) {
+    const g = new THREE.Group(); const mat = new THREE.MeshStandardMaterial({ color, roughness: .6 });
+    const body = new THREE.Mesh(new THREE.CylinderGeometry(.26, .3, .6, 14), mat); body.position.y = .7; body.castShadow = true; g.add(body);
+    const sh = new THREE.Mesh(new THREE.SphereGeometry(.26, 14, 10), mat); sh.position.y = 1.0; g.add(sh);
+    const head = new THREE.Mesh(new THREE.SphereGeometry(.25, 16, 16), new THREE.MeshStandardMaterial({ color: 0xf2d6c0, roughness: .8 })); head.position.y = 1.36; head.castShadow = true; g.add(head);
+    const hair = new THREE.Mesh(new THREE.SphereGeometry(.26, 16, 10, 0, Math.PI * 2, 0, Math.PI / 2.4), new THREE.MeshStandardMaterial({ color: [0x2b1d14, 0x111111, 0x6b4a2b, 0xd9b36b][Math.floor(Math.random() * 4)] })); hair.position.y = 1.4; g.add(hair);
+    const eye = new THREE.MeshStandardMaterial({ color: 0x111 }); for (const dx of [-.09, .09]) { const e = new THREE.Mesh(new THREE.SphereGeometry(.03, 8, 8), eye); e.position.set(dx, 1.38, .22); g.add(e); }
+    if (isHead) { const hat = new THREE.Mesh(new THREE.CylinderGeometry(.18, .18, .16, 16), new THREE.MeshStandardMaterial({ color: 0x1a1d26 })); hat.position.y = 1.64; g.add(hat); const brim = new THREE.Mesh(new THREE.CylinderGeometry(.31, .31, .03, 16), hat.material); brim.position.y = 1.57; g.add(brim); }
+    const ring = new THREE.Mesh(new THREE.RingGeometry(.42, .58, 32), new THREE.MeshBasicMaterial({ color, transparent: true, opacity: 0, side: THREE.DoubleSide })); ring.rotation.x = -Math.PI / 2; ring.position.y = .02; g.add(ring);
+    const bubble = textSprite(['working…'], { size: 34, color: '#ffd400', scale: .011 }); bubble.position.y = 2.5; bubble.visible = false; g.add(bubble);
+    g.userData = { body, head, ring, bubble }; return g;
+  }
+
+  // ---------- layout: hub in the middle, rooms in a ring ----------
+  const depts = data.departments; const lobby = depts.find(d => !d.agents.some(a => a.role === 'head') || d.name.toLowerCase().includes('brain')) || depts[0];
+  const rooms = depts.filter(d => d !== lobby);
+  const agents = [], byName = new Map(), roomInfo = [];
+  const RING = 30, ROOM = 12;
+
+  // the Brain hub
+  const hub = new THREE.Group();
+  const plat = new THREE.Mesh(new THREE.CylinderGeometry(7, 7.5, .6, 48), new THREE.MeshStandardMaterial({ color: 0x1b2233, roughness: .9 })); plat.position.y = .3; plat.receiveShadow = true; hub.add(plat);
+  for (const r of [3, 4.6, 6.2]) { const ring = new THREE.Mesh(new THREE.RingGeometry(r, r + .12, 64), new THREE.MeshBasicMaterial({ color: 0x5ee0ff, transparent: true, opacity: .5, side: THREE.DoubleSide })); ring.rotation.x = -Math.PI / 2; ring.position.y = .62; hub.add(ring); }
+  const core = new THREE.Mesh(new THREE.SphereGeometry(.9, 24, 24), new THREE.MeshStandardMaterial({ color: 0xbfefff, emissive: 0x5ee0ff, emissiveIntensity: 1.2 })); core.position.y = 2.6; hub.add(core);
+  const beam = new THREE.Mesh(new THREE.CylinderGeometry(.18, .18, 14, 12, 1, true), new THREE.MeshBasicMaterial({ color: 0x9df0ff, transparent: true, opacity: .35 })); beam.position.y = 9; hub.add(beam);
+  const glow = new THREE.PointLight(0x5ee0ff, 1.6, 30); glow.position.y = 3; hub.add(glow);
+  const brainLabel = textSprite(['THE BRAIN', 'shared memory'], { size: 44, color: '#e8edf5', scale: .013 }); brainLabel.position.y = 5.2; hub.add(brainLabel);
+  scene.add(hub);
+
+  // walkways + rooms
+  rooms.forEach((d, i) => {
+    const ang = -Math.PI / 2 + i * (Math.PI * 2 / rooms.length);
+    const cx = Math.cos(ang) * RING, cz = Math.sin(ang) * RING, color = COLORS[d.name] || 0x8a93a6;
+    const path = new THREE.Mesh(new THREE.BoxGeometry(RING - ROOM / 2 - 6, .15, 1.6), new THREE.MeshStandardMaterial({ color: 0x1a2030, roughness: 1 }));
+    path.position.set(Math.cos(ang) * (RING / 2 + 1), .08, Math.sin(ang) * (RING / 2 + 1)); path.rotation.y = -ang; path.receiveShadow = true; scene.add(path);
+    const g = new THREE.Group(); g.position.set(cx, 0, cz); g.rotation.y = -ang - Math.PI / 2; // back wall faces away from the hub
+    const floor = new THREE.Mesh(new THREE.BoxGeometry(ROOM, .5, ROOM), new THREE.MeshStandardMaterial({ color, roughness: .85 })); floor.position.y = .25; floor.receiveShadow = true; g.add(floor);
+    const rug = new THREE.Mesh(new THREE.BoxGeometry(ROOM - 2.4, .06, ROOM - 2.4), new THREE.MeshStandardMaterial({ color: 0xe9e4d8, roughness: 1 })); rug.position.y = .53; rug.receiveShadow = true; g.add(rug);
+    const wallMat = new THREE.MeshStandardMaterial({ color: new THREE.Color(color).multiplyScalar(.55), roughness: 1 });
+    const back = new THREE.Mesh(new THREE.BoxGeometry(ROOM, 3, .3), wallMat); back.position.set(0, 1.75, -ROOM / 2); back.castShadow = true; back.receiveShadow = true; g.add(back);
+    const side = new THREE.Mesh(new THREE.BoxGeometry(.3, 3, ROOM), wallMat); side.position.set(-ROOM / 2, 1.75, 0); side.castShadow = true; g.add(side);
+    const board = new THREE.Mesh(new THREE.BoxGeometry(3, 1.5, .08), new THREE.MeshStandardMaterial({ color: 0x0d1118, emissive: color, emissiveIntensity: .25 })); board.position.set(-2.5, 2, -ROOM / 2 + .2); g.add(board);
+    const lamp = new THREE.PointLight(0xfff1d6, .5, 14); lamp.position.set(0, 3.2, 0); g.add(lamp);
+    const plant = new THREE.Mesh(new THREE.ConeGeometry(.5, 1.3, 7), new THREE.MeshStandardMaterial({ color: 0x3f9b5a })); plant.position.set(ROOM / 2 - 1, 1.1, ROOM / 2 - 1); plant.castShadow = true; g.add(plant);
+    const couch = new THREE.Mesh(new THREE.BoxGeometry(2.2, .7, .9), new THREE.MeshStandardMaterial({ color: 0xe6e1d6 })); couch.position.set(-ROOM / 2 + 1.6, .85, ROOM / 2 - 1.2); couch.castShadow = true; g.add(couch);
+    scene.add(g);
+    const n = d.agents.length, perRow = Math.min(3, n);
+    d.agents.forEach((a, j) => {
+      const r = Math.floor(j / perRow), c = j % perRow, inRow = Math.min(perRow, n - r * perRow);
+      const lx = -(inRow - 1) * 1.6 + c * 3.2, lz = -ROOM / 2 + 2.4 + r * 3.4;
+      const dk = desk(lx, lz, 0, color); g.add(dk);
+      const ch = character(color, a.role === 'head'); ch.position.set(lx, .5, lz + 1.0); g.add(ch);
+      const tag = textSprite([a.name], { size: 30, color: '#e8edf5', scale: .011 }); tag.position.y = 1.9; ch.add(tag);
+      const home = ch.position.clone(), lobbyPos = new THREE.Vector3((Math.random() - .5) * 3, .5, ROOM / 2 - 2 - Math.random());
+      const rec = { ...a, team: d.name, color, mesh: ch, desk: dk, home, lobby: lobbyPos, working: false, phase: Math.random() * 6, idleT: 4 + Math.random() * 10 };
+      ch.traverse(o => { o.userData.agent = rec; }); agents.push(rec); byName.set(a.name, rec);
+    });
+    const sign = textSprite([`${ICONS[d.name] || '●'} ${d.name}`, `${n} agents · 0 running`], { size: 40, color: '#e8edf5', scale: .013, stripe: hex(color) });
+    sign.position.set(cx, 5.2, cz); scene.add(sign);
+    roomInfo.push({ d, cx, cz, color, sign, floor });
+    floor.userData.room = roomInfo[roomInfo.length - 1];
+  });
+  // chief of staff in the hub
+  lobby.agents.forEach(a => {
+    const ch = character(0x5ee0ff, true); ch.position.set(0, .6, 4.2); scene.add(ch);
+    const tag = textSprite([a.name], { size: 30, color: '#e8edf5', scale: .011 }); tag.position.y = 1.9; ch.add(tag);
+    const rec = { ...a, team: lobby.name, color: 0x5ee0ff, mesh: ch, desk: { userData: { screen: { material: { emissiveIntensity: 0 } } } }, home: ch.position.clone(), lobby: new THREE.Vector3(3, .6, -3), working: false, phase: 0, idleT: 8 };
+    ch.traverse(o => { o.userData.agent = rec; }); agents.push(rec); byName.set(a.name, rec);
+  });
+
+  // ---------- camera ----------
+  const target = new THREE.Vector3(0, 0, 2); let yaw = 0.35, pitch = 0.78, dist = 78; const FIT = 78;
+  function placeCamera() { camera.position.set(target.x + dist * Math.sin(yaw) * Math.cos(pitch), target.y + dist * Math.sin(pitch), target.z + dist * Math.cos(yaw) * Math.cos(pitch)); camera.lookAt(target); }
+  let drag = null, moved = 0;
+  canvas.addEventListener('pointerdown', e => { drag = { x: e.clientX, y: e.clientY, b: e.button }; moved = 0; canvas.setPointerCapture(e.pointerId); });
+  canvas.addEventListener('pointermove', e => { if (!drag) return; const dx = e.clientX - drag.x, dy = e.clientY - drag.y; moved += Math.abs(dx) + Math.abs(dy); drag.x = e.clientX; drag.y = e.clientY;
+    if (drag.b === 2 || e.shiftKey) { target.addScaledVector(new THREE.Vector3(Math.cos(yaw), 0, -Math.sin(yaw)), -dx * dist * .0015).addScaledVector(new THREE.Vector3(-Math.sin(yaw), 0, -Math.cos(yaw)), -dy * dist * .0015); }
+    else { yaw -= dx * .005; pitch = Math.min(1.45, Math.max(.15, pitch + dy * .005)); } });
+  canvas.addEventListener('pointerup', e => { if (drag && moved < 6) pick(e); drag = null; });
+  canvas.addEventListener('contextmenu', e => e.preventDefault());
+  const setDist = v => { dist = Math.min(160, Math.max(10, v)); document.getElementById('zoom').textContent = Math.round(FIT / dist * 100) + '%'; };
+  canvas.addEventListener('wheel', e => { setDist(dist * (1 + Math.sign(e.deltaY) * .08)); e.preventDefault(); }, { passive: false });
+  document.getElementById('zin').onclick = () => setDist(dist * .8); document.getElementById('zout').onclick = () => setDist(dist * 1.25);
+  document.getElementById('zfit').onclick = () => { target.set(0, 0, 2); setDist(FIT); yaw = .35; pitch = .78; };
+  const ray = new THREE.Raycaster(), ptr = new THREE.Vector2();
+  function pick(e) {
+    ptr.set((e.clientX / innerWidth) * 2 - 1, -(e.clientY / innerHeight) * 2 + 1); ray.setFromCamera(ptr, camera);
+    const hits = ray.intersectObjects(scene.children, true);
+    const ag = hits.find(h => h.object.userData.agent); if (ag) { showTab('office'); showCard(ag.object.userData.agent); return; }
+    const rm = hits.find(h => h.object.userData.room); if (rm) flyTo(rm.object.userData.room);
+  }
+  function flyTo(r) { target.set(r.cx, 0, r.cz); setDist(24); }
+
+  // ---------- panel / tabs ----------
+  const panel = document.getElementById('panel'); let tab = null;
+  function showTab(name) {
+    if (tab === name) { tab = null; panel.classList.remove('on'); document.querySelectorAll('#tabs button').forEach(b => b.classList.toggle('on', b.dataset.tab === 'office')); return; }
+    tab = name; panel.classList.add('on');
+    panel.querySelectorAll('[data-view]').forEach(v => v.style.display = v.dataset.view === name ? 'block' : 'none');
+    document.querySelectorAll('#tabs button').forEach(b => b.classList.toggle('on', b.dataset.tab === name));
+    if (name === 'brain') loadBrain();
+  }
+  document.querySelectorAll('#tabs button').forEach(b => b.onclick = () => showTab(b.dataset.tab));
+  const teamsEl = document.getElementById('teams'), card = document.getElementById('card');
+  roomInfo.forEach(r => { const row = document.createElement('div'); row.className = 'row'; row.innerHTML = `<span class="sw" style="background:${hex(r.color)}"></span><span class="n">${r.d.name}</span><span class="c" data-team="${r.d.name}">${r.d.agents.length} agents</span>`; row.onclick = () => flyTo(r); teamsEl.appendChild(row); });
+  function showCard(a) { card.style.display = 'block'; card.querySelector('.name').textContent = a.name; card.querySelector('.role').textContent = `${a.team} · ${a.role === 'head' ? 'team head' : 'worker'} · ${a.working ? 'working' : 'idle'}`; card.querySelector('.desc').textContent = a.description; card.querySelector('.tools').textContent = 'tools: ' + a.tools; card.querySelector('.model').textContent = 'model: ' + a.model; }
+  document.getElementById('count').textContent = agents.filter(a => a.name !== 'chief-of-staff').length;
+  async function loadBrain() {
+    try { const j = await fetch('/brain', { cache: 'no-store' }).then(r => r.json());
+      document.getElementById('brainsum').textContent = `${j.notes} notes · shared memory (brain/memory.jsonl)`; brainLabel.userData.update(['THE BRAIN', `${j.notes} notes · shared memory`]);
+      document.getElementById('brainlist').innerHTML = j.entities.map(e => `<h3>${e.name} <span class="kv">${e.type || ''}</span></h3><ul>${e.observations.map(o => `<li>${o.replace(/</g, '&lt;')}</li>`).join('')}</ul>`).join('');
+    } catch (e) { /* no server */ }
+  }
+
+  // ---------- status ----------
+  const toast = document.getElementById('toast'); let toastT = null;
+  function notify(title, sub, color) { document.getElementById('toastt').textContent = title; document.getElementById('toasts').textContent = sub; const ic = document.getElementById('toastic'); ic.style.background = color || '#2bbfa8'; toast.classList.add('on'); clearTimeout(toastT); toastT = setTimeout(() => toast.classList.remove('on'), 3500); }
+  const logEl = document.getElementById('log'), runlist = document.getElementById('runlist');
+  function log(msg) { const d = document.createElement('div'); d.innerHTML = msg; logEl.prepend(d); while (logEl.children.length > 60) logEl.lastChild.remove(); document.getElementById('taskn').textContent = logEl.children.length; }
+  function refreshCounts() {
+    const run = agents.filter(a => a.working); document.getElementById('running').textContent = run.length;
+    runlist.innerHTML = run.length ? run.map(a => `<li><b>${a.name}</b> <span class="kv">${a.team}</span></li>`).join('') : '<li style="color:var(--muted)">nobody</li>';
+    roomInfo.forEach(r => { const n = r.d.agents.filter(a => byName.get(a.name)?.working).length; if (r.lastN !== n) { r.lastN = n; r.sign.userData.update([`${ICONS[r.d.name] || '●'} ${r.d.name}`, `${r.d.agents.length} agents · ${n} running`]); } });
+  }
+  function setWorking(name, on, why) {
+    const a = byName.get(name); if (!a) return;
+    if (a.working !== on) { log(`<b style="color:var(--text)">${name}</b> ${on ? 'started' : 'finished'}${why ? ' · ' + why : ''}`); if (!on && a.role === 'head') notify(a.team, `${name} finished`, hex(a.color)); }
+    a.working = on; a.mesh.userData.bubble.visible = on; refreshCounts();
+  }
+  function handle(ev) { const t = ev.event || '';
+    if (t === 'UserPromptSubmit') setWorking('chief-of-staff', true, 'new request');
+    else if (t === 'SubagentStart') setWorking(ev.agent, true);
+    else if (t === 'SubagentStop') setWorking(ev.agent, false);
+    else if (t === 'Stop') agents.forEach(a => setWorking(a.name, false)); }
+  let since = 0, live = false, demo = null;
+  async function poll() {
+    try { const r = await fetch(`/events?since=${since}`, { cache: 'no-store' }); if (!r.ok) throw 0; const j = await r.json();
+      if (!live) { live = true; document.getElementById('live').classList.add('on'); loadBrain(); }
+      if (since === 0 && j.total > 200) since = j.total - 200;
+      j.events.slice(Math.max(0, since - (j.total - j.events.length))).forEach(handle); since = j.total;
+    } catch (e) { /* no server: static */ }
+    setTimeout(poll, 1500);
+  }
+  poll();
+  document.getElementById('demo').onclick = function () {
+    if (demo) { clearInterval(demo); demo = null; this.textContent = 'Demo'; agents.forEach(a => setWorking(a.name, false)); return; }
+    this.textContent = 'Stop demo'; setWorking('chief-of-staff', true, 'demo'); notify('Analytics', 'Weekly report is ready');
+    demo = setInterval(() => { const a = agents[Math.floor(Math.random() * agents.length)]; setWorking(a.name, !a.working, 'demo'); }, 800);
+  };
+
+  // ---------- minimap ----------
+  const mc = document.getElementById('mapc'), mctx = mc.getContext('2d');
+  function drawMap() {
+    mctx.clearRect(0, 0, mc.width, mc.height); const sx = x => mc.width / 2 + x * 3.6, sz = z => mc.height / 2 + z * 2.1;
+    mctx.fillStyle = '#5ee0ff'; mctx.beginPath(); mctx.arc(sx(0), sz(0), 5, 0, 7); mctx.fill();
+    roomInfo.forEach(r => { mctx.fillStyle = hex(r.color); mctx.fillRect(sx(r.cx) - 11, sz(r.cz) - 7, 22, 14); const n = r.lastN || 0; if (n) { mctx.fillStyle = '#fff'; mctx.beginPath(); mctx.arc(sx(r.cx) + 9, sz(r.cz) - 6, 3, 0, 7); mctx.fill(); } });
+    mctx.strokeStyle = 'rgba(255,255,255,.5)'; mctx.lineWidth = 1; mctx.strokeRect(sx(target.x) - 20, sz(target.z) - 12, 40, 24);
+  }
+
+  // ---------- animate ----------
+  function resize() { renderer.setSize(innerWidth, innerHeight, false); camera.aspect = innerWidth / innerHeight; camera.updateProjectionMatrix(); }
+  addEventListener('resize', resize); resize(); setDist(FIT);
+  const clock = new THREE.Clock(); let mapT = 0;
+  function frame() {
+    const dt = Math.min(clock.getDelta(), .05), t = clock.elapsedTime;
+    core.scale.setScalar(1 + Math.sin(t * 2) * .06); glow.intensity = 1.4 + Math.sin(t * 2) * .4; hub.children.forEach(o => { if (o.geometry && o.geometry.type === 'RingGeometry') o.rotation.z = t * .1; });
+    for (const a of agents) {
+      const u = a.mesh.userData; a.idleT -= dt; if (!a.working && a.idleT < 0) { a.idleT = 6 + Math.random() * 12; a.wander = a.wander ? null : a.lobby; }
+      const goal = a.working ? a.home : (a.wander || a.home); const d = goal.clone().sub(a.mesh.position); d.y = 0; const len = d.length();
+      if (len > .05) { a.mesh.position.addScaledVector(d.normalize(), Math.min(len, 2 * dt)); a.mesh.rotation.y = Math.atan2(d.x, d.z); u.body.position.y = .7 + Math.abs(Math.sin(t * 9 + a.phase)) * .06; }
+      else { a.mesh.rotation.y += (0 - a.mesh.rotation.y) * .1; u.body.position.y = .7 + Math.sin(t * 2 + a.phase) * .015; }
+      if (a.working) { u.head.position.y = 1.36 + Math.sin(t * 7 + a.phase) * .04; u.ring.material.opacity = .45 + Math.sin(t * 4 + a.phase) * .3; u.ring.scale.setScalar(1 + Math.sin(t * 4 + a.phase) * .08); a.desk.userData.screen.material.emissiveIntensity = .9; }
+      else { u.head.position.y = 1.36; u.ring.material.opacity += (0 - u.ring.material.opacity) * .1; a.desk.userData.screen.material.emissiveIntensity += (.15 - a.desk.userData.screen.material.emissiveIntensity) * .1; }
+    }
+    placeCamera(); renderer.render(scene, camera); if ((mapT += dt) > .25) { mapT = 0; drawMap(); } requestAnimationFrame(frame);
+  }
+  frame();
+})();
+</script>
+</body>
+</html>

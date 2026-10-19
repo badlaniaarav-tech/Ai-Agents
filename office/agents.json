@@ -1,0 +1,274 @@
+{
+ "departments": [
+  {
+   "name": "The Brain (lobby)",
+   "agents": [
+    {
+     "name": "chief-of-staff",
+     "role": "head",
+     "description": "Routes work, runs departments in parallel, reviews, reports.",
+     "tools": "everything",
+     "model": "the session"
+    }
+   ]
+  },
+  {
+   "name": "Research",
+   "agents": [
+    {
+     "name": "research-director",
+     "role": "head",
+     "description": "Runs research: splits a question across market-analyst, competitor-analyst, trend-scout and merges their findings into one brief with sources. Use for any 'find out about\u2026' task.",
+     "tools": "Read, Write, Bash, Agent, mcp__memory__open_nodes, mcp__memory__search_nodes",
+     "model": "opus"
+    },
+    {
+     "name": "market-analyst",
+     "role": "worker",
+     "description": "Sizes a market, describes the customer, and finds pricing benchmarks with sources. Use for market size, customers, pricing.",
+     "tools": "Read, Write, Bash, WebSearch, WebFetch, mcp__memory__open_nodes, mcp__memory__search_nodes",
+     "model": "sonnet"
+    },
+    {
+     "name": "competitor-analyst",
+     "role": "worker",
+     "description": "Profiles competitors: offer, pricing, positioning, strengths, gaps, with a comparison table. Use when the question is about who else does this.",
+     "tools": "Read, Write, Bash, WebSearch, WebFetch, mcp__memory__open_nodes, mcp__memory__search_nodes",
+     "model": "sonnet"
+    },
+    {
+     "name": "trend-scout",
+     "role": "worker",
+     "description": "Finds what is changing in a topic right now: new tools, shifts, conversations, with dates and sources. Use for 'what is new in\u2026' and content ideas.",
+     "tools": "Read, Write, Bash, WebSearch, WebFetch, mcp__memory__open_nodes, mcp__memory__search_nodes",
+     "model": "sonnet"
+    }
+   ]
+  },
+  {
+   "name": "Inbox",
+   "agents": [
+    {
+     "name": "inbox-manager",
+     "role": "head",
+     "description": "Runs the Inbox team: triages incoming email, DMs and requests, drafts replies, and routes what belongs to another team. Delegates to customer-support and proposal-writer. Use for anything that arrived in the inbox.",
+     "tools": "Read, Write, Bash, Agent, mcp__memory__open_nodes, mcp__memory__search_nodes",
+     "model": "opus"
+    },
+    {
+     "name": "customer-support",
+     "role": "worker",
+     "description": "Drafts replies to customer questions, complaints and refund requests from the company facts in the brain; escalates what it cannot answer. Use for any customer message.",
+     "tools": "Read, Write, mcp__memory__open_nodes, mcp__memory__search_nodes",
+     "model": "sonnet"
+    },
+    {
+     "name": "proposal-writer",
+     "role": "worker",
+     "description": "Writes proposals, quotes and one-page offers with scope, price, timeline and next step. Use when a lead is warm or the owner asks for a proposal.",
+     "tools": "Read, Write, mcp__memory__open_nodes, mcp__memory__search_nodes",
+     "model": "sonnet"
+    }
+   ]
+  },
+  {
+   "name": "Scripts",
+   "agents": [
+    {
+     "name": "script-writer",
+     "role": "head",
+     "description": "Runs the Scripts team and writes short-form video scripts (15 to 60 seconds) in the owner's voice: hook, three beats, a close. Delegates hooks to hook-writer and titles/descriptions to seo-specialist. Use for any new video idea, and to rewrite a weak script.",
+     "tools": "Read, Write, Agent, mcp__memory__open_nodes, mcp__memory__search_nodes",
+     "model": "opus"
+    },
+    {
+     "name": "hook-writer",
+     "role": "worker",
+     "description": "Writes and ranks opening lines (hooks) for videos, posts and emails. Use when a script, post or email needs a stronger first line.",
+     "tools": "Read, Write, mcp__memory__open_nodes, mcp__memory__search_nodes",
+     "model": "sonnet"
+    },
+    {
+     "name": "seo-specialist",
+     "role": "worker",
+     "description": "Keyword research, search-intent analysis, page and video titles, descriptions, and blog outlines that can rank. Use for anything that should be found through search.",
+     "tools": "Read, Write, Bash, WebSearch, WebFetch, mcp__memory__open_nodes, mcp__memory__search_nodes",
+     "model": "sonnet"
+    }
+   ]
+  },
+  {
+   "name": "Dev",
+   "agents": [
+    {
+     "name": "engineering-lead",
+     "role": "head",
+     "description": "Runs engineering: turns a feature or bug into tasks, delegates to frontend-dev and backend-dev, then qa-tester and code-reviewer. Use for any code change bigger than a one-line fix.",
+     "tools": "Read, Write, Bash, Agent, mcp__memory__open_nodes, mcp__memory__search_nodes",
+     "model": "opus"
+    },
+    {
+     "name": "frontend-dev",
+     "role": "worker",
+     "description": "Implements UI work: components, pages, styles, client logic, following the project's existing patterns. Use for anything the user sees.",
+     "tools": "Read, Write, Edit, Bash, Grep, Glob",
+     "model": "sonnet"
+    },
+    {
+     "name": "backend-dev",
+     "role": "worker",
+     "description": "Implements server, API, data and script work, following the project's existing patterns. Use for logic, endpoints, storage, tooling.",
+     "tools": "Read, Write, Edit, Bash, Grep, Glob",
+     "model": "sonnet"
+    },
+    {
+     "name": "qa-tester",
+     "role": "worker",
+     "description": "Writes and runs tests for a change, reproduces bugs, and reports exact failures. Use after any code change and for any bug report.",
+     "tools": "Read, Write, Edit, Bash, Grep, Glob",
+     "model": "sonnet"
+    },
+    {
+     "name": "code-reviewer",
+     "role": "worker",
+     "description": "Reads a diff for bugs, security problems, missing error handling and unclear code; returns ranked findings with file and line. Use before any code reaches the owner.",
+     "tools": "Read, Bash, Grep, Glob",
+     "model": "sonnet"
+    }
+   ]
+  },
+  {
+   "name": "TBX Shop",
+   "agents": [
+    {
+     "name": "shop-manager",
+     "role": "head",
+     "description": "Runs the TBX Shop team: product launches and drops, listings, ads, money and the launch plan. Delegates to copywriter, ads-specialist, finance-analyst, project-manager. Use for anything about the store or a product.",
+     "tools": "Read, Write, Bash, Agent, mcp__memory__open_nodes, mcp__memory__search_nodes",
+     "model": "opus"
+    },
+    {
+     "name": "copywriter",
+     "role": "worker",
+     "description": "Writes product listings, website, landing page and bio copy in the brand voice: headlines, sections, calls to action. Use for any words that live on a page rather than in a post or email.",
+     "tools": "Read, Write, mcp__memory__open_nodes, mcp__memory__search_nodes",
+     "model": "sonnet"
+    },
+    {
+     "name": "ads-specialist",
+     "role": "worker",
+     "description": "Writes paid ad copy and creative briefs (Meta, Google, YouTube), with audiences, budget split and the test plan. Use for anything paid.",
+     "tools": "Read, Write, Bash, WebSearch, WebFetch, mcp__memory__open_nodes, mcp__memory__search_nodes",
+     "model": "sonnet"
+    },
+    {
+     "name": "finance-analyst",
+     "role": "worker",
+     "description": "Builds simple budgets, forecasts, pricing math and cost comparisons in a spreadsheet-style table with the assumptions listed. Use for any question with money in it.",
+     "tools": "Read, Write, Bash, WebSearch, WebFetch, mcp__memory__open_nodes, mcp__memory__search_nodes",
+     "model": "sonnet"
+    },
+    {
+     "name": "project-manager",
+     "role": "worker",
+     "description": "Breaks a project into tasks with owners, order and dates, and tracks it in a status file. Use for any multi-week or multi-team effort.",
+     "tools": "Read, Write, mcp__memory__open_nodes, mcp__memory__search_nodes",
+     "model": "sonnet"
+    }
+   ]
+  },
+  {
+   "name": "Social",
+   "agents": [
+    {
+     "name": "social-media-manager",
+     "role": "head",
+     "description": "Runs the Social team: writes platform-ready posts (X/Twitter, LinkedIn, Instagram, TikTok, YouTube community) and the posting calendar, and delegates replies to community-manager, newsletters to email-marketer and DMs/outreach to outreach-writer. Use for any social post, calendar or campaign.",
+     "tools": "Read, Write, Agent, mcp__memory__open_nodes, mcp__memory__search_nodes",
+     "model": "opus"
+    },
+    {
+     "name": "community-manager",
+     "role": "worker",
+     "description": "Drafts replies to comments, DMs and community posts, and flags anything that needs the owner. Use for engagement, comment replies, and community questions.",
+     "tools": "Read, Write, mcp__memory__open_nodes, mcp__memory__search_nodes",
+     "model": "sonnet"
+    },
+    {
+     "name": "email-marketer",
+     "role": "worker",
+     "description": "Writes email sequences, newsletters and single sends with subject lines and preview text. Use for any email.",
+     "tools": "Read, Write, mcp__memory__open_nodes, mcp__memory__search_nodes",
+     "model": "sonnet"
+    },
+    {
+     "name": "outreach-writer",
+     "role": "worker",
+     "description": "Writes cold and warm outreach sequences (email, LinkedIn, DM) personalised to the person or brand. Use for partnerships, sponsors, collabs and sales DMs.",
+     "tools": "Read, Write, mcp__memory__open_nodes, mcp__memory__search_nodes",
+     "model": "sonnet"
+    }
+   ]
+  },
+  {
+   "name": "Creative",
+   "agents": [
+    {
+     "name": "creative-director",
+     "role": "head",
+     "description": "Runs the Creative team: splits a video job across clip-editor and thumbnail-designer (one per clip, in parallel), then has brand-checker review it. Use for any video, script or thumbnail work bigger than one clip.",
+     "tools": "Read, Write, Bash, Agent, mcp__memory__open_nodes, mcp__memory__search_nodes",
+     "model": "opus"
+    },
+    {
+     "name": "clip-editor",
+     "role": "worker",
+     "description": "Edits ONE raw clip into a short vertical video with burned-in captions, a cover image and notes. Use one clip-editor per clip, and run several in parallel when there are several clips. Also use it to fix a clip the brand-checker flagged.",
+     "tools": "Bash, Read, Write, mcp__memory__open_nodes, mcp__memory__search_nodes",
+     "model": "sonnet"
+    },
+    {
+     "name": "brand-checker",
+     "role": "worker",
+     "description": "Reviews finished creative work (edits in out/, scripts, posts, covers in work/) against the brand rules in the shared brain and lists exactly what must be fixed. Use after creative workers finish, before reporting to the owner.",
+     "tools": "Read, Bash, mcp__memory__open_nodes",
+     "model": "sonnet"
+    },
+    {
+     "name": "thumbnail-designer",
+     "role": "worker",
+     "description": "Makes and iterates cover images for videos with tools/thumbnail.py: picks the frame, the text, the placement. Use when a video needs a cover or a cover was flagged.",
+     "tools": "Bash, Read, Write, mcp__memory__open_nodes",
+     "model": "sonnet"
+    }
+   ]
+  },
+  {
+   "name": "Analytics",
+   "agents": [
+    {
+     "name": "analytics-lead",
+     "role": "head",
+     "description": "Runs the Analytics team: turns numbers (views, sales, traffic, costs) into the weekly report and decisions. Delegates to data-analyst and strategist. Use for any 'how are we doing' or 'what should we change' question.",
+     "tools": "Read, Write, Bash, Agent, mcp__memory__open_nodes, mcp__memory__search_nodes",
+     "model": "opus"
+    },
+    {
+     "name": "data-analyst",
+     "role": "worker",
+     "description": "Cleans data exports (CSV, JSON), computes metrics and trends, and makes simple charts with the numbers shown. Use when there is data to count or compare.",
+     "tools": "Read, Write, Bash, mcp__memory__open_nodes",
+     "model": "sonnet"
+    },
+    {
+     "name": "strategist",
+     "role": "worker",
+     "description": "Turns a goal into a plan: options, trade-offs, a recommendation and the first three steps. Use before any big or unclear task, and when the owner asks 'what should we do about\u2026'.",
+     "tools": "Read, Write, Bash, WebSearch, WebFetch, mcp__memory__open_nodes, mcp__memory__search_nodes",
+     "model": "opus"
+    }
+   ]
+  }
+ ],
+ "count": 32
+}

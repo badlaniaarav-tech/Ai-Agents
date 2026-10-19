@@ -1,0 +1,57 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(ls:*)",
+      "Bash(cat:*)",
+      "Bash(wc:*)",
+      "Bash(mkdir -p out/:*)",
+      "Bash(mkdir -p work/:*)",
+      "Bash(python3 tools/cut.py:*)",
+      "Bash(python3 tools/captions.py:*)",
+      "Bash(python3 tools/thumbnail.py:*)",
+      "Bash(python3 tools/frames.py:*)",
+      "Bash(mv inbox/:*)",
+      "Bash(npm test:*)",
+      "Bash(npm run lint:*)",
+      "Bash(npm run build:*)",
+      "Bash(pytest:*)",
+      "Bash(git status:*)",
+      "Bash(git diff:*)",
+      "Bash(git log:*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Read",
+      "Edit(out/**)",
+      "Edit(done/**)",
+      "Edit(work/**)",
+      "Edit(brain/**)",
+      "WebSearch",
+      "WebFetch",
+      "mcp__memory",
+      "Bash(python3 office/build.py:*)",
+      "Bash(python3 office/serve.py:*)",
+      "Edit(office/agents.json)"
+    ],
+    "ask": [
+      "Bash(git push:*)",
+      "Edit(src/**)",
+      "Edit(.claude/**)",
+      "Edit(CLAUDE.md)"
+    ],
+    "deny": [
+      "Bash(rm:*)",
+      "Bash(curl:*)",
+      "Bash(wget:*)",
+      "Bash(git push --force:*)",
+      "Read(.env)",
+      "Read(.env.*)"
+    ]
+  },
+  "enableAllProjectMcpServers": true,
+  "hooks": {
+    "UserPromptSubmit": [{ "hooks": [{ "type": "command", "command": "bash \"$CLAUDE_PROJECT_DIR\"/office/hook.sh" }] }],
+    "SubagentStart":    [{ "hooks": [{ "type": "command", "command": "bash \"$CLAUDE_PROJECT_DIR\"/office/hook.sh" }] }],
+    "SubagentStop":     [{ "hooks": [{ "type": "command", "command": "bash \"$CLAUDE_PROJECT_DIR\"/office/hook.sh" }] }],
+    "Stop":             [{ "hooks": [{ "type": "command", "command": "bash \"$CLAUDE_PROJECT_DIR\"/office/hook.sh" }] }]
+  }
+}

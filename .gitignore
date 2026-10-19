@@ -1,0 +1,13 @@
+inbox/*
+!inbox/.gitkeep
+out/*
+!out/.gitkeep
+done/*
+!done/.gitkeep
+work/*
+!work/.gitkeep
+tools/models/
+__pycache__/
+.env
+.env.*
+office/events.jsonl
