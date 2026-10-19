@@ -4,7 +4,7 @@ description: Edit every new clip in inbox/ in parallel, check the results, and r
 Edit the new clips in `inbox/`.
 
 1. List the clips: `ls inbox` (mp4, mov, m4v).
-   If `music/brief.md` is missing or older than 14 days, run `/music-research` first (a **trend-scout** sub-agent) so the music matches what is working right now.
+   If `music/brief.md` is missing or older than 14 days, run `/music-research` first (the **music-director** sub-agent) so the music matches what is working right now.
 2. Start one **clip-editor** sub-agent per clip. Start them all in the same message so they work in parallel. Tell each one its file name.
 3. When all of them are done, run the **brand-checker** on `out/`.
 4. If the brand-checker flags something, send that clip back to a clip-editor with the exact fix, then check again.

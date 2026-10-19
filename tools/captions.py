@@ -26,7 +26,7 @@ SR = 16000
 def words_faster_whisper(path):
     from faster_whisper import WhisperModel
     m = WhisperModel(os.environ.get("WHISPER_MODEL", "small.en"), compute_type="int8")
-    segs, _ = m.transcribe(path, word_timestamps=True, vad_filter=True)
+    segs, _ = m.transcribe(audio(path, SR), word_timestamps=True, vad_filter=True)  # raw samples via ffmpeg: works with any PyAV version and skips undecodable extra tracks
     return [(w.word.strip(), w.start, w.end) for s in segs for w in s.words if w.word.strip()]
 
 

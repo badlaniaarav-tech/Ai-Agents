@@ -1,6 +1,6 @@
 # Org chart
 
-31 agents in 8 teams around the Brain, led by the chief of staff (the Claude Code session itself, with its instructions in `CLAUDE.md`). Each of the 31 agents is a sub-agent file in `.claude/agents/`. Team heads run on Opus and orchestrate; workers run on Sonnet and do one job each.
+34 agents in 9 teams around the Brain, led by the chief of staff (the Claude Code session itself, with its instructions in `CLAUDE.md`). Each of the 34 agents is a sub-agent file in `.claude/agents/`. Team heads run on Opus and orchestrate; workers run on Sonnet and do one job each.
 
 | # | Agent | Team | Job |
 |---|---|---|---|
@@ -36,6 +36,9 @@
 | 29 | `analytics-lead` | Analytics | The weekly report: what the numbers mean, what to change |
 | 30 | `data-analyst` | Analytics | Cleans exports, computes metrics and trends, shows the work |
 | 31 | `strategist` | Analytics | Goal to options, recommendation, first three steps |
+| 32 | `music-director` | Music | Weekly: what viral videos sound like now, fresh tracks in `music/`, credits kept current |
+| 33 | `sound-scout` | Music | This week's moods, tempo, search words and trending in-app sounds, in `music/brief.md` |
+| 34 | `track-curator` | Music | One mood: downloads CC tracks with `tools/music_fetch.py`, removes last week's, updates credits |
 
 ## How a request moves
 
