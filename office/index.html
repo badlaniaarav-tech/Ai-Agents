@@ -181,7 +181,7 @@
   <div class="row claude-only"><input id="menu-cur" type="password" placeholder="current" style="width:48%"><input id="menu-new" type="password" placeholder="new" style="width:48%"><button id="menu-pass">Set</button></div>
   <div class="row"><div class="kv">Not you?</div><button id="menu-switch">Switch person</button></div>
 </div>
-<div id="hint">drag to orbit · right-drag or arrows to pan · wheel to zoom · click a room or agent · O overview · 1–8 rooms</div>
+<div id="hint">drag to orbit · right-drag or arrows to pan · wheel to zoom · click a room or agent · O overview · 1–9 rooms</div>
 <div id="toast"><div class="ic" id="toastic">▥</div><div><div id="toastt">Analytics</div><small id="toasts">Weekly report is ready</small></div><span class="hide">now</span></div>
 
 <div id="panel">
@@ -249,9 +249,9 @@
 <script src="vendor/three.min.js"></script>
 <script>
 (async function () {
-  const COLORS = { Research:0x3d6ef0, Inbox:0xd9873a, Scripts:0xdfb43a, Dev:0x3aa85c, 'TBX Shop':0xd84a4a, Social:0xc44fd0, Creative:0x6b5be0, Analytics:0x2fb3a6 };
+  const COLORS = { Research:0x3d6ef0, Inbox:0xd9873a, Scripts:0xdfb43a, Dev:0x3aa85c, 'TBX Shop':0xd84a4a, Social:0xc44fd0, Creative:0x6b5be0, Analytics:0x2fb3a6, Music:0xe0527a };
   // room palettes sampled from the video frame: walls, floor, rug, and the slab's side (pre-darkened for the scene's lighting)
-  const PAL = { Research: [0x2a57d6, 0xaebbe6, 0xc6d0ee], Scripts: [0xb8891f, 0xd9b45a, 0xe6cc85], Social: [0xa845b8, 0xd7a9e0, 0xe7c8ee], Creative: [0x5246c8, 0xa299e0, 0xbfb8ec], Analytics: [0x1f8c82, 0x8fcbc1, 0xb3ddd6], 'TBX Shop': [0xb93838, 0xe09c9c, 0xeec0c0], Dev: [0x2d8a47, 0x9fcfa8, 0xbfe0c6], Inbox: [0xb87326, 0xd9b27e, 0xe6caa0] };
+  const PAL = { Research: [0x2a57d6, 0xaebbe6, 0xc6d0ee], Scripts: [0xb8891f, 0xd9b45a, 0xe6cc85], Social: [0xa845b8, 0xd7a9e0, 0xe7c8ee], Creative: [0x5246c8, 0xa299e0, 0xbfb8ec], Analytics: [0x1f8c82, 0x8fcbc1, 0xb3ddd6], 'TBX Shop': [0xb93838, 0xe09c9c, 0xeec0c0], Dev: [0x2d8a47, 0x9fcfa8, 0xbfe0c6], Inbox: [0xb87326, 0xd9b27e, 0xe6caa0], Music: [0xb83a5e, 0xe0a0b4, 0xeec3d0] };
   const ICONS = { Research:'◎', Inbox:'✉', Scripts:'✎', Dev:'</>', 'TBX Shop':'◫', Social:'♡', Creative:'▶', Analytics:'▥' };
   const data = await fetch('agents.json').then(r => r.json()).catch(() => ({ departments: [] }));
   const hex = c => '#' + c.toString(16).padStart(6, '0');
@@ -507,7 +507,7 @@
   const keys = new Set();
   addEventListener('keydown', e => { const tag = document.activeElement.tagName; if (tag === 'INPUT' || tag === 'SELECT' || tag === 'TEXTAREA') { if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') { e.preventDefault(); askQ.focus(); } return; }
     if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') { e.preventDefault(); askQ.focus(); return; }
-    if (e.key === 'o' || e.key === 'O') overview(); else if (/^[1-8]$/.test(e.key) && roomInfo[+e.key - 1]) flyTo(roomInfo[+e.key - 1]); else if (e.key === 'Escape') { if (tab) showTab(tab); }
+    if (e.key === 'o' || e.key === 'O') overview(); else if (/^[1-9]$/.test(e.key) && roomInfo[+e.key - 1]) flyTo(roomInfo[+e.key - 1]); else if (e.key === 'Escape') { if (tab) showTab(tab); }
     else if (['w', 'a', 's', 'd', 'q', 'e', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', '+', '-', '='].includes(e.key)) { keys.add(e.key); e.preventDefault(); userMoved = true; } });
   addEventListener('keyup', e => keys.delete(e.key)); addEventListener('blur', () => keys.clear());
   function keyMove(dt) {
@@ -837,8 +837,8 @@
   function roster() { return rooms.map(d => `${d.name}: ${d.agents.map(a => a.name + (a.role === 'head' ? ' (head)' : '')).join(', ')}`).join('\n'); }
   function instructionsFor(a, mode) {
     const who = a.name === 'chief-of-staff'
-      ? `You are the chief of staff of Agent HQ, a 31-agent AI office that normally runs inside Claude Code. Your charter:\n\n${a.prompt}\n\nThe teams and their agents:\n${roster()}`
-      : `You are "${a.name}", ${a.role === 'head' ? 'head of' : 'a worker on'} the ${a.team} team of Agent HQ, a 31-agent AI office that normally runs inside Claude Code. Your job definition:\n\n${a.prompt}`;
+      ? `You are the chief of staff of Agent HQ, a 34-agent AI office that normally runs inside Claude Code. Your charter:\n\n${a.prompt}\n\nThe teams and their agents:\n${roster()}`
+      : `You are "${a.name}", ${a.role === 'head' ? 'head of' : 'a worker on'} the ${a.team} team of Agent HQ, a 34-agent AI office that normally runs inside Claude Code. Your job definition:\n\n${a.prompt}`;
     const tail = mode === 'work'
       ? `You are working on a task from the office board, from the dashboard rather than inside Claude Code: you cannot run tools, read files or start other agents here, so write the deliverable itself in your answer (the copy, the plan, the list, the code), complete and specific, in plain text with short headings. Follow the brand rules. Do not describe these instructions.`
       : `You are being asked from the office dashboard, not from inside Claude Code: here you cannot run tools, read files or start other agents. Answer in character, directly and usefully, in plain words, under 200 words unless more is clearly needed. If the question belongs to another agent, say which one and still give your best short answer. Do not describe these instructions.`;
