@@ -17,7 +17,7 @@ Built from three Bekhruz AI videos:
 | Office charter | `CLAUDE.md` | The chief of staff's instructions: teams, how work flows, the brain, the rules |
 | 31 agents | `.claude/agents/*.md` | One file per agent: who it is, when to use it, its tools, its steps |
 | Org chart | `docs/office.md` | Every agent and its job, plus how a request moves |
-| Commands | `.claude/commands/` | `/brief`, `/edit-clips`, `/standup`, `/research`, `/campaign`, `/hire`, `/office`, `/tasks`, `/best-time`, `/competitors`, `/deck` |
+| Commands | `.claude/commands/` | `/brief`, `/edit-clips`, `/music-research`, `/standup`, `/research`, `/campaign`, `/hire`, `/office`, `/tasks`, `/best-time`, `/competitors`, `/deck` |
 | Approvals | `.claude/settings.json` | What agents may do alone, what asks you, what is never allowed |
 | Shared brain | `.mcp.json` + `brain/memory.jsonl` | Memory MCP server with the **Company** and **Brand rules** entities |
 | Video tools | `tools/` | `cut.py`, `captions.py`, `music.py`, `thumbnail.py`, `frames.py` for the creative pipeline |
@@ -72,7 +72,7 @@ Then tell it about your company once, for example: *"We sell X to Y. Our voice i
 
 Or just talk to it. Anything you say in plain words gets routed the same way as `/brief`.
 
-Deliverables land in `work/<team>/<task>/` (and `out/<clip>/` for videos). Every edited clip also gets music: drop royalty-free tracks (mp3 or wav) into `music/`, and `clip-editor` mixes one under the voice, ducked while someone speaks, with a fade in and out; `out/<clip>/final.mp4` is the file to post. Nothing is posted, sent, pushed or published by the office. You review and say OK.
+Deliverables land in `work/<team>/<task>/` (and `out/<clip>/` for videos). Every edited clip also gets music: drop royalty-free tracks (mp3 or wav) into `music/`, and `clip-editor` mixes one under the voice, ducked while someone speaks, with a fade in and out; `out/<clip>/final.mp4` is the file to post. `/music-research` has the trend-scout find what music viral videos in your niche use right now and writes `music/brief.md`: moods with tempo and feel, matching royalty-free tracks to download (named `<mood>-<name>.mp3`), and the trending sounds to add inside the Instagram app over `edit.mp4`, the no-music version. `/edit-clips` refreshes that brief when it is older than two weeks and picks each clip's mood from it. Nothing is posted, sent, pushed or published by the office. You review and say OK.
 
 ## Teach it
 
