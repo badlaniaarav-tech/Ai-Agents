@@ -54,6 +54,10 @@ Window searched: last 60 days (about 2026-08-20 to 2026-10-19)
 - Seen on: golf editor @golf_brat uses Billboard pop (SI, Aug 23). Charts: "Upside Down" by Diana Ross (Instagram, 175K reels, transition reveals), "Funkytown" by Lipps Inc. (rapid-cut montages), "Ring My Bell" by Anita Ward (Sept).
 - Use for: before-and-after swing fixes, outfit and course montages, "day in my golf life", beat-synced transitions.
 
+## Tracks in music/ (2026-10-19)
+
+Pixabay blocks downloads from the office's server, so the tracks were taken from the Free Music Archive instead, matched to the same moods: three per mood, all CC BY or CC BY-SA. The list with titles, artists, licenses and links is in `music/credits.md`. CC BY needs a credit line in the caption or description, which the clip-editor puts in notes.md. The Pixabay picks below are still good alternatives if the owner downloads them by hand.
+
 ## 2. Tracks to download
 
 All Pixabay tracks: "Free for use under the Pixabay Content License", free download button (checked on the first track page). Pixabay notes "Content ID Registered" on at least the first track. If YouTube flags it, keep the Pixabay link as proof. Check each track page license before use.

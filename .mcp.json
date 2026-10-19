@@ -1,9 +1,11 @@
 {
   "mcpServers": {
     "memory": {
-      "command": "npx",
-      "args": ["-y", "@modelcontextprotocol/server-memory"],
-      "env": { "MEMORY_FILE_PATH": "${PWD}/brain/memory.jsonl" }
+      "command": "bash",
+      "args": [
+        "-c",
+        "MEMORY_FILE_PATH=\"$PWD/brain/memory.jsonl\" exec npx -y @modelcontextprotocol/server-memory"
+      ]
     }
   }
 }

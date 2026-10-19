@@ -35,9 +35,9 @@ has_voice = "Audio:" in subprocess.run([FFMPEG, "-hide_banner", "-i", a.src], ca
 fade = max(0.0, min(a.fade, dur / 2))
 music = f"[1:a]aloop=loop=-1:size=2000000000,atrim=0:{dur:.3f},asetpts=N/SR/TB,volume={a.volume},afade=t=in:d={fade},afade=t=out:st={max(0, dur - fade):.3f}:d={fade}[m]"
 if has_voice and not a.no_duck:
-    chain = f"{music};[0:a]asplit=2[v1][v2];[m][v2]sidechaincompress=threshold=0.04:ratio=6:attack=30:release=500:makeup=1[md];[v1][md]amix=inputs=2:duration=first:dropout_transition=0:normalize=0[a]"
+    chain = f"{music};[0:a:0]asplit=2[v1][v2];[m][v2]sidechaincompress=threshold=0.04:ratio=6:attack=30:release=500:makeup=1[md];[v1][md]amix=inputs=2:duration=first:dropout_transition=0:normalize=0[a]"
 elif has_voice:
-    chain = f"{music};[0:a][m]amix=inputs=2:duration=first:dropout_transition=0:normalize=0[a]"
+    chain = f"{music};[0:a:0][m]amix=inputs=2:duration=first:dropout_transition=0:normalize=0[a]"
 else:
     chain = f"{music};[m]anull[a]"
 os.makedirs(os.path.dirname(os.path.abspath(a.out)) or ".", exist_ok=True)
