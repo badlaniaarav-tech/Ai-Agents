@@ -20,7 +20,7 @@ Built from three Bekhruz AI videos:
 | Commands | `.claude/commands/` | `/brief`, `/edit-clips`, `/standup`, `/research`, `/campaign`, `/hire`, `/office`, `/tasks`, `/best-time`, `/competitors`, `/deck` |
 | Approvals | `.claude/settings.json` | What agents may do alone, what asks you, what is never allowed |
 | Shared brain | `.mcp.json` + `brain/memory.jsonl` | Memory MCP server with the **Company** and **Brand rules** entities |
-| Video tools | `tools/` | `cut.py`, `captions.py`, `thumbnail.py`, `frames.py` for the creative pipeline |
+| Video tools | `tools/` | `cut.py`, `captions.py`, `music.py`, `thumbnail.py`, `frames.py` for the creative pipeline |
 | 3D office | `office/` | Agent HQ, a Three.js page: the Brain in the middle, one room per team, one character per agent, and characters light up while their sub-agent runs |
 
 Teams: Research, Inbox, Scripts, Dev, TBX Shop, Social, Creative, Analytics. See `docs/office.md`.
@@ -72,7 +72,7 @@ Then tell it about your company once, for example: *"We sell X to Y. Our voice i
 
 Or just talk to it. Anything you say in plain words gets routed the same way as `/brief`.
 
-Deliverables land in `work/<team>/<task>/` (and `out/<clip>/` for videos). Nothing is posted, sent, pushed or published by the office. You review and say OK.
+Deliverables land in `work/<team>/<task>/` (and `out/<clip>/` for videos). Every edited clip also gets music: drop royalty-free tracks (mp3 or wav) into `music/`, and `clip-editor` mixes one under the voice, ducked while someone speaks, with a fade in and out; `out/<clip>/final.mp4` is the file to post. Nothing is posted, sent, pushed or published by the office. You review and say OK.
 
 ## Teach it
 
