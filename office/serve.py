@@ -54,7 +54,7 @@ class Handler(SimpleHTTPRequestHandler):
             elif op == "update":
                 for i in d["items"]:
                     if i["id"] == item.get("id"):
-                        for k in ("title", "team", "agent", "status", "date", "notes", "type"):
+                        for k in ("title", "team", "agent", "status", "date", "notes", "type", "result"):
                             if k in item:
                                 i[k] = item[k]
                         item = i

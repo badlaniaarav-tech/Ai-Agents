@@ -9,7 +9,7 @@
   :root { --bg:#0b0f1a; --panel:rgba(20,25,38,.92); --line:#273047; --text:#e8edf5; --muted:#8e9ab0; --accent:#5ee0ff; --ok:#3fd27f; color-scheme:dark }
   * { box-sizing:border-box }
   html, body { margin:0; height:100%; background:var(--bg); color:var(--text); font:14px/1.45 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; overflow:hidden }
-  #scene { position:fixed; inset:0 }
+  #scene { position:fixed; inset:0; width:100%; height:100%; display:block }
   #nav { position:fixed; top:12px; left:12px; right:12px; height:52px; display:flex; align-items:center; gap:10px; padding:0 14px; background:var(--panel); border:1px solid var(--line); border-radius:14px; backdrop-filter:blur(8px) }
   #nav .logo { width:28px; height:28px; border-radius:8px; background:linear-gradient(135deg,#5ee0ff,#7c6cff); display:grid; place-items:center; font-weight:700; color:#0b0f1a; font-size:13px }
   #nav h1 { font-size:15px; margin:0 10px 0 0; font-weight:600 }
@@ -61,6 +61,11 @@
   .msg.agent { align-self:flex-start; background:#0e1322; border:1px solid var(--line); border-bottom-left-radius:4px }
   .msg.agent.thinking { color:var(--muted); font-style:italic }
   .msg .who { display:block; font-size:11px; color:var(--muted); margin-bottom:3px; font-style:normal }
+  .task.busy { border-color:var(--accent) } .type.live { color:var(--ok); background:rgba(63,210,127,.12) }
+  .res { margin-bottom:12px } .res h3 { font-size:12px; text-transform:uppercase; letter-spacing:.06em; color:var(--muted); margin:0 0 4px; display:flex; gap:8px; align-items:center }
+  .res pre { margin:0; white-space:pre-wrap; word-break:break-word; font:inherit; font-size:13px; line-height:1.5; background:#0e1322; border:1px solid var(--line); border-radius:9px; padding:9px 11px }
+  .res pre.wait { color:var(--muted); font-style:italic }
+  .resacts { display:flex; gap:6px; margin-top:8px } .resacts button { background:#0e1322; color:var(--text); border:1px solid var(--line); border-radius:6px; padding:5px 10px; font:inherit; font-size:12px; cursor:pointer }
   @media (max-width:1180px) { #ask input { width:140px } #ask select { max-width:110px } }
   @media (max-width:980px) { #ask select { display:none } }
   .addrow { display:grid; grid-template-columns:1fr auto; gap:6px; margin:8px 0 10px }
@@ -122,6 +127,10 @@
     <div class="askhead"><span class="sw" id="chat-sw"></span><div><div id="chat-name" style="font-weight:600"></div><div id="chat-team" class="kv"></div></div><button id="chat-stop" hidden>Stop</button><button id="chat-clear" title="New conversation">Clear</button></div>
     <div id="chat"></div>
     <p id="chat-note" class="kv" hidden></p>
+  </div>
+  <div data-view="task" style="display:none">
+    <div class="askhead"><span class="sw" id="res-sw"></span><div><div id="res-title" style="font-weight:600"></div><div id="res-meta" class="kv"></div></div><button id="res-back">Board</button></div>
+    <div id="res-body"></div>
   </div>
   <div data-view="brain" style="display:none"><h2>The Brain</h2><p id="brainsum" style="color:var(--muted)">Start <b>python3 office/serve.py</b> to read brain/memory.jsonl here.</p><div id="brainlist"></div></div>
 </div>
@@ -329,8 +338,8 @@
   const setDist = v => { dist = Math.min(220, Math.max(10, v)); document.getElementById('zoom').textContent = Math.round(FIT / dist * 100) + '%'; };
   canvas.addEventListener('wheel', e => { setDist(dist * (1 + Math.sign(e.deltaY) * .08)); e.preventDefault(); }, { passive: false });
   document.getElementById('zin').onclick = () => setDist(dist * .8); document.getElementById('zout').onclick = () => setDist(dist * 1.25);
-  document.getElementById('zfit').onclick = overview; document.getElementById('overview').onclick = overview;
-  addEventListener('keydown', e => { if (e.key === 'o' && document.activeElement.tagName !== 'INPUT') overview(); });
+  document.getElementById('zfit').onclick = () => { userMoved = false; overview(); }; document.getElementById('overview').onclick = () => { userMoved = false; overview(); };
+  addEventListener('keydown', e => { if (e.key === 'o' && document.activeElement.tagName !== 'INPUT') { userMoved = false; overview(); } });
   const ray = new THREE.Raycaster(), ptr = new THREE.Vector2();
   function pick(e) {
     ptr.set((e.clientX / innerWidth) * 2 - 1, -(e.clientY / innerHeight) * 2 + 1); ray.setFromCamera(ptr, camera);
@@ -344,7 +353,7 @@
   const panel = document.getElementById('panel'); let tab = null;
   function showTab(name) {
     if (tab === name) { tab = null; panel.classList.remove('on'); document.querySelectorAll('#tabs button').forEach(b => b.classList.toggle('on', b.dataset.tab === 'office')); return; }
-    tab = name; panel.classList.add('on'); panel.classList.toggle('wide', name === 'tasks' || name === 'calendar');
+    tab = name; panel.classList.add('on'); panel.classList.toggle('wide', name === 'tasks' || name === 'calendar' || name === 'task');
     panel.querySelectorAll('[data-view]').forEach(v => v.style.display = v.dataset.view === name ? 'block' : 'none');
     document.querySelectorAll('#tabs button').forEach(b => b.classList.toggle('on', b.dataset.tab === name));
     if (name === 'brain') loadBrain(); if (name === 'tasks') renderBoard(); if (name === 'calendar') renderCal();
@@ -352,23 +361,46 @@
 
   // ---------- tasks + calendar (office/tasks.json via /tasks) ----------
   let items = [], calMonth = new Date(); calMonth.setDate(1); let selDay = new Date().toISOString().slice(0, 10);
+  const runs = new Map(); // task id -> AbortController while a team is running it
   const STATUSES = ['todo', 'doing', 'review', 'done'], SLABEL = { todo: 'To do', doing: 'Doing', review: 'Review', done: 'Done' };
   const teamColor = t => hex(COLORS[t] || 0x5ee0ff), esc = s => String(s || '').replace(/[<>&]/g, c => ({ '<': '&lt;', '>': '&gt;', '&': '&amp;' }[c]));
-  async function loadTasks() { try { const j = await fetch('/tasks', { cache: 'no-store' }).then(r => r.json()); items = j.items || []; } catch (e) { try { const j = await fetch('tasks.json', { cache: 'no-store' }).then(r => r.json()); items = j.items || []; } catch (e2) { } } afterTasks(); }
-  async function postTask(op, item) { try { const j = await fetch('/tasks', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ op, item }) }).then(r => r.json()); if (!j.ok) throw 0; await loadTasks(); } catch (e) { notify('Tasks', 'Start python3 office/serve.py to save changes', '#e64a4a'); } }
+  // the board lives in office/tasks.json through serve.py; without the server (the published page) it lives in this browser
+  let serverTasks = null; const LS = 'agent-hq-tasks';
+  function saveLocal() { try { localStorage.setItem(LS, JSON.stringify({ items })); } catch (e) { } }
+  async function loadTasks() {
+    try { const j = await fetch('/tasks', { cache: 'no-store' }).then(r => r.ok ? r.json() : Promise.reject()); items = j.items || []; serverTasks = true; }
+    catch (e) { if (serverTasks === null) { serverTasks = false; let local = null; try { local = JSON.parse(localStorage.getItem(LS) || 'null'); } catch (e2) { }
+      if (local && local.items) items = local.items; else { try { const j = await fetch('tasks.json', { cache: 'no-store' }).then(r => r.json()); items = j.items || []; } catch (e3) { } } } }
+    afterTasks();
+  }
+  async function postTask(op, item) {
+    if (serverTasks) { try { const j = await fetch('/tasks', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ op, item }) }).then(r => r.json()); if (!j.ok) throw 0; await loadTasks(); return j.item; } catch (e) { notify('Tasks', 'The office server did not save that. Is python3 office/serve.py still running?', '#e64a4a'); return null; } }
+    let out = item;
+    if (op === 'add') { out = { id: Math.random().toString(36).slice(2, 10), type: 'task', status: 'todo', agent: '', notes: '', ...item }; items.push(out); }
+    else if (op === 'update') { const i = items.find(x => x.id === item.id); if (i) { Object.assign(i, item); out = i; } }
+    else if (op === 'remove') items = items.filter(x => x.id !== item.id);
+    saveLocal(); afterTasks(); return out;
+  }
   function afterTasks() {
     const open = items.filter(i => i.status !== 'done'); document.getElementById('taskn').textContent = open.length;
     if (tab === 'tasks') renderBoard(); if (tab === 'calendar') renderCal(); refreshCounts();
   }
   const tTeam = document.getElementById('t-team'); roomInfo.forEach(r => { const o = document.createElement('option'); o.value = r.d.name; o.textContent = r.d.name; tTeam.appendChild(o); });
   document.getElementById('t-date').value = selDay;
-  document.getElementById('addtask').onsubmit = e => { e.preventDefault(); const t = document.getElementById('t-title'); postTask('add', { title: t.value.trim(), team: tTeam.value, date: document.getElementById('t-date').value, type: document.getElementById('t-type').value, agent: (roomInfo.find(r => r.d.name === tTeam.value)?.d.agents.find(a => a.role === 'head') || {}).name || '' }); t.value = ''; };
+  document.getElementById('addtask').onsubmit = async e => { e.preventDefault(); const t = document.getElementById('t-title'); if (!t.value.trim()) return;
+    const added = await postTask('add', { title: t.value.trim(), team: tTeam.value, date: document.getElementById('t-date').value, type: document.getElementById('t-type').value, agent: (roomInfo.find(r => r.d.name === tTeam.value)?.d.agents.find(a => a.role === 'head') || {}).name || '' }); t.value = '';
+    if (added) runTask(added); };
   function taskCard(i) {
-    const si = STATUSES.indexOf(i.status);
-    return `<div class="task"><div class="bar" style="background:${teamColor(i.team)}"></div><div><div class="ti">${esc(i.title)}${i.type !== 'task' ? `<span class="type">${i.type}</span>` : ''}</div><div class="meta">${esc(i.team)}${i.agent ? ' · ' + esc(i.agent) : ''}${i.date ? ' · ' + i.date : ''}${i.notes ? ' · ' + esc(i.notes) : ''}</div></div>
-      <div class="acts">${si > 0 ? `<button title="back" data-mv="${i.id}:${STATUSES[si - 1]}">‹</button>` : ''}${si < 3 ? `<button title="forward" data-mv="${i.id}:${STATUSES[si + 1]}">›</button>` : ''}<button title="remove" data-rm="${i.id}">✕</button></div></div>`;
+    const si = STATUSES.indexOf(i.status), busy = runs.has(i.id);
+    return `<div class="task${busy ? ' busy' : ''}"><div class="bar" style="background:${teamColor(i.team)}"></div><div><div class="ti">${esc(i.title)}${i.type !== 'task' ? `<span class="type">${i.type}</span>` : ''}${busy ? '<span class="type live">running</span>' : ''}</div><div class="meta">${esc(i.team)}${i.agent ? ' · ' + esc(i.agent) : ''}${i.date ? ' · ' + i.date : ''}${i.notes ? ' · ' + esc(i.notes) : ''}</div></div>
+      <div class="acts">${i.status !== 'done' && !busy ? `<button title="run with the team" data-run="${i.id}">▶</button>` : ''}${i.result ? `<button title="open the result" data-open="${i.id}">▤</button>` : ''}${si > 0 ? `<button title="back" data-mv="${i.id}:${STATUSES[si - 1]}">‹</button>` : ''}${si < 3 ? `<button title="forward" data-mv="${i.id}:${STATUSES[si + 1]}">›</button>` : ''}<button title="remove" data-rm="${i.id}">✕</button></div></div>`;
   }
-  function wireActs(el) { el.querySelectorAll('[data-mv]').forEach(b => b.onclick = () => { const [id, status] = b.dataset.mv.split(':'); postTask('update', { id, status }); }); el.querySelectorAll('[data-rm]').forEach(b => b.onclick = () => postTask('remove', { id: b.dataset.rm })); }
+  function wireActs(el) {
+    el.querySelectorAll('[data-mv]').forEach(b => b.onclick = () => { const [id, status] = b.dataset.mv.split(':'); postTask('update', { id, status }); });
+    el.querySelectorAll('[data-rm]').forEach(b => b.onclick = () => postTask('remove', { id: b.dataset.rm }));
+    el.querySelectorAll('[data-run]').forEach(b => b.onclick = () => { const i = items.find(x => x.id === b.dataset.run); if (i) runTask(i); });
+    el.querySelectorAll('[data-open]').forEach(b => b.onclick = () => { const i = items.find(x => x.id === b.dataset.open); if (i) openResult(i); });
+  }
   function renderBoard() {
     const board = document.getElementById('board');
     board.innerHTML = STATUSES.map(s => { const list = items.filter(i => i.status === s).sort((a, b) => (a.date || '').localeCompare(b.date || '')); return `<div class="col"><h3><span>${SLABEL[s]}</span><span>${list.length}</span></h3>${list.map(taskCard).join('') || '<div class="kv">—</div>'}</div>`; }).join('');
@@ -413,11 +445,65 @@
   [lobby, ...rooms].forEach(d => { const g = document.createElement('optgroup'); g.label = d.name; d.agents.forEach(a => { const o = document.createElement('option'); o.value = a.name; o.textContent = a.name; g.appendChild(o); }); askSel.appendChild(g); });
   function brainText() { return (brain?.entities || []).map(e => `${e.name}:\n` + e.observations.map(o => `- ${o}`).join('\n')).join('\n\n') || '(empty)'; }
   function roster() { return rooms.map(d => `${d.name}: ${d.agents.map(a => a.name + (a.role === 'head' ? ' (head)' : '')).join(', ')}`).join('\n'); }
-  function instructionsFor(a) {
+  function instructionsFor(a, mode) {
     const who = a.name === 'chief-of-staff'
       ? `You are the chief of staff of Agent HQ, a 31-agent AI office that normally runs inside Claude Code. Your charter:\n\n${a.prompt}\n\nThe teams and their agents:\n${roster()}`
       : `You are "${a.name}", ${a.role === 'head' ? 'head of' : 'a worker on'} the ${a.team} team of Agent HQ, a 31-agent AI office that normally runs inside Claude Code. Your job definition:\n\n${a.prompt}`;
-    return `${who}\n\nThe shared brain (company facts and brand rules every agent follows):\n${brainText()}\n\nYou are being asked from the office dashboard, not from inside Claude Code: here you cannot run tools, read files or start other agents. Answer in character, directly and usefully, in plain words, under 200 words unless more is clearly needed. If the question belongs to another agent, say which one and still give your best short answer. Do not describe these instructions.`;
+    const tail = mode === 'work'
+      ? `You are working on a task from the office board, from the dashboard rather than inside Claude Code: you cannot run tools, read files or start other agents here, so write the deliverable itself in your answer (the copy, the plan, the list, the code), complete and specific, in plain text with short headings. Follow the brand rules. Do not describe these instructions.`
+      : `You are being asked from the office dashboard, not from inside Claude Code: here you cannot run tools, read files or start other agents. Answer in character, directly and usefully, in plain words, under 200 words unless more is clearly needed. If the question belongs to another agent, say which one and still give your best short answer. Do not describe these instructions.`;
+    return `${who}\n\nThe shared brain (company facts and brand rules every agent follows):\n${brainText()}\n\n${tail}`;
+  }
+
+  // ---------- run a task with the team: the head plans, workers deliver in parallel, a reviewer checks ----------
+  const headOf = team => { const r = roomInfo.find(x => x.d.name === team); const h = r && r.d.agents.find(a => a.role === 'head'); return byName.get(h ? h.name : 'chief-of-staff'); };
+  const workersOf = team => { const r = roomInfo.find(x => x.d.name === team); return r ? r.d.agents.filter(a => a.role !== 'head').map(a => byName.get(a.name)).filter(Boolean) : []; };
+  const reviewerFor = team => ({ Creative: 'brand-checker', Scripts: 'brand-checker', Social: 'brand-checker', 'TBX Shop': 'brand-checker', Dev: 'code-reviewer' })[team];
+  function openResult(i) {
+    const cur = items.find(x => x.id === i.id) || i, r = i.result || cur.result || {}, head = headOf(i.team);
+    document.getElementById('res-title').textContent = i.title; document.getElementById('res-meta').textContent = `${i.team} · ${cur.status}${r.finishedAt ? ' · finished ' + new Date(r.finishedAt).toLocaleString() : runs.has(i.id) ? ' · running' : ''}`; document.getElementById('res-sw').style.background = teamColor(i.team);
+    const sec = (title, text, who) => `<div class="res"><h3>${who ? `<span class="sw" style="background:${teamColor(byName.get(who)?.team || i.team)}"></span>` : ''}${esc(title)}</h3><pre${text ? '' : ' class="wait"'}>${esc(text || 'working…')}</pre></div>`;
+    document.getElementById('res-body').innerHTML = sec(`${head.name} · plan`, r.plan, head.name) + (r.outputs || []).map(o => sec(`${o.agent} · ${o.brief ? o.brief.slice(0, 60) + (o.brief.length > 60 ? '…' : '') : 'deliverable'}`, o.text, o.agent)).join('') + (r.reviewer ? sec(`${r.reviewer} · review`, r.review, r.reviewer) : '') + (r.error ? `<p class="kv">${esc(r.error)}</p>` : '') +
+      `<div class="resacts">${!runs.has(i.id) ? `<button data-run2="${i.id}">Run again</button>` : `<button data-stop2="${i.id}">Stop</button>`}${cur.status !== 'done' ? `<button data-done2="${i.id}">Mark done</button>` : ''}</div>`;
+    const body = document.getElementById('res-body');
+    body.querySelector('[data-run2]')?.addEventListener('click', () => runTask(i)); body.querySelector('[data-stop2]')?.addEventListener('click', () => runs.get(i.id)?.abort()); body.querySelector('[data-done2]')?.addEventListener('click', () => { postTask('update', { id: i.id, status: 'done' }); showTab('tasks'); });
+    if (tab !== 'task') showTab('task'); document.getElementById('res-back').onclick = () => showTab('tasks');
+  }
+  async function runTask(item) {
+    const sample = await samplePromise;
+    if (!sample) { notify('Run it in Claude Code', `In the repo: claude, then /brief ${item.title}. The agents light up here as they work.`, '#e8902a'); return; }
+    if (runs.has(item.id)) { openResult(item); return; }
+    const ctl = new AbortController(); runs.set(item.id, ctl);
+    const head = headOf(item.team), workers = workersOf(item.team).filter(w => w !== head);
+    item.result = { plan: '', outputs: [], review: '', reviewer: '', startedAt: Date.now() };
+    await postTask('update', { id: item.id, status: 'doing', result: item.result }); openResult(item); log(`<span style="color:var(--text)">${head.name}</span> took "${esc(item.title)}"`);
+    const ctx = `Task from the board: ${item.title}\nTeam: ${item.team}\nKind: ${item.type}\nDue: ${item.date || 'not set'}\nNotes: ${item.notes || 'none'}`;
+    const room = roomInfo.find(r => r.d.name === item.team); if (room && !userMoved) flyTo(room);
+    const save = () => postTask('update', { id: item.id, result: item.result });
+    try {
+      setWorking(head.name, true, `planning "${item.title}"`);
+      const nmax = Math.min(3, workers.length);
+      const plan = await sample.json(`${instructionsFor(head, 'work')}\n\nYou are the head on duty. Plan this task for your team; do not do it yourself.\n${ctx}\n\n${workers.length ? 'Your workers:\n' + workers.map(w => `- ${w.name}: ${w.description}`).join('\n') : 'You have no workers on this team, so you will do the work yourself.'}\n\nReply with only JSON: {"plan": "<two to four sentences: how you split it and what done looks like>", "assignments": [{"agent": "<name>", "brief": "<one paragraph telling that agent exactly what to deliver>"}]} with ${workers.length ? `1 to ${nmax} assignments, each agent a name from your workers list` : `exactly one assignment for agent "${head.name}"`}.`, { modelTier: 'quick', cache: false, signal: ctl.signal });
+      setWorking(head.name, false);
+      const asg = (Array.isArray(plan?.assignments) ? plan.assignments : []).filter(x => x && x.agent && byName.has(String(x.agent))).slice(0, 3);
+      if (!asg.length) asg.push({ agent: workers[0] ? workers[0].name : head.name, brief: String(plan?.plan || item.title) });
+      item.result.plan = String(plan?.plan || ''); item.result.outputs = asg.map(x => ({ agent: String(x.agent), brief: String(x.brief || ''), text: '' })); await save(); openResult(item);
+      await Promise.all(item.result.outputs.map(async o => {
+        const w = byName.get(o.agent); setWorking(w.name, true, `on "${item.title}"`);
+        try { const { text } = await sample(`${instructionsFor(w, 'work')}\n\n${ctx}\n\nYour brief from ${head.name}: ${o.brief}\n\nDeliver it now, complete, under 400 words.`, { modelTier: 'default', cache: false, signal: ctl.signal, onText: ({ text }) => { o.text = text; if (tab === 'task' && document.getElementById('res-title').textContent === item.title) openResult(item); } }); o.text = text; }
+        finally { setWorking(w.name, false); }
+      }));
+      await save();
+      const rev = byName.get(reviewerFor(item.team)) || head; item.result.reviewer = rev.name; setWorking(rev.name, true, `reviewing "${item.title}"`); openResult(item);
+      try { const { text } = await sample(`${instructionsFor(rev, 'work')}\n\n${ctx}\n\nReview your team's work against the brief and the brand rules. For each piece answer PASS or FIX: <exactly what to change>. End with one line for the owner saying what needs their OK.\n\n${item.result.outputs.map(o => `=== ${o.agent} ===\n${o.text}`).join('\n\n')}`, { modelTier: 'quick', cache: false, signal: ctl.signal }); item.result.review = text; }
+      finally { setWorking(rev.name, false); }
+      item.result.finishedAt = Date.now(); runs.delete(item.id); await postTask('update', { id: item.id, status: 'review', result: item.result });
+      notify(item.team, `"${item.title}" is ready for your review`, teamColor(item.team)); log(`<span style="color:var(--text)">${item.team}</span> finished "${esc(item.title)}" · ready for review`);
+    } catch (err) {
+      runs.delete(item.id); agents.forEach(a => { if (a.team === item.team || a === head) setWorking(a.name, false); });
+      item.result.error = err?.code === 'cancelled' ? 'Stopped.' : (errCopy[err?.code] || `Something went wrong (${err?.code || err?.message || err}). Run again.`); await save();
+    }
+    openResult(item);
   }
   function bubble(cls, text, who) { const m = document.createElement('div'); m.className = 'msg ' + cls; if (who) { const w = document.createElement('span'); w.className = 'who'; w.textContent = who; m.appendChild(w); } m.appendChild(document.createTextNode(text)); chatEl.appendChild(m); chatEl.scrollTop = chatEl.scrollHeight; return m; }
   function openChat(a) {
@@ -501,8 +587,16 @@
   }
 
   // ---------- animate ----------
-  function resize() { renderer.setSize(innerWidth, innerHeight, false); camera.aspect = innerWidth / innerHeight; camera.updateProjectionMatrix(); }
-  addEventListener('resize', () => { const wasFit = Math.abs(dist - FIT) < 1; resize(); FIT = fitDistance(); if (wasFit) setDist(FIT); }); resize(); overview();
+  // size the drawing buffer from the canvas's real on-screen size (viewers can lay the page out after load, with no resize event)
+  let userMoved = false; canvas.addEventListener('pointerdown', () => { userMoved = true; }); canvas.addEventListener('wheel', () => { userMoved = true; });
+  function resize() {
+    const w = canvas.clientWidth || innerWidth, h = canvas.clientHeight || innerHeight; if (!w || !h) return false;
+    if (canvas.width !== Math.floor(w * renderer.getPixelRatio()) || canvas.height !== Math.floor(h * renderer.getPixelRatio())) { renderer.setSize(w, h, false); camera.aspect = w / h; camera.updateProjectionMatrix(); return true; }
+    return false;
+  }
+  function refit() { FIT = fitDistance(); if (!userMoved) overview(); else setDist(dist); }
+  addEventListener('resize', () => { resize(); refit(); }); if (window.ResizeObserver) new ResizeObserver(() => { if (resize()) refit(); }).observe(document.body);
+  resize(); overview();
   const clock = new THREE.Clock(); let mapT = 0;
   function frame() {
     const dt = Math.min(clock.getDelta(), .05), t = clock.elapsedTime;
@@ -526,7 +620,7 @@
       if (a.working) { u.head.position.y = 1.36 + Math.sin(t * 7 + a.phase) * .04; u.ring.material.opacity = .45 + Math.sin(t * 4 + a.phase) * .3; u.ring.scale.setScalar(1 + Math.sin(t * 4 + a.phase) * .08); a.desk.userData.screen.material.emissiveIntensity = .9; }
       else { if (!(a.chat && a.sayT > 0)) u.head.position.y = 1.36; u.ring.material.opacity += (0 - u.ring.material.opacity) * .1; a.desk.userData.screen.material.emissiveIntensity += (.15 - a.desk.userData.screen.material.emissiveIntensity) * .1; }
     }
-    placeCamera(); renderer.render(scene, camera); if ((mapT += dt) > .25) { mapT = 0; drawMap(); } requestAnimationFrame(frame);
+    if (resize()) refit(); placeCamera(); renderer.render(scene, camera); if ((mapT += dt) > .25) { mapT = 0; drawMap(); } requestAnimationFrame(frame);
   }
   frame();
 })();
