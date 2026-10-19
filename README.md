@@ -37,6 +37,10 @@ Drag to orbit, wheel to zoom, click a character for its job, tools and model, cl
 
 It is live: hooks in `.claude/settings.json` append every sub-agent start and stop to `office/events.jsonl`, and the page polls that file. Run Claude Code in this repo in another terminal, give it a task, and watch the characters work. After `/hire`, run `/office` (or `python3 office/build.py`) to regenerate `office/agents.json`.
 
+## Sharing it with other people
+
+Everyone who opens the link signs in to claude.ai, and the page keeps a private workspace per person: their board, clips, results and profile live under their own account and nobody else can see them, the owner included. On first visit a welcome screen asks for their name, an email for notifications and approvals, an office name, and whether they want to connect their social media through Metricool (the page then shows how: add the Metricool connector in claude.ai Settings → Connectors, then connect networks in Metricool). Metricool runs as the viewer, so each person's own Metricool account is used; the owner's stays on the owner's account. To let someone save work, share the link with them as a Contributor (or higher) from the page's Share menu; a view-only share lets them look but not save.
+
 ## The website
 
 The claude.ai link is the full office: agents answer, tasks run, the board saves to your account, Metricool works. Every push to `main` also publishes the `office/` folder to GitHub Pages (`.github/workflows/pages.yml`), which gives a public, read-only version of the 3D office with the starter board and no AI features, at `https://<owner>.github.io/Ai-Agents/`.
