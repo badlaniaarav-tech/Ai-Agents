@@ -16,8 +16,9 @@ Run every step as its own command, one command per Bash call (no `&&` chains). U
 4. **Words.** From the transcript write: a title (max 60 characters, no clickbait), cover text (max 3 words, the strongest idea), and a hook (the first sentence a viewer should hear).
 5. **Cover.** From the cut without captions: `python3 tools/thumbnail.py out/<name>/cut.mp4 out/<name>/cover.jpg --text "<cover text>" --color <cover color>`
    Look at `cover.jpg` with Read. If the text sits on top of something busy, run it again with `--at <seconds>` (another frame) or `--pos middle|bottom` (move the text).
-6. **Music.** `python3 tools/music.py out/<name>/edit.mp4 out/<name>/final.mp4`
-   It picks a track from `music/` (or use `--track music/<file>` for a named one), keeps it low under the voice, dips it when someone speaks, and fades it in and out. Use the music level from the brand rules (`--volume`). If `music/` is empty, say so in the report and copy `edit.mp4` to `final.mp4`.
+6. **Music.** Read `music/brief.md` first if it exists (the trend-scout's note on what music viral videos in our niche use: moods, tempo, and which tracks in `music/` match). Pick the mood that fits this clip (a big drive or a trick shot is `hype`, a range session or a lesson is `chill`, a slow-motion swing is `cinematic`, a fail is `funny`), then
+   `python3 tools/music.py out/<name>/edit.mp4 out/<name>/final.mp4 --mood <mood>`
+   It picks a track named `<mood>-*.mp3` from `music/` (any track if none match; `--track music/<file>` for a named one), keeps it low under the voice, dips it when someone speaks, and fades it in and out. Use the music level from the brand rules (`--volume`). If `music/` is empty, say so in the report and copy `edit.mp4` to `final.mp4`. Keep `edit.mp4` too: it is the version without music, for when the owner adds a trending sound inside the Instagram app instead.
 7. **Check.** `python3 tools/frames.py out/<name>/final.mp4 out/<name>/frames.jpg` and look at `frames.jpg`: captions readable, nothing cut off.
 8. **Notes.** Write `out/<name>/notes.md`: title, cover text, hook, raw length, edit length, seconds removed, fillers removed, music track, transcript.
 9. **Report** to the lead in three short lines: the folder, the edit length, the title. `final.mp4` is the file to post.

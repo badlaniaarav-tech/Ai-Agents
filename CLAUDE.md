@@ -34,13 +34,13 @@ Company facts, brand rules and the owner's preferences live in the memory MCP se
 ## Folders
 - `inbox/` raw clips waiting to be edited (can be a synced Google Drive folder)
 - `out/<clip-name>/` finished video work: `cut.mp4`, `edit.mp4`, `final.mp4` (with music, the one to post), `captions.srt`, `cover.jpg`, `notes.md`
-- `music/` royalty-free tracks the owner has the rights to use; `tools/music.py` picks from here
+- `music/` royalty-free tracks the owner has the rights to use, named `<mood>-<name>.mp3`; `music/brief.md` (from `/music-research`) says which mood fits what; `tools/music.py --mood` picks from here
 - `done/` raw clips that were edited successfully
 - `work/<team>/<task>/` every other deliverable (drafts, research, plans, code), one folder per task, with a `README.md` that says what is inside
 - `tools/` the video tools: `cut.py`, `captions.py`, `music.py`, `thumbnail.py`, `frames.py`. Each prints one JSON line with its result.
 
 ## Commands
-`/edit-clips` edit every clip in `inbox/` · `/brief <task>` route any task through the office · `/standup` every team reports · `/research <topic>` · `/campaign <launch>` · `/hire <name>` add an agent · `/office` refresh the 3D office · `/tasks` the board and calendar · `/best-time` best posting slots from Metricool · `/competitors` Instagram competitors from Metricool · `/deck <topic>` a presentation (.pptx)
+`/edit-clips` edit every clip in `inbox/` · `/music-research` what music viral videos in our niche use, written to `music/brief.md` · `/brief <task>` route any task through the office · `/standup` every team reports · `/research <topic>` · `/campaign <launch>` · `/hire <name>` add an agent · `/office` refresh the 3D office · `/tasks` the board and calendar · `/best-time` best posting slots from Metricool · `/competitors` Instagram competitors from Metricool · `/deck <topic>` a presentation (.pptx)
 
 ## Rules
 - Nothing gets published, uploaded, posted, emailed or pushed. Finished work waits for the owner's OK.
