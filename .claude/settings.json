@@ -30,6 +30,8 @@
       "mcp__memory",
       "Bash(python3 office/build.py:*)",
       "Bash(python3 office/serve.py:*)",
+      "Bash(python3 office/tasks.py:*)",
+      "Edit(office/tasks.json)",
       "Edit(office/agents.json)"
     ],
     "ask": [
