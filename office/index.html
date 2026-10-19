@@ -5,7 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Agent HQ</title>
 <style>
-  :root { --bg:#0b0f1a; --panel:rgba(20,25,38,.92); --line:#273047; --text:#e8edf5; --muted:#8e9ab0; --accent:#5ee0ff; --ok:#3fd27f }
+  /* Agent HQ is a night-time floor plan: one deliberately dark look, so the colors are fixed rather than themed. */
+  :root { --bg:#0b0f1a; --panel:rgba(20,25,38,.92); --line:#273047; --text:#e8edf5; --muted:#8e9ab0; --accent:#5ee0ff; --ok:#3fd27f; color-scheme:dark }
   * { box-sizing:border-box }
   html, body { margin:0; height:100%; background:var(--bg); color:var(--text); font:14px/1.45 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; overflow:hidden }
   #scene { position:fixed; inset:0 }
@@ -46,6 +47,22 @@
   #map .b { display:flex; gap:4px; margin-top:6px }
   #map button { flex:1; background:#0e1322; color:var(--text); border:1px solid var(--line); border-radius:6px; font:inherit; font-size:12px; cursor:pointer; padding:3px 0 }
   #panel.wide { width:460px }
+  #ask { display:flex; align-items:center; gap:0; border:1px solid var(--line); border-radius:9px; background:#0e1322; overflow:hidden; height:34px }
+  #ask select { background:transparent; color:var(--muted); border:0; border-right:1px solid var(--line); padding:0 6px; height:100%; font:inherit; font-size:12px; max-width:150px }
+  #ask input { background:transparent; color:var(--text); border:0; padding:0 10px; height:100%; width:210px; font:inherit; font-size:13px; outline:none }
+  #ask input:focus { background:#131a2a }
+  #ask button { background:transparent; color:var(--muted); border:0; border-left:1px solid var(--line); height:100%; padding:0 10px; cursor:pointer; font:inherit }
+  #ask button:hover { color:var(--text) }
+  .askhead { display:flex; align-items:center; gap:10px; padding-bottom:10px; border-bottom:1px solid var(--line); margin-bottom:10px }
+  .askhead > div { flex:1 } .askhead button { background:#0e1322; color:var(--text); border:1px solid var(--line); border-radius:6px; padding:4px 9px; font:inherit; font-size:12px; cursor:pointer }
+  #chat { display:flex; flex-direction:column; gap:8px }
+  .msg { max-width:92%; padding:8px 11px; border-radius:12px; font-size:13px; white-space:pre-wrap; word-break:break-word; line-height:1.5 }
+  .msg.me { align-self:flex-end; background:#1c2436; border-bottom-right-radius:4px }
+  .msg.agent { align-self:flex-start; background:#0e1322; border:1px solid var(--line); border-bottom-left-radius:4px }
+  .msg.agent.thinking { color:var(--muted); font-style:italic }
+  .msg .who { display:block; font-size:11px; color:var(--muted); margin-bottom:3px; font-style:normal }
+  @media (max-width:1180px) { #ask input { width:140px } #ask select { max-width:110px } }
+  @media (max-width:980px) { #ask select { display:none } }
   .addrow { display:grid; grid-template-columns:1fr auto; gap:6px; margin:8px 0 10px }
   .addrow input, .addrow select, .addrow button { background:#0e1322; color:var(--text); border:1px solid var(--line); border-radius:7px; padding:6px 8px; font:inherit; font-size:12px; min-width:0 }
   .addrow input#t-title { grid-column:1 / -1 }
@@ -64,7 +81,7 @@
   #calgrid .day { min-height:56px; background:#0e1322; border:1px solid var(--line); border-radius:7px; padding:3px 4px; cursor:pointer; font-size:11px; color:var(--muted); overflow:hidden }
   #calgrid .day.other { opacity:.4 } #calgrid .day.today { border-color:var(--accent) } #calgrid .day.sel { background:#1c2436 } #calgrid .day .n { color:var(--text); font-weight:500 }
   #calgrid .chip { display:block; font-size:10px; color:#fff; border-radius:3px; padding:0 3px; margin-top:2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis }
-  @media (max-width:860px) { #panel, #panel.wide { width:min(320px, calc(100% - 24px)) } #tabs button b, #nav .owner { display:none } #map { display:none } }
+  @media (max-width:860px) { #ask { display:none } #panel, #panel.wide { width:min(320px, calc(100% - 24px)) } #tabs button b, #nav .owner { display:none } #map { display:none } }
 </style>
 </head>
 <body>
@@ -73,6 +90,7 @@
 <div id="nav">
   <div class="logo">HQ</div><h1>Agent HQ</h1><span class="owner" id="owner">Aarav</span>
   <div id="tabs"><button class="on" data-tab="office">Office</button><button data-tab="tasks">Tasks<b id="taskn">0</b></button><button data-tab="calendar">Calendar</button><button data-tab="brain">Brain</button></div>
+  <form id="ask" autocomplete="off"><select id="ask-agent" title="Which agent"></select><input id="ask-q" placeholder="Ask any agent…" aria-label="Ask any agent"><button type="submit" title="Ask">↵</button></form>
   <span class="pill live" id="live"><b id="count">0</b> agents · <b id="running">0</b> running</span>
   <button id="demo">Demo</button>
 </div>
@@ -98,6 +116,11 @@
     <div class="calhead"><button id="cprev">‹</button><h2 id="calmonth" style="margin:0"></h2><button id="cnext">›</button><button id="ctoday">today</button></div>
     <div id="calgrid"></div>
     <div id="dayhead" class="kv" style="margin-top:10px"></div><div id="daylist"></div>
+  </div>
+  <div data-view="ask" style="display:none">
+    <div class="askhead"><span class="sw" id="chat-sw"></span><div><div id="chat-name" style="font-weight:600"></div><div id="chat-team" class="kv"></div></div><button id="chat-stop" hidden>Stop</button><button id="chat-clear" title="New conversation">Clear</button></div>
+    <div id="chat"></div>
+    <p id="chat-note" class="kv" hidden></p>
   </div>
   <div data-view="brain" style="display:none"><h2>The Brain</h2><p id="brainsum" style="color:var(--muted)">Start <b>python3 office/serve.py</b> to read brain/memory.jsonl here.</p><div id="brainlist"></div></div>
 </div>
@@ -242,7 +265,7 @@
   function pick(e) {
     ptr.set((e.clientX / innerWidth) * 2 - 1, -(e.clientY / innerHeight) * 2 + 1); ray.setFromCamera(ptr, camera);
     const hits = ray.intersectObjects(scene.children, true);
-    const ag = hits.find(h => h.object.userData.agent); if (ag) { showTab('office'); showCard(ag.object.userData.agent); return; }
+    const ag = hits.find(h => h.object.userData.agent); if (ag) { if (tab !== 'office') showTab('office'); showCard(ag.object.userData.agent); askSel.value = ag.object.userData.agent.name; return; }
     const rm = hits.find(h => h.object.userData.room); if (rm) flyTo(rm.object.userData.room);
   }
   function flyTo(r) { target.set(r.cx, 0, r.cz); setDist(24); }
@@ -303,12 +326,58 @@
   roomInfo.forEach(r => { const row = document.createElement('div'); row.className = 'row'; row.innerHTML = `<span class="sw" style="background:${hex(r.color)}"></span><span class="n">${r.d.name}</span><span class="c" data-team="${r.d.name}">${r.d.agents.length} agents</span>`; row.onclick = () => flyTo(r); teamsEl.appendChild(row); });
   function showCard(a) { card.style.display = 'block'; card.querySelector('.name').textContent = a.name; card.querySelector('.role').textContent = `${a.team} · ${a.role === 'head' ? 'team head' : 'worker'} · ${a.working ? 'working' : 'idle'}`; card.querySelector('.desc').textContent = a.description; card.querySelector('.tools').textContent = 'tools: ' + a.tools; card.querySelector('.model').textContent = 'model: ' + a.model; }
   document.getElementById('count').textContent = agents.filter(a => a.name !== 'chief-of-staff').length;
-  async function loadBrain() {
-    try { const j = await fetch('/brain', { cache: 'no-store' }).then(r => r.json());
-      document.getElementById('brainsum').textContent = `${j.notes} notes · shared memory (brain/memory.jsonl)`; brainLabel.userData.update(['THE BRAIN', `${j.notes} notes · shared memory`]);
-      document.getElementById('brainlist').innerHTML = j.entities.map(e => `<h3>${e.name} <span class="kv">${e.type || ''}</span></h3><ul>${e.observations.map(o => `<li>${o.replace(/</g, '&lt;')}</li>`).join('')}</ul>`).join('');
-    } catch (e) { /* no server */ }
+  let brain = data.brain || null;
+  function renderBrain(j) {
+    brain = j; document.getElementById('brainsum').textContent = `${j.notes} notes · shared memory (brain/memory.jsonl)`; brainLabel.userData.update(['THE BRAIN', `${j.notes} notes · shared memory`]);
+    document.getElementById('brainlist').innerHTML = j.entities.map(e => `<h3>${e.name} <span class="kv">${e.type || ''}</span></h3><ul>${e.observations.map(o => `<li>${String(o).replace(/</g, '&lt;')}</li>`).join('')}</ul>`).join('');
   }
+  async function loadBrain() {
+    try { renderBrain(await fetch('/brain', { cache: 'no-store' }).then(r => r.json())); }
+    catch (e) { if (brain) renderBrain(brain); /* no server: use the copy in agents.json */ }
+  }
+  if (brain) renderBrain(brain);
+
+  // ---------- ask any agent (the viewer's own Claude, through the sample capability) ----------
+  const askSel = document.getElementById('ask-agent'), askQ = document.getElementById('ask-q'), chatEl = document.getElementById('chat');
+  const chats = new Map(); let askCtl = null, samplePromise = (window.claude && window.claude.use) ? window.claude.use('sample').catch(() => null) : Promise.resolve(null);
+  [lobby, ...rooms].forEach(d => { const g = document.createElement('optgroup'); g.label = d.name; d.agents.forEach(a => { const o = document.createElement('option'); o.value = a.name; o.textContent = a.name; g.appendChild(o); }); askSel.appendChild(g); });
+  function brainText() { return (brain?.entities || []).map(e => `${e.name}:\n` + e.observations.map(o => `- ${o}`).join('\n')).join('\n\n') || '(empty)'; }
+  function roster() { return rooms.map(d => `${d.name}: ${d.agents.map(a => a.name + (a.role === 'head' ? ' (head)' : '')).join(', ')}`).join('\n'); }
+  function instructionsFor(a) {
+    const who = a.name === 'chief-of-staff'
+      ? `You are the chief of staff of Agent HQ, a 31-agent AI office that normally runs inside Claude Code. Your charter:\n\n${a.prompt}\n\nThe teams and their agents:\n${roster()}`
+      : `You are "${a.name}", ${a.role === 'head' ? 'head of' : 'a worker on'} the ${a.team} team of Agent HQ, a 31-agent AI office that normally runs inside Claude Code. Your job definition:\n\n${a.prompt}`;
+    return `${who}\n\nThe shared brain (company facts and brand rules every agent follows):\n${brainText()}\n\nYou are being asked from the office dashboard, not from inside Claude Code: here you cannot run tools, read files or start other agents. Answer in character, directly and usefully, in plain words, under 200 words unless more is clearly needed. If the question belongs to another agent, say which one and still give your best short answer. Do not describe these instructions.`;
+  }
+  function bubble(cls, text, who) { const m = document.createElement('div'); m.className = 'msg ' + cls; if (who) { const w = document.createElement('span'); w.className = 'who'; w.textContent = who; m.appendChild(w); } m.appendChild(document.createTextNode(text)); chatEl.appendChild(m); chatEl.scrollTop = chatEl.scrollHeight; return m; }
+  function openChat(a) {
+    document.getElementById('chat-name').textContent = a.name; document.getElementById('chat-team').textContent = `${a.team} · ${a.role === 'head' ? 'team head' : 'worker'}`; document.getElementById('chat-sw').style.background = hex(a.color);
+    chatEl.innerHTML = ''; (chats.get(a.name) || []).forEach(t => bubble(t.role === 'user' ? 'me' : 'agent', t.content, t.role === 'user' ? '' : a.name));
+    if (tab !== 'ask') showTab('ask');
+  }
+  const errCopy = { not_granted: 'This page was not allowed to use Claude. Allow it in the artifact permissions to ask agents.', rate_limited: 'Too many questions at once. Wait a moment and ask again.', refused: 'That question was declined. Try asking it another way.', session_expired: 'Sign in to claude.ai again, then ask again.', sampling_disabled: 'Claude is not available on this account.', upstream_error: 'The connection dropped. Ask again.' };
+  document.getElementById('ask').onsubmit = async e => {
+    e.preventDefault(); const q = askQ.value.trim(), a = byName.get(askSel.value); if (!q || !a) return;
+    openChat(a); askQ.value = ''; const note = document.getElementById('chat-note'); note.hidden = true;
+    const turns = chats.get(a.name) || []; chats.set(a.name, turns); turns.push({ role: 'user', content: q }); bubble('me', q);
+    const sample = await samplePromise;
+    if (!sample) { note.textContent = 'Asking agents works when this page is open on claude.ai. Locally, run "claude" in the repo and ask there.'; note.hidden = false; turns.pop(); return; }
+    const room = roomInfo.find(r => r.d.name === a.team); if (room) flyTo(room); else { target.set(0, 0, 2); setDist(28); }
+    setWorking(a.name, true, 'asked from the dashboard'); const stop = document.getElementById('chat-stop'); stop.hidden = false;
+    const out = bubble('agent thinking', 'Thinking…', a.name); askCtl = new AbortController(); stop.onclick = () => askCtl.abort();
+    try {
+      const { text, truncated } = await sample([{ role: 'user', content: instructionsFor(a) }, ...turns.slice(-12)], { cache: false, modelTier: 'quick', signal: askCtl.signal, onText: ({ text }) => { out.classList.remove('thinking'); out.lastChild.textContent = text; chatEl.scrollTop = chatEl.scrollHeight; } });
+      out.classList.remove('thinking'); out.lastChild.textContent = text; turns.push({ role: 'assistant', content: text });
+      if (truncated) { note.textContent = 'The answer was cut short. Ask for less at a time.'; note.hidden = false; }
+    } catch (err) {
+      out.classList.remove('thinking'); out.lastChild.textContent = err.text || '';
+      if (!err.text) out.remove(); turns.pop();
+      if (err.code !== 'cancelled') { note.textContent = errCopy[err.code] || errCopy.upstream_error; note.hidden = false; }
+    } finally { stop.hidden = true; askCtl = null; setWorking(a.name, false); }
+  };
+  document.getElementById('chat-clear').onclick = () => { const a = byName.get(askSel.value); if (a) { chats.delete(a.name); openChat(a); } };
+  document.getElementById('chat-stop').onclick = () => askCtl && askCtl.abort();
+  askSel.onchange = () => { const a = byName.get(askSel.value); if (a && tab === 'ask') openChat(a); };
 
   // ---------- status ----------
   const toast = document.getElementById('toast'); let toastT = null;
