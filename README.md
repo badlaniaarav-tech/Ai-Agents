@@ -37,9 +37,9 @@ Drag to orbit, wheel to zoom, click a character for its job, tools and model, cl
 
 It is live: hooks in `.claude/settings.json` append every sub-agent start and stop to `office/events.jsonl`, and the page polls that file. Run Claude Code in this repo in another terminal, give it a task, and watch the characters work. After `/hire`, run `/office` (or `python3 office/build.py`) to regenerate `office/agents.json`.
 
-## Sharing it with other people
+## Sharing it with family or a team
 
-Everyone who opens the link signs in to claude.ai, and the page keeps a private workspace per person: their board, clips, results and profile live under their own account and nobody else can see them, the owner included. On first visit a welcome screen asks for their name, an email for notifications and approvals, an office name, and whether they want to connect their social media through Metricool (the page then shows how: add the Metricool connector in claude.ai Settings → Connectors, then connect networks in Metricool). Metricool runs as the viewer, so each person's own Metricool account is used; the owner's stays on the owner's account. To let someone save work, share the link with them as a Contributor (or higher) from the page's Share menu; a view-only share lets them look but not save.
+One claude.ai login can hold several people. The page has its own sign-in: each person creates a profile with their name, email and a password, gets their own board, clips and results, and can stay signed in on their device. The account menu (avatar, top right) has Switch person and Change password. The password is a lock inside the page, keyed to the shared claude.ai account, so it keeps people's work apart rather than guarding secrets from each other. The first profile created owns Metricool: only the profile whose email matches the Metricool account (or the first profile) can send posts for approval, read best times or competitors; others are told whose it is. People on their own claude.ai accounts get their own separate set of profiles. To let someone save work, share the link as a Contributor (or higher) from the page's Share menu.
 
 ## The website
 
