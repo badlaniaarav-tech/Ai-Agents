@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Reads CLAUDE.md (the department table) and .claude/agents/*.md, writes office/agents.json for the 3D office.
+"""Reads CLAUDE.md (the team table) and .claude/agents/*.md, writes office/agents.json for the 3D office.
 
 usage: python3 office/build.py        (run from the repo root, or anywhere: paths are relative to this file)
 """
@@ -24,11 +24,11 @@ def frontmatter(path):
 
 
 def departments():
-    """Parse the department table in CLAUDE.md: | Department | Head | Workers |"""
+    """Parse the team table in CLAUDE.md: | Team | Head | Workers |  (a row without a backticked head is the lobby)"""
     deps = []
     for line in open(os.path.join(ROOT, "CLAUDE.md"), encoding="utf-8"):
         cells = [c.strip() for c in line.strip().strip("|").split("|")]
-        if len(cells) != 3 or cells[0] in ("Department", "") or set(cells[0]) <= {"-"}:
+        if len(cells) != 3 or cells[0] in ("Team", "Department", "") or set(cells[0]) <= {"-"}:
             continue
         head = re.findall(r"`([a-z0-9-]+)`", cells[1])
         workers = re.findall(r"`([a-z0-9-]+)`", cells[2])
@@ -43,7 +43,7 @@ def main():
     out = {"departments": []}
     for d in deps:
         members = []
-        if d["name"] == "Leadership":
+        if not d["head"]:
             members.append({"name": "chief-of-staff", "role": "head", "description": "Routes work, runs departments in parallel, reviews, reports.", "tools": "everything", "model": "the session"})
         for name in ([d["head"]] if d["head"] else []) + d["workers"]:
             if name not in files:
@@ -57,7 +57,7 @@ def main():
         out["departments"].append({"name": d["name"], "agents": members})
     missing = sorted(set(files) - placed)
     if missing:
-        print(f"warning: not in any department, placed in Leadership: {missing}", file=sys.stderr)
+        print(f"warning: not in any team, placed in the lobby: {missing}", file=sys.stderr)
         for name in missing:
             meta, _ = frontmatter(files[name])
             out["departments"][0]["agents"].append({"name": name, "role": "worker", "description": meta.get("description", ""), "tools": meta.get("tools", ""), "model": meta.get("model", "inherit")})

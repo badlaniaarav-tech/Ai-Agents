@@ -1,29 +1,29 @@
-# AI Agents: an AI office for Claude Code
+# Agent HQ: a 31-agent AI office for Claude Code
 
-A 31-agent AI office that runs inside [Claude Code](https://claude.com/claude-code). One lead (the chief of staff) routes your request to seven departments, whose heads split the work across sub-agents that run in parallel, review the result, and hand it back for your OK. A shared brain (a memory MCP server) holds your company facts and brand rules, so every agent follows the same rules and remembers what you tell it.
+A 31-agent AI office that runs inside [Claude Code](https://claude.com/claude-code). One lead (the chief of staff) routes your request to eight teams around a shared Brain. Team heads split the work across sub-agents that run in parallel, review the result, and hand it back for your OK. A shared brain (a memory MCP server) holds your company facts and brand rules, so every agent follows the same rules and remembers what you tell it.
 
 Built from three Bekhruz AI videos:
 
 | Video | What it contributed |
 |---|---|
 | [I Built an AI Agent Team From Scratch](https://youtu.be/-14NKNpWr1M) | The creative team: `clip-editor`, `brand-checker`, `/edit-clips`, the video `tools/`, and the permission rules. Taken from the creator's own repo, [bekhruztbx/ai-creative-team](https://github.com/bekhruztbx/ai-creative-team) (MIT). |
-| [I Built an AI Office With 31 Agents](https://youtu.be/t0hGE-aaAds) | The office: departments, heads that orchestrate, workers that do one job, the chief of staff that routes everything. |
+| [I Built an AI Office With 31 Agents](https://youtu.be/t0hGE-aaAds) | The office: eight teams (Research, Inbox, Scripts, Dev, TBX Shop, Social, Creative, Analytics) around the Brain, heads that orchestrate, workers that do one job, and the Three.js "Agent HQ" page where each room is a team and each character is an agent. |
 | [I Gave My AI Agents One Brain](https://youtu.be/fZn-DftQYSo) | The shared brain: one memory MCP server in `brain/memory.jsonl` that every agent reads and the lead writes to. |
 
 ## What is in here
 
 | Piece | Where | What it does |
 |---|---|---|
-| Office charter | `CLAUDE.md` | The chief of staff's instructions: departments, how work flows, the brain, the rules |
+| Office charter | `CLAUDE.md` | The chief of staff's instructions: teams, how work flows, the brain, the rules |
 | 31 agents | `.claude/agents/*.md` | One file per agent: who it is, when to use it, its tools, its steps |
 | Org chart | `docs/office.md` | Every agent and its job, plus how a request moves |
 | Commands | `.claude/commands/` | `/brief`, `/edit-clips`, `/standup`, `/research`, `/campaign`, `/hire` |
 | Approvals | `.claude/settings.json` | What agents may do alone, what asks you, what is never allowed |
 | Shared brain | `.mcp.json` + `brain/memory.jsonl` | Memory MCP server with the **Company** and **Brand rules** entities |
 | Video tools | `tools/` | `cut.py`, `captions.py`, `thumbnail.py`, `frames.py` for the creative pipeline |
-| 3D office | `office/` | A Three.js page: each room is a department, each character is an agent, and characters light up while their sub-agent runs |
+| 3D office | `office/` | Agent HQ, a Three.js page: the Brain in the middle, one room per team, one character per agent, and characters light up while their sub-agent runs |
 
-Departments: Leadership, Creative, Marketing, Sales, Research, Engineering, Operations. See `docs/office.md`.
+Teams: Research, Inbox, Scripts, Dev, TBX Shop, Social, Creative, Analytics. See `docs/office.md`.
 
 ## See the office in 3D
 
@@ -31,7 +31,7 @@ Departments: Leadership, Creative, Marketing, Sales, Research, Engineering, Oper
 python3 office/serve.py        # then open http://localhost:8787
 ```
 
-Drag to orbit, wheel to zoom, click a character for its job, tools and model. Click a department in the side panel to fly to its room. Press "Demo activity" to see what it looks like when agents are busy.
+Drag to orbit, wheel to zoom, click a character for its job, tools and model, click a room to fly to it. The top bar has the Office, Tasks (live log) and Brain (shared memory) tabs and the "31 agents · N running" counter; the minimap is bottom right. Press "Demo" to see what it looks like when agents are busy.
 
 It is live: hooks in `.claude/settings.json` append every sub-agent start and stop to `office/events.jsonl`, and the page polls that file. Run Claude Code in this repo in another terminal, give it a task, and watch the characters work. After `/hire`, run `/office` (or `python3 office/build.py`) to regenerate `office/agents.json`.
 
@@ -52,16 +52,16 @@ Then tell it about your company once, for example: *"We sell X to Y. Our voice i
 
 | You type | What happens |
 |---|---|
-| `/brief write a landing page for our new course` | Chief of staff routes to Creative; `copywriter` writes, `brand-checker` reviews |
+| `/brief write the listing for the new hoodie` | Chief of staff routes to TBX Shop; `copywriter` writes, `brand-checker` reviews |
 | `/research AI video editing tools market` | Market, competitor and trend agents run in parallel; one brief with sources |
-| `/campaign launch of the October drop` | Marketing director plans; social, SEO, email, ads, community run in parallel |
+| `/campaign launch of the October drop` | Social and TBX Shop heads plan; posts, replies, newsletter, ads and pricing run in parallel |
 | `/edit-clips` | One `clip-editor` per clip in `inbox/`, then `brand-checker` |
-| `/standup` | Every department head reports; status goes to `work/operations/status.md` |
+| `/standup` | Every team head reports; status goes to `work/analytics/status.md` |
 | `/hire podcast-producer: turns long recordings into episode outlines` | Adds a new agent file and updates the org chart |
 
 Or just talk to it. Anything you say in plain words gets routed the same way as `/brief`.
 
-Deliverables land in `work/<department>/<task>/` (and `out/<clip>/` for videos). Nothing is posted, sent, pushed or published by the office. You review and say OK.
+Deliverables land in `work/<team>/<task>/` (and `out/<clip>/` for videos). Nothing is posted, sent, pushed or published by the office. You review and say OK.
 
 ## Teach it
 
@@ -71,7 +71,7 @@ Say *"From now on, cover text is red, not yellow"* or *"Never use the word 'leve
 
 - Agents may run the four video tools, write under `work/`, `out/`, `done/` and `brain/`, search the web, and run tests. Editing source code or the agents themselves asks you first (`.claude/settings.json`).
 - `rm`, `curl`, `wget`, force pushes and reading `.env` are blocked. `git push` asks.
-- Every deliverable is reviewed by a checker agent or a department head before you see it.
+- Every deliverable is reviewed by a checker agent or a team head before you see it.
 
 ## License
 

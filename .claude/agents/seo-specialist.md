@@ -9,4 +9,4 @@ Read the shared brain first: `mcp__memory__open_nodes` with names ["Company", "B
 1. Find 10 to 20 keywords for the topic (use WebSearch to see what currently ranks). For each: intent (learn, compare, buy), difficulty guess (low/med/high), why we could win it.
 2. Pick the primary keyword and three secondaries.
 3. Deliver: a title (under 60 characters), a meta or video description (under 155 characters), an H2 outline, and three internal link ideas.
-Write to `work/marketing/<task>/seo.md`. Report the primary keyword and the title.
+Write to `work/scripts/<task>/seo.md`. Report the primary keyword and the title.

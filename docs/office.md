@@ -1,49 +1,49 @@
 # Org chart
 
-31 agents in 7 departments, led by the chief of staff (the Claude Code session itself, with its instructions in `CLAUDE.md`). Each of the 31 agents is a sub-agent file in `.claude/agents/`. Heads run on Opus and orchestrate; workers run on Sonnet and do one job each.
+31 agents in 8 teams around the Brain, led by the chief of staff (the Claude Code session itself, with its instructions in `CLAUDE.md`). Each of the 31 agents is a sub-agent file in `.claude/agents/`. Team heads run on Opus and orchestrate; workers run on Sonnet and do one job each.
 
-| # | Agent | Department | Job |
+| # | Agent | Team | Job |
 |---|---|---|---|
-| lead | chief of staff | Leadership | Routes work, runs departments in parallel, reviews, reports (`CLAUDE.md`) |
-| 1 | `strategist` | Leadership | Goal to options, recommendation, first three steps |
-| 2 | `creative-director` | Creative | Splits video and content jobs, runs the workers, sends work to brand-checker |
-| 3 | `script-writer` | Creative | Short-form video scripts: hook, three beats, close |
-| 4 | `hook-writer` | Creative | Ten ranked opening lines for any piece |
-| 5 | `copywriter` | Creative | Landing page, product and bio copy |
-| 6 | `clip-editor` | Creative | One raw clip to a captioned vertical edit, cover and notes (`tools/`) |
-| 7 | `brand-checker` | Creative | Reviews every creative deliverable against the brand rules; PASS or FIX |
-| 8 | `thumbnail-designer` | Creative | Picks the frame, text and placement for covers |
-| 9 | `marketing-director` | Marketing | Campaign plan, delegates per channel, reviews |
-| 10 | `social-media-manager` | Marketing | Platform-ready posts and a calendar |
-| 11 | `seo-specialist` | Marketing | Keywords, titles, descriptions, outlines |
-| 12 | `email-marketer` | Marketing | Sequences, newsletters, subject lines |
-| 13 | `ads-specialist` | Marketing | Paid ad variants, audiences, test plan |
-| 14 | `community-manager` | Marketing | Replies to comments and DMs, flags what needs the owner |
-| 15 | `sales-director` | Sales | Pipeline plan, delegates research, outreach, proposals |
-| 16 | `lead-researcher` | Sales | Qualified leads for one segment, with fit reasons |
-| 17 | `outreach-writer` | Sales | Personalised 3-step outreach sequences |
-| 18 | `proposal-writer` | Sales | Proposals and quotes with scope, price, next step |
-| 19 | `research-director` | Research | Splits a question three ways, merges into one brief |
-| 20 | `market-analyst` | Research | Market size, customers, pricing benchmarks |
-| 21 | `competitor-analyst` | Research | Competitor profiles and the gap we can own |
-| 22 | `trend-scout` | Research | What changed in the last 30 to 90 days |
-| 23 | `engineering-lead` | Engineering | Spec, delegates to devs, runs QA and review |
-| 24 | `frontend-dev` | Engineering | UI code following the project's patterns |
-| 25 | `backend-dev` | Engineering | Server, API, data and tooling code |
-| 26 | `qa-tester` | Engineering | Tests per acceptance criterion, reproduces bugs |
-| 27 | `code-reviewer` | Engineering | Ranked findings on the diff; PASS or FIX |
-| 28 | `operations-manager` | Operations | Status, schedules, budgets, support; keeps `work/operations/status.md` |
-| 29 | `project-manager` | Operations | Milestones, tasks, owners, dates, risks |
-| 30 | `finance-analyst` | Operations | Budgets, forecasts, pricing math with assumptions |
-| 31 | `customer-support` | Operations | Replies to customer messages, escalates money and legal |
+| lead | chief of staff | The Brain | Routes work, runs teams in parallel, reviews, reports (`CLAUDE.md`) |
+| 1 | `research-director` | Research | Splits a question three ways, merges into one brief |
+| 2 | `market-analyst` | Research | Market size, customers, pricing benchmarks |
+| 3 | `competitor-analyst` | Research | Competitor profiles and the gap we can own |
+| 4 | `trend-scout` | Research | What changed in the last 30 to 90 days |
+| 5 | `inbox-manager` | Inbox | Triages email, DMs and requests; routes and drafts |
+| 6 | `customer-support` | Inbox | Replies to customer messages, escalates money and legal |
+| 7 | `proposal-writer` | Inbox | Proposals and quotes with scope, price, next step |
+| 8 | `script-writer` | Scripts | Short-form video scripts: hook, three beats, close; runs the Scripts team |
+| 9 | `hook-writer` | Scripts | Ten ranked opening lines for any piece |
+| 10 | `seo-specialist` | Scripts | Keywords, titles, descriptions, outlines |
+| 11 | `engineering-lead` | Dev | Spec, delegates to devs, runs QA and review |
+| 12 | `frontend-dev` | Dev | UI code following the project's patterns |
+| 13 | `backend-dev` | Dev | Server, API, data and tooling code |
+| 14 | `qa-tester` | Dev | Tests per acceptance criterion, reproduces bugs |
+| 15 | `code-reviewer` | Dev | Ranked findings on the diff; PASS or FIX |
+| 16 | `shop-manager` | TBX Shop | Product drops and launches: plan, delegate, review |
+| 17 | `copywriter` | TBX Shop | Product listings, landing page and bio copy |
+| 18 | `ads-specialist` | TBX Shop | Paid ad variants, audiences, test plan |
+| 19 | `finance-analyst` | TBX Shop | Pricing, margin, budgets with assumptions |
+| 20 | `project-manager` | TBX Shop | Launch timeline: milestones, tasks, owners, dates |
+| 21 | `social-media-manager` | Social | Posts and calendar; runs the Social team |
+| 22 | `community-manager` | Social | Replies to comments and DMs, flags what needs the owner |
+| 23 | `email-marketer` | Social | Newsletters and sequences with subject lines |
+| 24 | `outreach-writer` | Social | Personalised outreach to partners, sponsors, collabs |
+| 25 | `creative-director` | Creative | Splits video jobs, runs the workers, sends work to brand-checker |
+| 26 | `clip-editor` | Creative | One raw clip to a captioned vertical edit, cover and notes (`tools/`) |
+| 27 | `brand-checker` | Creative | Reviews every creative deliverable against the brand rules; PASS or FIX |
+| 28 | `thumbnail-designer` | Creative | Picks the frame, text and placement for covers |
+| 29 | `analytics-lead` | Analytics | The weekly report: what the numbers mean, what to change |
+| 30 | `data-analyst` | Analytics | Cleans exports, computes metrics and trends, shows the work |
+| 31 | `strategist` | Analytics | Goal to options, recommendation, first three steps |
 
 ## How a request moves
 
 ```
-owner  ->  chief of staff  ->  department head  ->  workers (parallel)
-                 ^                   |                    |
-                 |                   v                    v
-              report  <-------  review (brand-checker / code-reviewer / head)
+owner  ->  chief of staff (the Brain)  ->  team head  ->  workers (parallel)
+                 ^                              |               |
+                 |                              v               v
+              report  <----------  review (brand-checker / code-reviewer / head)
 ```
 
 ## The shared brain
@@ -52,7 +52,7 @@ owner  ->  chief of staff  ->  department head  ->  workers (parallel)
 
 ## The 3D office
 
-`office/index.html` draws this chart as a 3D floor: one room per department, one desk and character per agent, heads wear a hat. `office/build.py` turns the table in `CLAUDE.md` plus the agent files into `office/agents.json`; `office/serve.py` serves the page and streams `office/events.jsonl`, which the hooks in `.claude/settings.json` write on every sub-agent start and stop.
+`office/index.html` draws this chart as a 3D floor: the Brain in the middle, one room per team around it, one desk and character per agent, heads wear a hat. The top bar has Office, Tasks (the live log) and Brain (the memory file) tabs, the running counter, and the model chips; the minimap sits bottom right. `office/build.py` turns the table in `CLAUDE.md` plus the agent files into `office/agents.json`; `office/serve.py` serves the page, streams `office/events.jsonl` (written by the hooks in `.claude/settings.json` on every sub-agent start and stop) and exposes the brain at `/brain`.
 
 ## Adding an agent
 

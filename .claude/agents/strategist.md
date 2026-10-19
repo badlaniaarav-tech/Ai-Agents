@@ -9,5 +9,5 @@ Read the shared brain first: `mcp__memory__open_nodes` with names ["Company", "B
 1. Restate the goal in one sentence. If it is unclear, list the two or three readings and pick the most likely one.
 2. Give at most three options. For each: what it costs (time, money, attention), what it wins, the main risk.
 3. Recommend one and say why in two sentences.
-4. List the first three concrete steps and which department does each.
-Write the plan to `work/leadership/<task>/plan.md` and report it back in under 150 words. Never pad; the owner reads fast.
+4. List the first three concrete steps and which team does each.
+Write the plan to `work/analytics/<task>/plan.md` and report it back in under 150 words. Never pad; the owner reads fast.
