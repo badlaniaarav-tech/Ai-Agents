@@ -91,7 +91,7 @@
   .clipmedia { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:10px } .clipmedia:not(:has(a)) { grid-template-columns:1fr } .clipmedia video { width:100%; max-height:260px; border-radius:9px; background:#000 } .clipmedia a { display:flex; flex-direction:column; gap:4px; color:var(--muted); font-size:11px; text-decoration:none } .clipmedia img { width:100%; max-height:240px; object-fit:contain; border-radius:9px; background:#000 } .clip .ti { font-size:13px } .clip .meta { font-size:11px; color:var(--muted) }
   #menu { position:fixed; top:56px; right:12px; width:300px; background:var(--panel); border:1px solid var(--line); border-radius:12px; padding:12px; display:none; z-index:5; box-shadow:0 10px 30px rgba(0,0,0,.35) } #menu.on { display:block }
   #menu .row { display:flex; align-items:center; gap:10px; padding:6px 0; border-bottom:1px solid var(--line); font-size:13px } #menu .row:last-child { border:0 } #menu .row .kv { flex:1 } #menu button { background:var(--well); color:var(--text); border:1px solid var(--line); border-radius:6px; padding:4px 9px; font:inherit; font-size:12px; cursor:pointer }
-  #menu input { background:var(--well); color:var(--text); border:1px solid var(--line); border-radius:6px; padding:4px 8px; font:inherit; font-size:12px; width:100% }
+  #menu input { background:var(--well); color:var(--text); border:1px solid var(--line); border-radius:6px; padding:4px 8px; font:inherit; font-size:12px; flex:1; min-width:0; width:auto }
   #nav .me { cursor:pointer }
   #welcome { position:fixed; inset:0; background:rgba(6,9,16,.72); backdrop-filter:blur(6px); display:none; align-items:center; justify-content:center; z-index:20; padding:16px } #welcome.on { display:flex }
   .wcard { width:min(420px, 100%); background:var(--panel); border:1px solid var(--line); border-radius:16px; padding:20px; box-shadow:0 20px 60px rgba(0,0,0,.5) }
@@ -129,7 +129,9 @@
   #calgrid .day { min-height:56px; background:var(--well); border:1px solid var(--line); border-radius:7px; padding:3px 4px; cursor:pointer; font-size:11px; color:var(--muted); overflow:hidden }
   #calgrid .day.other { opacity:.4 } #calgrid .day.today { border-color:var(--accent) } #calgrid .day.sel { background:var(--well2) } #calgrid .day .n { color:var(--text); font-weight:500 }
   #calgrid .chip { display:block; font-size:10px; color:#fff; border-radius:3px; padding:0 3px; margin-top:2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis }
-  @media (max-width:860px) { #ask, #hint { display:none } #nav { height:auto; flex-wrap:wrap; padding:8px 10px; row-gap:6px } #tabs { margin:0; order:5; flex-basis:100% } #panel, #panel.wide { width:min(320px, calc(100% - 24px)) } #tabs button b, #bell { display:none } #map, #pad { display:none } }
+  @media (max-width:860px) { #ask, #hint { display:none } #nav { height:auto; flex-wrap:wrap; padding:8px 10px; row-gap:6px } #tabs { margin:0; order:5; flex-basis:100%; overflow-x:auto; -webkit-overflow-scrolling:touch; scrollbar-width:none } #tabs::-webkit-scrollbar { display:none } #tabs button { white-space:nowrap; flex:0 0 auto } #panel, #panel.wide { width:min(320px, calc(100% - 24px)) } #tabs button b, #bell { display:none } #map, #pad { display:none } }
+  @media (max-width:600px) { #nav h1 { font-size:14px; margin-right:4px } #nav .pill { font-size:11px; padding:3px 8px } #overview, #demo { padding:4px 8px; font-size:12px } #menu { left:12px; right:12px; width:auto; max-height:calc(100vh - 110px); overflow:auto } #menu .row:not(:has(input)) { flex-wrap:wrap } #panel, #panel.wide { width:calc(100% - 24px); max-height:60vh } }
+  body.demo .claude-only, body.demo #menu .row.claude-only { display:none } .demo-only, #menu .row.demo-only { display:none } body.demo .demo-only, body.demo #menu .row.demo-only { display:flex } #menu .row.demo-only { flex-direction:column; align-items:stretch; gap:8px; background:var(--well); border:1px solid var(--line); border-radius:10px; padding:10px; margin:6px 0 } #menu .row.demo-only .kv { white-space:normal; line-height:1.5 } #menu .row.demo-only a { display:block; text-align:center; background:var(--accent); color:#06121c; font-weight:600; border-radius:8px; padding:9px; text-decoration:none; font-size:13px }
 </style>
 </head>
 <body>
@@ -167,15 +169,16 @@
 </div>
 <div id="menu">
   <div class="row"><div class="me" id="menu-av">A</div><div class="kv"><div id="menu-name" style="color:var(--text); font-weight:600">Aarav</div><div id="menu-email">signed in on claude.ai</div></div></div>
+  <div class="row demo-only"><div class="kv">This is the public demo of the office: the 3D view and the starter board, saved in this browser only. Sign-in, running tasks, golf clips, Metricool and iPhone alerts work on the full office on claude.ai (same login).</div><a id="menu-full" href="#" target="_blank" rel="noopener">Open the full office</a></div>
   <div class="row"><div class="kv">Office name and logo</div></div>
   <div class="row"><input id="menu-office" placeholder="Agent HQ" maxlength="32"><button id="menu-save">Save</button></div>
-  <div class="row"><div class="kv" id="menu-brand">Metricool: not read yet</div></div>
+  <div class="row claude-only"><div class="kv" id="menu-brand">Metricool: not read yet</div></div>
   <div class="row"><div class="kv" id="menu-where">saving: …</div></div>
-  <div class="row"><div class="kv">iPhone alerts: the Claude app check-in (4× a day) and Metricool for posts. Browser alerts below, where the browser allows them.</div><button id="menu-alerts">Enable</button></div>
-  <div class="row"><div class="kv">Page permissions (Claude, Metricool, database)</div><button id="menu-perms">Manage</button></div>
+  <div class="row claude-only"><div class="kv">iPhone alerts: the Claude app check-in (4× a day) and Metricool for posts. Browser alerts below, where the browser allows them.</div><button id="menu-alerts">Enable</button></div>
+  <div class="row claude-only"><div class="kv">Page permissions (Claude, Metricool, database)</div><button id="menu-perms">Manage</button></div>
   <div class="row"><div class="kv">Backup of the board</div><button id="menu-export">Export</button></div>
-  <div class="row"><div class="kv">Change password</div></div>
-  <div class="row"><input id="menu-cur" type="password" placeholder="current" style="width:48%"><input id="menu-new" type="password" placeholder="new" style="width:48%"><button id="menu-pass">Set</button></div>
+  <div class="row claude-only"><div class="kv">Change password</div></div>
+  <div class="row claude-only"><input id="menu-cur" type="password" placeholder="current" style="width:48%"><input id="menu-new" type="password" placeholder="new" style="width:48%"><button id="menu-pass">Set</button></div>
   <div class="row"><div class="kv">Not you?</div><button id="menu-switch">Switch person</button></div>
 </div>
 <div id="hint">drag to orbit · right-drag or arrows to pan · wheel to zoom · click a room or agent · O overview · 1–8 rooms</div>
@@ -1017,7 +1020,8 @@
   }
   document.getElementById('menu-switch').onclick = async () => { try { localStorage.removeItem(STAY_LS); } catch (e) { } mid = null; profile = null; boardCol = null; items = []; afterTasks(); menu.classList.remove('on'); showLogin(await listMembers()); };
   document.getElementById('menu-pass').onclick = async () => { const cur = document.getElementById('menu-cur').value, nw = document.getElementById('menu-new').value; if (!profile) return; if ((await sha(profile.salt + cur)) !== profile.hash) { notify('Password', 'Current password does not match.', '#e64a4a'); return; } if (nw.length < 4) { notify('Password', 'Use at least 4 characters.', '#e64a4a'); return; } const hash = await sha(profile.salt + nw); await saveProfile({ hash }); try { const s = JSON.parse(localStorage.getItem(STAY_LS) || 'null'); if (s && s.mid === mid) localStorage.setItem(STAY_LS, JSON.stringify({ mid, token: hash })); } catch (e) { } document.getElementById('menu-cur').value = document.getElementById('menu-new').value = ''; notify('Password', 'Changed.'); };
-  if (!(window.claude && window.claude.use)) { try { profile = JSON.parse(localStorage.getItem('agent-hq-profile') || 'null'); } catch (e) { } }
+  const FULL_OFFICE = 'https://claude.ai/artifact/XYTm1RJeZgpxge3aYLhYUj'; // the published office with Claude, the database and Metricool
+  if (!(window.claude && window.claude.use)) { document.body.classList.add('demo'); document.getElementById('menu-full').href = FULL_OFFICE; try { profile = JSON.parse(localStorage.getItem('agent-hq-profile') || 'null'); } catch (e) { } }
   document.getElementById('menu-perms').onclick = async () => { try { const perms = await window.claude.use('permissions'); await perms.manage(); } catch (e) { notify('Permissions', 'Open the artifact menu on claude.ai → Permissions.', '#e8902a'); } };
   document.getElementById('menu-alerts').onclick = async function () {
     if (!('Notification' in window)) { notify('Alerts', 'This browser cannot show notifications. Phone alerts come from the Claude app check-in and Metricool.', '#e8902a'); return; }
