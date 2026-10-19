@@ -89,7 +89,8 @@
   .task .acts button:hover { color:var(--text); background:var(--well2) }
   .type { font-size:10px; padding:1px 5px; border-radius:4px; background:var(--well2); color:var(--muted); margin-left:4px; text-transform:uppercase; letter-spacing:.05em }
   .calhead { display:flex; align-items:center; gap:6px; margin-bottom:8px } .calhead h2 { flex:1; text-transform:none; letter-spacing:0; font-size:14px; color:var(--text) }
-  .calhead button { background:var(--well); color:var(--text); border:1px solid var(--line); border-radius:6px; padding:3px 9px; font:inherit; font-size:12px; cursor:pointer }
+  .calhead button, .calhead select { background:var(--well); color:var(--text); border:1px solid var(--line); border-radius:6px; padding:3px 9px; font:inherit; font-size:12px; cursor:pointer }
+  table.cmp { width:100%; border-collapse:collapse; font-size:12px; margin:6px 0 10px } table.cmp th, table.cmp td { text-align:right; padding:5px 6px; border-bottom:1px solid var(--line); white-space:nowrap } table.cmp th:first-child, table.cmp td:first-child { text-align:left } table.cmp th { color:var(--muted); font-weight:500; font-size:11px; text-transform:uppercase; letter-spacing:.05em } table.cmp tr.me td { color:var(--accent); font-weight:600 } table.cmp td a { color:var(--text) } .cmpwrap { overflow-x:auto }
   #calgrid { display:grid; grid-template-columns:repeat(7, 1fr); gap:3px }
   #calgrid .dow { font-size:10px; color:var(--muted); text-align:center; text-transform:uppercase; letter-spacing:.06em; padding-bottom:2px }
   #calgrid .day { min-height:56px; background:var(--well); border:1px solid var(--line); border-radius:7px; padding:3px 4px; cursor:pointer; font-size:11px; color:var(--muted); overflow:hidden }
@@ -103,7 +104,7 @@
 
 <div id="nav">
   <div class="logo">HQ</div><h1>Agent HQ</h1><span class="owner" id="owner"><span class="av">A</span>Aarav ▾</span>
-  <div id="tabs"><button class="on" data-tab="office">Office</button><button data-tab="tasks">Tasks<b id="taskn">0</b></button><button data-tab="calendar">Calendar</button><button data-tab="brain">Brain</button></div>
+  <div id="tabs"><button class="on" data-tab="office">Office</button><button data-tab="tasks">Tasks<b id="taskn">0</b></button><button data-tab="calendar">Calendar</button><button data-tab="competitors">Competitors</button><button data-tab="brain">Brain</button></div>
   <form id="ask" autocomplete="off"><select id="ask-agent" title="Which agent"></select><input id="ask-q" placeholder="Ask any agent…" aria-label="Ask any agent"><kbd>⌘K</kbd><button type="submit" title="Ask">↵</button></form>
   <span class="pill live" id="live"><b id="count">0</b> agents · <b id="running">0</b> running</span>
   <button id="overview" title="See the whole office (O)">Overview</button>
@@ -143,6 +144,11 @@
   <div data-view="task" style="display:none">
     <div class="askhead"><span class="sw" id="res-sw"></span><div><div id="res-title" style="font-weight:600"></div><div id="res-meta" class="kv"></div></div><button id="res-back">Board</button></div>
     <div id="res-body"></div>
+  </div>
+  <div data-view="competitors" style="display:none">
+    <div class="calhead"><h2 style="margin:0">Instagram competitors</h2><select id="cmp-range"><option value="30">last 30 days</option><option value="7">last 7 days</option><option value="90">last 90 days</option></select><button id="cmp-load">Load</button></div>
+    <p class="kv">Numbers come from your Metricool brand. Add competitors in Metricool under Analytics → Instagram → Competitors, then press Load.</p>
+    <div id="cmp-body"></div>
   </div>
   <div data-view="brain" style="display:none"><h2>The Brain</h2><p id="brainsum" style="color:var(--muted)">Start <b>python3 office/serve.py</b> to read brain/memory.jsonl here.</p><div id="brainlist"></div></div>
 </div>
@@ -431,7 +437,7 @@
   const panel = document.getElementById('panel'); let tab = null;
   function showTab(name) {
     if (tab === name) { tab = null; panel.classList.remove('on'); document.querySelectorAll('#tabs button').forEach(b => b.classList.toggle('on', b.dataset.tab === 'office')); return; }
-    tab = name; panel.classList.add('on'); panel.classList.toggle('wide', name === 'tasks' || name === 'calendar' || name === 'task');
+    tab = name; panel.classList.add('on'); panel.classList.toggle('wide', name === 'tasks' || name === 'calendar' || name === 'task' || name === 'competitors');
     panel.querySelectorAll('[data-view]').forEach(v => v.style.display = v.dataset.view === name ? 'block' : 'none');
     document.querySelectorAll('#tabs button').forEach(b => b.classList.toggle('on', b.dataset.tab === name));
     if (name === 'brain') loadBrain(); if (name === 'tasks') renderBoard(); if (name === 'calendar') renderCal();
@@ -546,6 +552,49 @@
       await Promise.all(NETS.map(async n => { try { const r = await mcp.callTool(METRICOOL, 'getBestTimeToPostByNetwork', { brandId, fromDate: iso(from), toDate: iso(to), timezone: tz, socialNetwork: n }); best.nets[n] = slotsFrom(r.payload); } catch (e) { if (e.code === 'tool_error') best.nets[n] = []; else throw e; } }));
       renderBest();
     } catch (e) { renderBest(mcpCopy[e.code] || (e.code === 'tool_error' ? `Metricool says: ${String(e.message || '').slice(0, 300)}` : `Metricool did not answer (${e.code || 'error'}). Try again.`)); }
+    finally { this.disabled = false; }
+  };
+  // ---------- Instagram competitors: Metricool analytics fields, called as the viewer ----------
+  const CMP = { you: ['IGEV01', 'IGEV37', 'IGEV22', 'IGEV13', 'IGEV21', 'IGEV43', 'IGEV44', 'IGEV23'], them: ['IGCO02', 'IGCO03', 'IGCO07', 'IGCO08', 'IGCO12', 'IGCO09', 'IGCO06', 'IGCO10'], posts: ['IGCP01', 'IGCP04', 'IGCP05', 'IGCP07', 'IGCP08', 'IGCP09', 'IGCP10', 'IGCP11'] };
+  const NAMES = { IGEV01: 'followers', IGEV37: 'posts', IGEV22: 'reels', IGEV13: 'likes', IGEV21: 'engagement', IGEV43: 'gained', IGEV44: 'lost', IGEV23: 'reelViews', IGCO02: 'handle', IGCO03: 'name', IGCO07: 'followers', IGCO08: 'posts', IGCO12: 'reels', IGCO09: 'likes', IGCO06: 'comments', IGCO10: 'engagement', IGCP01: 'handle', IGCP04: 'text', IGCP05: 'published', IGCP07: 'likes', IGCP08: 'comments', IGCP09: 'interactions', IGCP10: 'engagement', IGCP11: 'url' };
+  let cmpData = null;
+  function rowsFrom(payload, ids) { // tolerant: rows keyed by field id or by metric name, in an array or under a data/rows member
+    const out = []; const seen = new Set();
+    const walk = o => { if (!o || typeof o !== 'object' || seen.has(o)) return; seen.add(o); if (Array.isArray(o)) { o.forEach(walk); return; }
+      const keys = Object.keys(o); const hit = keys.filter(k => ids.includes(k) || Object.values(NAMES).includes(k) || ids.some(id => k.toLowerCase() === NAMES[id]?.toLowerCase()));
+      if (hit.length >= 2) { const r = {}; keys.forEach(k => { const id = ids.find(x => x === k || NAMES[x]?.toLowerCase() === String(k).toLowerCase()); if (id) r[NAMES[id]] = o[k]; }); out.push(r); }
+      else keys.forEach(k => walk(o[k])); };
+    walk(payload); return out;
+  }
+  const num = v => { const n = parseFloat(String(v ?? '').replace(/[^\d.\-]/g, '')); return isFinite(n) ? n : null; }, fmt = v => v === null ? '–' : v >= 1e6 ? (v / 1e6).toFixed(1) + 'M' : v >= 1e4 ? Math.round(v / 1e3) + 'k' : Math.round(v * 10) / 10 + '';
+  function renderCmp(msg) {
+    const body = document.getElementById('cmp-body'); if (msg) { body.innerHTML = `<p class="kv">${esc(msg)}</p>`; return; }
+    const { you, them, posts, days } = cmpData;
+    const row = (label, r, me) => `<tr class="${me ? 'me' : ''}"><td>${me ? label : `<a href="https://instagram.com/${esc(r.handle || '')}" target="_blank" rel="noopener">@${esc(r.handle || r.name || '?')}</a>`}</td><td>${fmt(num(r.followers))}</td><td>${fmt(num(r.posts))}</td><td>${fmt(num(r.reels))}</td><td>${fmt(num(r.likes))}</td><td>${fmt(num(r.engagement))}</td></tr>`;
+    body.innerHTML = `<div class="cmpwrap"><table class="cmp"><tr><th>account</th><th>followers</th><th>posts ${days}d</th><th>reels</th><th>avg likes</th><th>engagement</th></tr>${you ? row('You', you, true) : ''}${them.map(r => row('', r)).join('')}</table></div>` +
+      (them.length ? '' : '<p class="kv">No competitors yet. Add them in Metricool (Analytics → Instagram → Competitors) and press Load again.</p>') +
+      (posts.length ? `<h2>Their top posts</h2><div class="cmpwrap"><table class="cmp"><tr><th>account</th><th style="text-align:left">post</th><th>likes</th><th>comments</th><th>eng.</th></tr>${posts.slice(0, 12).map(p => `<tr><td>@${esc(String(p.handle || '').split(':').pop())}</td><td style="text-align:left; white-space:normal; max-width:220px">${p.url ? `<a href="${esc(p.url)}" target="_blank" rel="noopener">` : ''}${esc(String(p.text || '').slice(0, 70))}${p.url ? '</a>' : ''}</td><td>${fmt(num(p.likes))}</td><td>${fmt(num(p.comments))}</td><td>${fmt(num(p.engagement))}</td></tr>`).join('')}</table></div>` : '') +
+      `<div class="resacts"><button id="cmp-ask">Ask Research why they get more reach</button></div>`;
+    document.getElementById('cmp-ask').onclick = async () => {
+      const summary = `Our Instagram (last ${days} days): ${you ? Object.entries(you).map(([k, v]) => `${k} ${v}`).join(', ') : 'no data'}.\nCompetitors: ${them.map(r => `@${r.handle}: followers ${r.followers}, posts ${r.posts}, reels ${r.reels}, avg likes ${r.likes}, engagement ${r.engagement}`).join('; ') || 'none'}.\nTheir top posts: ${posts.slice(0, 8).map(p => `@${String(p.handle || '').split(':').pop()} "${String(p.text || '').slice(0, 60)}" likes ${p.likes} comments ${p.comments}`).join('; ') || 'none'}.`;
+      const added = await postTask('add', { title: `Why competitors out-reach us on Instagram (${days}d)`, team: 'Research', agent: 'research-director', type: 'task', date: new Date().toISOString().slice(0, 10), notes: summary.slice(0, 1800) });
+      if (added) runTask(added);
+    };
+  }
+  document.getElementById('cmp-load').onclick = async function () {
+    const mcp = await mcpPromise; if (!mcp) { renderCmp('Competitors need this page open on claude.ai with the Metricool connector. In Claude Code, type /competitors instead.'); return; }
+    this.disabled = true; renderCmp('Asking Metricool…'); const days = +document.getElementById('cmp-range').value;
+    try {
+      const brands = (await mcp.callTool(METRICOOL, 'getBrandSettings', {})).payload; const flat = []; const walk = o => { if (Array.isArray(o)) o.forEach(walk); else if (o && typeof o === 'object') { flat.push(o); Object.values(o).forEach(walk); } }; walk(brands);
+      const brand = flat.find(o => o.blogId !== undefined || o.brandId !== undefined || o.id !== undefined) || {}; const brandId = String(brand.blogId ?? brand.brandId ?? brand.id ?? '');
+      if (!brandId) throw { code: 'tool_error', message: typeof brands === 'string' ? brands : 'Metricool returned no brand. Connect Instagram in Metricool first.' };
+      const iso = d => d.toISOString().replace(/\.\d+Z$/, '+00:00'), to = new Date(), from = new Date(Date.now() - days * 864e5);
+      const call = metrics => mcp.callTool(METRICOOL, 'getAnalyticsDataByMetrics', { brandId, from: iso(from), to: iso(to), metrics }).then(r => r.payload).catch(e => { if (e.code === 'tool_error') return null; throw e; });
+      const [y, c, p] = await Promise.all([call(CMP.you), call(CMP.them), call(CMP.posts)]);
+      const them = rowsFrom(c, CMP.them).filter(r => r.handle || r.name), posts = rowsFrom(p, CMP.posts).filter(r => r.likes !== undefined || r.text).sort((a, b) => (num(b.interactions) || 0) - (num(a.interactions) || 0));
+      const youRows = rowsFrom(y, CMP.you); const you = youRows.length ? youRows.reduce((acc, r) => { Object.entries(r).forEach(([k, v]) => { const n = num(v); if (n !== null) acc[k] = (k === 'followers' || k === 'engagement') ? n : (acc[k] || 0) + n; }); return acc; }, {}) : null;
+      cmpData = { you, them, posts, days }; renderCmp();
+    } catch (e) { renderCmp(mcpCopy[e.code] || (e.code === 'tool_error' ? `Metricool says: ${String(e.message || '').slice(0, 300)}` : `Metricool did not answer (${e.code || 'error'}). Try again.`)); }
     finally { this.disabled = false; }
   };
   document.getElementById('cprev').onclick = () => { calMonth.setMonth(calMonth.getMonth() - 1); renderCal(); };

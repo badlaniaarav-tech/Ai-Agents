@@ -39,7 +39,7 @@ Company facts, brand rules and the owner's preferences live in the memory MCP se
 - `tools/` the video tools: `cut.py`, `captions.py`, `thumbnail.py`, `frames.py`. Each prints one JSON line with its result.
 
 ## Commands
-`/edit-clips` edit every clip in `inbox/` · `/brief <task>` route any task through the office · `/standup` every team reports · `/research <topic>` · `/campaign <launch>` · `/hire <name>` add an agent · `/office` refresh the 3D office · `/tasks` the board and calendar · `/best-time` best posting slots from Metricool
+`/edit-clips` edit every clip in `inbox/` · `/brief <task>` route any task through the office · `/standup` every team reports · `/research <topic>` · `/campaign <launch>` · `/hire <name>` add an agent · `/office` refresh the 3D office · `/tasks` the board and calendar · `/best-time` best posting slots from Metricool · `/competitors` Instagram competitors from Metricool
 
 ## Rules
 - Nothing gets published, uploaded, posted, emailed or pushed. Finished work waits for the owner's OK.
