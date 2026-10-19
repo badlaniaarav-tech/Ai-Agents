@@ -9,6 +9,7 @@
       "Bash(python3 tools/cut.py:*)",
       "Bash(python3 tools/captions.py:*)",
       "Bash(python3 tools/thumbnail.py:*)",
+      "Bash(python3 tools/music.py:*)",
       "Bash(python3 tools/frames.py:*)",
       "Bash(mv inbox/:*)",
       "Bash(npm test:*)",

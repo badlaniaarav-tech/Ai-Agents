@@ -8,6 +8,6 @@ Edit the new clips in `inbox/`.
 3. When all of them are done, run the **brand-checker** on `out/`.
 4. If the brand-checker flags something, send that clip back to a clip-editor with the exact fix, then check again.
 5. Move each finished raw clip: `mv inbox/<file> done/`
-6. Report to the owner: a short table (clip, edit length, title, cover text) and the paths. End with: "Nothing is published. Reply OK to approve."
+6. Report to the owner: a short table (clip, edit length, title, cover text, music track) and the paths; `final.mp4` is the one to post. End with: "Nothing is published. Reply OK to approve."
 
 $ARGUMENTS
