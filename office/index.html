@@ -87,7 +87,8 @@
   .card { background:var(--well); border:1px solid var(--line); border-radius:12px; padding:12px; margin-bottom:10px } .card h2 { margin-bottom:6px }
   .card .task, .card pre, .card .addrow input, .card .addrow select, .card .addrow button, .card .resacts button { background:var(--bg) }
   .col h3 { cursor:pointer; user-select:none } .col h3 .tog { color:var(--muted); font-weight:400; margin-right:6px } .col.closed .task, .col.closed .kv { display:none }
-  .clip { display:grid; grid-template-columns:72px 1fr auto; gap:10px; align-items:center; background:var(--bg); border:1px solid var(--line); border-radius:9px; padding:8px; margin-bottom:6px } .clip video { width:72px; height:72px; object-fit:cover; border-radius:6px; background:#000 } .clip .ti { font-size:13px } .clip .meta { font-size:11px; color:var(--muted) }
+  .clip { display:grid; grid-template-columns:72px 1fr auto; gap:10px; align-items:center; background:var(--bg); border:1px solid var(--line); border-radius:9px; padding:8px; margin-bottom:6px } .clip video, .clip img { width:72px; height:72px; object-fit:cover; border-radius:6px; background:#000 }
+  .clipmedia { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:10px } .clipmedia:not(:has(a)) { grid-template-columns:1fr } .clipmedia video { width:100%; max-height:260px; border-radius:9px; background:#000 } .clipmedia a { display:flex; flex-direction:column; gap:4px; color:var(--muted); font-size:11px; text-decoration:none } .clipmedia img { width:100%; max-height:240px; object-fit:contain; border-radius:9px; background:#000 } .clip .ti { font-size:13px } .clip .meta { font-size:11px; color:var(--muted) }
   #menu { position:fixed; top:56px; right:12px; width:300px; background:var(--panel); border:1px solid var(--line); border-radius:12px; padding:12px; display:none; z-index:5; box-shadow:0 10px 30px rgba(0,0,0,.35) } #menu.on { display:block }
   #menu .row { display:flex; align-items:center; gap:10px; padding:6px 0; border-bottom:1px solid var(--line); font-size:13px } #menu .row:last-child { border:0 } #menu .row .kv { flex:1 } #menu button { background:var(--well); color:var(--text); border:1px solid var(--line); border-radius:6px; padding:4px 9px; font:inherit; font-size:12px; cursor:pointer }
   #menu input { background:var(--well); color:var(--text); border:1px solid var(--line); border-radius:6px; padding:4px 8px; font:inherit; font-size:12px; width:100% }
@@ -201,8 +202,8 @@
     <section class="card">
       <h2>Golf clips</h2>
       <button type="button" id="clip-up" class="drop"><span class="ic">⬆</span><span class="big">Upload a swing video</span><span class="sub">or drop it here · mp4 or mov, under 20 MB</span></button><input id="clip-file" type="file" accept="video/*" hidden>
-      <input id="clip-note" class="note" placeholder="Anything to mention? (optional) e.g. “new driver, first round back”">
-      <p class="kv hintline">You get a caption, hooks, tags and cover text back in about a minute. The edited video with captions and music comes from <b>/edit-clips</b> in Claude Code.</p>
+      <input id="clip-note" class="note" placeholder="Description for the caption, e.g. “new driver, first round back”">
+      <p class="kv hintline">The office writes the caption and hashtags and makes the thumbnail, in about a minute. The edited video with spoken captions and music comes from <b>/edit-clips</b> in Claude Code.</p>
       <div id="clips"></div>
     </section>
     <section class="card">
@@ -751,7 +752,7 @@
   const clipSrc = i => i.media || localClips.get(i.id) || '';
   function renderClips() {
     const el = document.getElementById('clips'); if (!el) return; const clips = items.filter(i => i.type === 'clip').sort((a, b) => (b.created || 0) - (a.created || 0));
-    el.innerHTML = clips.length ? clips.map(i => `<div class="clip"><video src="${esc(clipSrc(i))}" muted playsinline preload="metadata"></video><div><div class="ti">${esc(i.title)}${runs.has(i.id) ? '<span class="type live">running</span>' : ''}</div><div class="meta">${esc(i.status)}${i.result?.caption ? ' · caption ready' : ''}${i.notes ? ' · ' + esc(i.notes.slice(0, 60)) : ''}</div></div><div class="acts" style="display:flex; gap:4px">${!runs.has(i.id) ? `<button data-run="${i.id}" title="write caption, hooks, tags">▶</button>` : ''}${i.result ? `<button data-open="${i.id}" title="open">▤</button>` : ''}<button data-rm="${i.id}" title="remove">✕</button></div></div>`).join('') : '<div class="kv">No clips yet.</div>';
+    el.innerHTML = clips.length ? clips.map(i => `<div class="clip">${coverOf(i) ? `<img src="${esc(coverOf(i))}" alt="">` : `<video src="${esc(clipSrc(i))}" muted playsinline preload="metadata"></video>`}<div><div class="ti">${esc(i.title)}${runs.has(i.id) ? '<span class="type live">running</span>' : ''}</div><div class="meta">${esc(i.status)}${i.result?.caption ? (coverOf(i) ? ' · caption and thumbnail ready' : ' · caption ready') : ''}${i.notes ? ' · ' + esc(i.notes.slice(0, 60)) : ''}</div></div><div class="acts" style="display:flex; gap:4px">${!runs.has(i.id) ? `<button data-run="${i.id}" title="write caption, hooks, tags">▶</button>` : ''}${i.result ? `<button data-open="${i.id}" title="open">▤</button>` : ''}<button data-rm="${i.id}" title="remove">✕</button></div></div>`).join('') : '<div class="kv">No clips yet.</div>';
     wireActs(el);
   }
   async function framesOf(url) { // three stills from the clip, for the team to look at
@@ -761,6 +762,17 @@
     for (const f of [.15, .5, .85]) { v.currentTime = d * f; await new Promise(r => { v.onseeked = r; setTimeout(r, 4000); }); c.width = Math.min(640, v.videoWidth || 640); c.height = Math.round(c.width * (v.videoHeight || 360) / (v.videoWidth || 640)); c.getContext('2d').drawImage(v, 0, 0, c.width, c.height); const b = await new Promise(r => c.toBlob(r, 'image/jpeg', .8)); if (b) out.push(b); }
     return out;
   }
+  async function makeCover(frameBlob, text) { // the thumbnail: a 9:16 crop of the frame, dark band on top, words stacked, last word yellow (brand rule)
+    const img = await createImageBitmap(frameBlob); const W = 1080, H = 1920, c = document.createElement('canvas'); c.width = W; c.height = H; const g = c.getContext('2d');
+    const sc = Math.max(W / img.width, H / img.height), dw = img.width * sc, dh = img.height * sc; g.drawImage(img, (W - dw) / 2, (H - dh) / 2, dw, dh);
+    const grad = g.createLinearGradient(0, 0, 0, H * .48); grad.addColorStop(0, 'rgba(0,0,0,.72)'); grad.addColorStop(1, 'rgba(0,0,0,0)'); g.fillStyle = grad; g.fillRect(0, 0, W, H * .48);
+    const words = String(text).toUpperCase().split(/\s+/).filter(Boolean).slice(0, 3); let size = 170; const font = n => `900 ${n}px Geist, Inter, Arial, sans-serif`; g.font = font(size);
+    while (size > 60 && Math.max(...words.map(w => g.measureText(w).width)) > W * .86) { size -= 8; g.font = font(size); }
+    g.textAlign = 'center'; g.textBaseline = 'top'; let y = 150;
+    words.forEach((w, i) => { g.fillStyle = 'rgba(0,0,0,.7)'; g.fillText(w, W / 2 + 6, y + 8); g.fillStyle = i === words.length - 1 ? '#FFD400' : '#fff'; g.fillText(w, W / 2, y); y += size * 1.04; });
+    return new Promise(r => c.toBlob(r, 'image/jpeg', .9));
+  }
+  const coverOf = i => i.result?.cover || localClips.get(i.id + ':cover') || '';
   async function runClip(item) {
     const sample = await samplePromise; if (!sample) { notify('Golf clips', 'Captions need this page open on claude.ai. Locally: put the file in inbox/ and run /edit-clips.', '#e8902a'); return; }
     if (runs.has(item.id)) { openResult(item); return; } const ctl = new AbortController(); runs.set(item.id, ctl);
@@ -771,17 +783,24 @@
       let imgs = []; try { const lim = await sample.limits(); if (lim.images && clipSrc(item)) imgs = (await framesOf(clipSrc(item))).slice(0, lim.images.maxCount); } catch (e) { }
       setWorking(head.name, true, `looking at "${item.title}"`);
       const ctx = `Golf swing clip "${item.fileName || item.title}". Owner's note: ${item.notes || 'none'}. ${imgs.length ? 'Three stills from the clip are attached (start, middle, end).' : 'No stills available; work from the note and the brand.'} Instagram handle: @${brandInfo?.handle || 'aarav_badlani_golf'}.`;
-      const plan = await sample.json(`${instructionsFor(head, 'work')}\n\n${ctx}\n\nDescribe what the clip shows and decide the angle. Reply with only JSON {"what": "<two sentences: what we see, what the swing does well or needs>", "angle": "<one sentence: the one idea this post should make>", "cut": "<one sentence: what to trim and the best 3-second moment for the hook>"}.`, { modelTier: 'default', cache: false, signal: ctl.signal, images: imgs.length ? imgs : undefined });
+      const plan = await sample.json(`${instructionsFor(head, 'work')}\n\n${ctx}\n\nDescribe what the clip shows and decide the angle. Reply with only JSON {"what": "<two sentences: what we see, what the swing does well or needs>", "angle": "<one sentence: the one idea this post should make>", "cut": "<one sentence: what to trim and the best 3-second moment for the hook>", "frame": <1, 2 or 3: which attached still makes the best thumbnail; 2 if none attached>}.`, { modelTier: 'default', cache: false, signal: ctl.signal, images: imgs.length ? imgs : undefined });
       setWorking(head.name, false); item.result.plan = `${plan.what}\nAngle: ${plan.angle}\nCut: ${plan.cut}`; await postTask('update', { id: item.id, result: item.result }); openResult(item);
       setWorking(writer.name, true, `writing for "${item.title}"`);
       const copy = await sample.json(`${instructionsFor(writer, 'work')}\n\n${ctx}\nCreative director's read: ${item.result.plan}\n\nWrite the post. Reply with only JSON {"title": "<max 60 characters>", "hooks": ["<3 spoken opening lines under 12 words>"], "caption": "<Instagram caption, 60-120 words, plain and friendly, ends with one question or call to action>", "tags": ["<15 hashtags without #, most specific first>"], "cover": "<cover text, max 3 words, ALL CAPS>", "altText": "<one sentence>"}.`, { modelTier: 'default', cache: false, signal: ctl.signal });
       setWorking(writer.name, false);
       const text = `TITLE\n${copy.title}\n\nHOOKS\n${(copy.hooks || []).map((h, i) => `${i + 1}. ${h}`).join('\n')}\n\nCAPTION\n${copy.caption}\n\nTAGS\n${(copy.tags || []).map(x => '#' + String(x).replace(/^#/, '')).join(' ')}\n\nCOVER TEXT\n${copy.cover}\n\nALT TEXT\n${copy.altText || ''}`;
       item.result.outputs = [{ agent: writer.name, brief: 'title, hooks, caption, tags, cover', text }]; item.result.caption = copy.caption; item.result.tags = copy.tags; item.result.title = copy.title; await postTask('update', { id: item.id, result: item.result }); openResult(item);
+      const designer = byName.get('thumbnail-designer') || head;
+      if (imgs.length && copy.cover) { setWorking(designer.name, true, `thumbnail for "${item.title}"`); try {
+        const blob = await makeCover(imgs[Math.min(imgs.length, Math.max(1, Number(plan.frame) || 2)) - 1], copy.cover); const assets = await assetsPromise; let url = '';
+        if (assets) { try { const up = await assets.upload(new File([blob], `${item.id}-cover.jpg`, { type: 'image/jpeg' })); url = up.url; item.result.coverId = up.id; } catch (e) { } }
+        if (!url) { url = URL.createObjectURL(blob); localClips.set(item.id + ':cover', url); }
+        item.result.cover = url; item.result.coverText = copy.cover; await postTask('update', { id: item.id, result: item.result }); openResult(item);
+      } catch (e) { } finally { setWorking(designer.name, false); } }
       item.result.reviewer = checker.name; setWorking(checker.name, true, `checking "${item.title}"`);
       try { const { text: rv } = await sample(`${instructionsFor(checker, 'work')}\n\nReview this Instagram copy against the brand rules (caption length, no clickbait, cover text 3 words, voice). Answer PASS or FIX: <exactly what>, then one line for the owner.\n\n${text}`, { modelTier: 'quick', cache: false, signal: ctl.signal }); item.result.review = rv; } finally { setWorking(checker.name, false); }
       item.result.finishedAt = Date.now(); runs.delete(item.id); await postTask('update', { id: item.id, status: 'review', result: item.result });
-      notify('Creative', `"${item.title}" caption and tags are ready for your review`, teamColor('Creative')); log(`<span style="color:var(--text)">Creative</span> finished "${esc(item.title)}"`);
+      notify('Creative', `"${item.title}": caption, hashtags${coverOf(item) ? ' and thumbnail' : ''} are ready for your review`, teamColor('Creative')); log(`<span style="color:var(--text)">Creative</span> finished "${esc(item.title)}"`);
     } catch (err) { runs.delete(item.id); [head, writer, checker].forEach(a => setWorking(a.name, false)); item.result.error = err?.code === 'cancelled' ? 'Stopped.' : (errCopy[err?.code] || `Something went wrong (${err?.code || err?.message || err}). Run again.`); await postTask('update', { id: item.id, result: item.result }); }
     openResult(item); renderClips();
   }
@@ -831,7 +850,7 @@
     const cur = items.find(x => x.id === i.id) || i, r = i.result || cur.result || {}, head = headOf(i.team);
     document.getElementById('res-title').textContent = i.title; document.getElementById('res-meta').textContent = `${i.team} · ${cur.status}${r.finishedAt ? ' · finished ' + new Date(r.finishedAt).toLocaleString() : runs.has(i.id) ? ' · running' : ''}`; document.getElementById('res-sw').style.background = teamColor(i.team);
     const sec = (title, text, who) => `<div class="res"><h3>${who ? `<span class="sw" style="background:${teamColor(byName.get(who)?.team || i.team)}"></span>` : ''}${esc(title)}</h3><pre${text ? '' : ' class="wait"'}>${esc(text || 'working…')}</pre></div>`;
-    document.getElementById('res-body').innerHTML = (i.type === 'clip' && clipSrc(i) ? `<video src="${esc(clipSrc(i))}" controls playsinline style="width:100%; max-height:260px; border-radius:9px; background:#000; margin-bottom:10px"></video>` : '') + sec(`${head.name} · ${i.type === 'clip' ? 'what the clip shows' : 'plan'}`, r.plan, head.name) + (r.outputs || []).map(o => sec(`${o.agent} · ${o.brief ? o.brief.slice(0, 60) + (o.brief.length > 60 ? '…' : '') : 'deliverable'}`, o.text, o.agent)).join('') + (r.reviewer ? sec(`${r.reviewer} · review`, r.review, r.reviewer) : '') + (r.error ? `<p class="kv">${esc(r.error)}</p>` : '') +
+    document.getElementById('res-body').innerHTML = (i.type === 'clip' && clipSrc(i) ? `<div class="clipmedia"><video src="${esc(clipSrc(i))}" controls playsinline></video>${coverOf(i) ? `<a href="${esc(coverOf(i))}" download="cover.jpg" target="_blank" title="Open or save the thumbnail"><img src="${esc(coverOf(i))}" alt="thumbnail"><span>Thumbnail · ${esc(r.coverText || '')}</span></a>` : ''}</div>` : '') + sec(`${head.name} · ${i.type === 'clip' ? 'what the clip shows' : 'plan'}`, r.plan, head.name) + (r.outputs || []).map(o => sec(`${o.agent} · ${o.brief ? o.brief.slice(0, 60) + (o.brief.length > 60 ? '…' : '') : 'deliverable'}`, o.text, o.agent)).join('') + (r.reviewer ? sec(`${r.reviewer} · review`, r.review, r.reviewer) : '') + (r.error ? `<p class="kv">${esc(r.error)}</p>` : '') +
       `<div class="resacts">${!runs.has(i.id) ? `<button data-run2="${i.id}">Run again</button>` : `<button data-stop2="${i.id}">Stop</button>`}${cur.status !== 'done' ? `<button data-done2="${i.id}">Mark done</button>` : ''}${(i.type === 'post' || i.type === 'clip') && !runs.has(i.id) ? `<button data-review2="${i.id}">Send to Metricool for my approval</button>` : ''}</div>${(i.type === 'post' || i.type === 'clip') ? `<div id="review-box" class="kv" style="margin-top:8px">${esc(r.metricool || '')}</div>` : ''}`;
     const body = document.getElementById('res-body');
     body.querySelector('[data-run2]')?.addEventListener('click', () => runTask(i)); body.querySelector('[data-review2]')?.addEventListener('click', () => sendForApproval(i)); body.querySelector('[data-stop2]')?.addEventListener('click', () => runs.get(i.id)?.abort()); body.querySelector('[data-done2]')?.addEventListener('click', () => { postTask('update', { id: i.id, status: 'done' }); showTab('tasks'); });
