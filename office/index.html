@@ -5,18 +5,21 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Agent HQ</title>
 <style>
-  /* Agent HQ is a night-time floor plan: one deliberately dark look, so the colors are fixed rather than themed. */
-  :root { --bg:#0b0f1a; --panel:rgba(20,25,38,.92); --well:var(--well); --well2:var(--well2); --line:#273047; --text:#e8edf5; --muted:#8e9ab0; --accent:#5ee0ff; --ok:#3fd27f; --bubble:rgba(12,16,26,0.86); --chatbg:rgba(30,38,58,0.95); color-scheme:dark }
-  @media (prefers-color-scheme: light) { :root:not([data-theme="dark"]) { --bg:#e9edf5; --panel:rgba(255,255,255,.92); --well:#f3f5f9; --well2:#e2e7f0; --line:#cfd6e2; --text:#141a26; --muted:#5b667a; --accent:#0a7fa8; --ok:#1f9d57; --bubble:rgba(255,255,255,0.92); --chatbg:rgba(255,255,255,0.96); color-scheme:light } }
-  :root[data-theme="light"] { --bg:#e9edf5; --panel:rgba(255,255,255,.92); --well:#f3f5f9; --well2:#e2e7f0; --line:#cfd6e2; --text:#141a26; --muted:#5b667a; --accent:#0a7fa8; --ok:#1f9d57; --bubble:rgba(255,255,255,0.92); --chatbg:rgba(255,255,255,0.96); color-scheme:light }
+  /* Agent HQ: one night-time look, fixed colors (the office video's dark dashboard). */
+  :root { --bg:#0a0e1a; --panel:rgba(17,21,32,.94); --well:#0f1421; --well2:#1b2232; --line:#273047; --text:#e8edf5; --muted:#8e9ab0; --accent:#5ee0ff; --ok:#3fd27f; color-scheme:dark }
   * { box-sizing:border-box }
   html, body { margin:0; height:100%; background:var(--bg); color:var(--text); font:14px/1.45 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; overflow:hidden }
   #scene { position:fixed; inset:0; width:100%; height:100%; display:block }
   #nav { position:fixed; top:12px; left:12px; right:12px; height:52px; display:flex; align-items:center; gap:10px; padding:0 14px; background:var(--panel); border:1px solid var(--line); border-radius:14px; backdrop-filter:blur(8px) }
   #nav .logo { width:28px; height:28px; border-radius:8px; background:linear-gradient(135deg,#5ee0ff,#7c6cff); display:grid; place-items:center; font-weight:700; color:#0b0f1a; font-size:13px }
-  #theme { cursor:pointer; background:var(--well); color:var(--text); border:1px solid var(--line); border-radius:8px; width:34px; height:30px; font:inherit; font-size:14px; display:grid; place-items:center }
   #nav h1 { font-size:15px; margin:0 10px 0 0; font-weight:600 }
-  #nav .owner { color:var(--muted); font-size:12px; padding:4px 10px; border:1px solid var(--line); border-radius:999px }
+  #nav .owner { color:var(--muted); font-size:12px; padding:3px 10px 3px 4px; border:1px solid var(--line); border-radius:999px; display:flex; align-items:center; gap:7px }
+  .av { width:22px; height:22px; border-radius:50%; background:linear-gradient(135deg,#f7b267,#f4845f); color:#1a1020; font-size:11px; font-weight:700; display:grid; place-items:center; flex:none }
+  #bell { position:relative; cursor:pointer; background:var(--well); color:var(--text); border:1px solid var(--line); border-radius:8px; width:34px; height:30px; font:inherit; font-size:14px; display:grid; place-items:center }
+  #bell i { position:absolute; top:-5px; right:-5px; min-width:16px; height:16px; padding:0 4px; border-radius:8px; background:#e64a4a; color:#fff; font-size:10px; font-style:normal; font-weight:600; display:none; place-items:center }
+  #bell i.on { display:grid }
+  #nav .me { width:30px; height:30px; border-radius:50%; background:linear-gradient(135deg,#f7b267,#f4845f); color:#1a1020; font-weight:700; display:grid; place-items:center; font-size:12px; flex:none }
+  #ask kbd { font:inherit; font-size:10px; color:var(--muted); border:1px solid var(--line); border-radius:4px; padding:1px 5px; margin-right:6px }
   #tabs { margin:0 auto; display:flex; gap:4px; background:var(--well); border:1px solid var(--line); border-radius:10px; padding:3px }
   #tabs button { background:transparent; color:var(--muted); border:0; border-radius:8px; padding:6px 14px; font:inherit; font-size:13px; cursor:pointer }
   #tabs button.on { background:var(--well2); color:var(--text) }
@@ -37,7 +40,10 @@
   .sw { width:10px; height:10px; border-radius:3px; flex:none }
   #panel .n { flex:1 } #panel .c { color:var(--muted); font-size:12px }
   #panel .kv { font-size:12px; color:var(--muted); word-break:break-word }
-  #toast { position:fixed; top:76px; right:12px; width:320px; background:var(--panel); border:1px solid var(--line); border-radius:14px; padding:10px 12px; display:flex; gap:10px; align-items:center; font-size:13px; transition:opacity .4s; opacity:0; pointer-events:none }
+  #toast { position:fixed; top:76px; right:12px; width:340px; background:var(--panel); border:1px solid var(--line); border-radius:14px; padding:12px 14px; display:flex; gap:12px; align-items:center; font-size:13px; transition:opacity .4s, transform .4s; opacity:0; transform:translateY(-6px); pointer-events:none; box-shadow:0 10px 30px rgba(0,0,0,.35) }
+  #toast.on { transform:none }
+  #toast .ic { color:#fff; font-weight:700 }
+  #toast .hide { margin-left:auto; color:var(--muted); font-size:11px }
   #toast.on { opacity:1 }
   #toast .ic { width:30px; height:30px; border-radius:8px; display:grid; place-items:center; font-size:14px; flex:none }
   #toast small { display:block; color:var(--muted) }
@@ -89,23 +95,24 @@
   #calgrid .day { min-height:56px; background:var(--well); border:1px solid var(--line); border-radius:7px; padding:3px 4px; cursor:pointer; font-size:11px; color:var(--muted); overflow:hidden }
   #calgrid .day.other { opacity:.4 } #calgrid .day.today { border-color:var(--accent) } #calgrid .day.sel { background:var(--well2) } #calgrid .day .n { color:var(--text); font-weight:500 }
   #calgrid .chip { display:block; font-size:10px; color:#fff; border-radius:3px; padding:0 3px; margin-top:2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis }
-  @media (max-width:860px) { #ask, #hint { display:none } #nav { height:auto; flex-wrap:wrap; padding:8px 10px; row-gap:6px } #tabs { margin:0; order:5; flex-basis:100% } #panel, #panel.wide { width:min(320px, calc(100% - 24px)) } #tabs button b, #nav .owner { display:none } #map { display:none } }
+  @media (max-width:860px) { #ask, #hint { display:none } #nav { height:auto; flex-wrap:wrap; padding:8px 10px; row-gap:6px } #tabs { margin:0; order:5; flex-basis:100% } #panel, #panel.wide { width:min(320px, calc(100% - 24px)) } #tabs button b, #nav .owner, #bell, #nav .me { display:none } #map { display:none } }
 </style>
 </head>
 <body>
 <canvas id="scene"></canvas>
 
 <div id="nav">
-  <div class="logo">HQ</div><h1>Agent HQ</h1><span class="owner" id="owner">Aarav</span>
+  <div class="logo">HQ</div><h1>Agent HQ</h1><span class="owner" id="owner"><span class="av">A</span>Aarav ▾</span>
   <div id="tabs"><button class="on" data-tab="office">Office</button><button data-tab="tasks">Tasks<b id="taskn">0</b></button><button data-tab="calendar">Calendar</button><button data-tab="brain">Brain</button></div>
-  <form id="ask" autocomplete="off"><select id="ask-agent" title="Which agent"></select><input id="ask-q" placeholder="Ask any agent…" aria-label="Ask any agent"><button type="submit" title="Ask">↵</button></form>
+  <form id="ask" autocomplete="off"><select id="ask-agent" title="Which agent"></select><input id="ask-q" placeholder="Ask any agent…" aria-label="Ask any agent"><kbd>⌘K</kbd><button type="submit" title="Ask">↵</button></form>
   <span class="pill live" id="live"><b id="count">0</b> agents · <b id="running">0</b> running</span>
-  <button id="theme" title="Switch light / dark">☾</button>
   <button id="overview" title="See the whole office (O)">Overview</button>
   <button id="demo">Demo</button>
+  <button id="bell" title="Notifications">🔔<i id="bellc">0</i></button>
+  <div class="me" title="Aarav">A</div>
 </div>
-<div id="hint">drag to orbit · wheel to zoom · click a character or a room · O for overview</div>
-<div id="toast"><div class="ic" id="toastic">●</div><div><div id="toastt">Analytics</div><small id="toasts">Weekly report is ready</small></div></div>
+<div id="hint">drag to orbit · right-drag or arrows to pan · wheel to zoom · click a room or agent · O overview · 1–8 rooms</div>
+<div id="toast"><div class="ic" id="toastic">▥</div><div><div id="toastt">Analytics</div><small id="toasts">Weekly report is ready</small></div><span class="hide">now</span></div>
 
 <div id="panel">
   <div data-view="office">
@@ -145,37 +152,40 @@
 <script src="vendor/three.min.js"></script>
 <script>
 (async function () {
-  const COLORS = { Research:0x3b7bff, Inbox:0xe8902a, Scripts:0xe9c02e, Dev:0x3fbf5f, 'TBX Shop':0xe64a4a, Social:0xd04fd6, Creative:0x7b5cff, Analytics:0x2bbfa8 };
-  const ICONS = { Research:'🔍', Inbox:'✉', Scripts:'✎', Dev:'⌘', 'TBX Shop':'🛍', Social:'♥', Creative:'▶', Analytics:'▤' };
+  const COLORS = { Research:0x3d6ef0, Inbox:0xd9873a, Scripts:0xdfb43a, Dev:0x3aa85c, 'TBX Shop':0xd84a4a, Social:0xc44fd0, Creative:0x6b5be0, Analytics:0x2fb3a6 };
+  const ICONS = { Research:'◎', Inbox:'✉', Scripts:'✎', Dev:'</>', 'TBX Shop':'◫', Social:'♡', Creative:'▶', Analytics:'▥' };
   const data = await fetch('agents.json').then(r => r.json()).catch(() => ({ departments: [] }));
   const hex = c => '#' + c.toString(16).padStart(6, '0');
-  const cssVar = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
-  const isLight = () => cssVar('color-scheme').includes('light');
+  const TEXT = '#e8edf5', MUTED = '#9aa6bd', BUBBLE = 'rgba(14,18,28,0.9)', CHATBG = 'rgba(30,38,58,0.96)';
+  const ORDER = ['Research', 'Scripts', 'Social', 'Creative', 'Analytics', 'TBX Shop', 'Dev', 'Inbox']; // clockwise from the top, as in the video
 
   // ---------- renderer ----------
   const canvas = document.getElementById('scene');
   const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
   renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
   renderer.shadowMap.enabled = true; renderer.shadowMap.type = THREE.PCFSoftShadowMap;
-  const scene = new THREE.Scene(); scene.background = new THREE.Color(0x0b0f1a); scene.fog = new THREE.Fog(0x0b0f1a, 140, 360);
-  const camera = new THREE.PerspectiveCamera(42, 1, 0.1, 500);
-  // lighting: a bright even key so every room reads, a soft sky fill, and a warm lamp per room
-  scene.add(new THREE.HemisphereLight(0xe9f0ff, 0x2a3142, 0.95));
-  scene.add(new THREE.AmbientLight(0xffffff, 0.22));
-  const sun = new THREE.DirectionalLight(0xfff6e8, 0.95); sun.position.set(30, 60, 25); sun.castShadow = true; sun.shadow.mapSize.set(2048, 2048); sun.shadow.bias = -0.0005;
+  const scene = new THREE.Scene(); scene.background = new THREE.Color(0x0a0e1a); scene.fog = new THREE.Fog(0x0a0e1a, 150, 380);
+  const camera = new THREE.PerspectiveCamera(40, 1, 0.1, 600);
+  scene.add(new THREE.HemisphereLight(0xdfe8ff, 0x1c2230, 0.8));
+  scene.add(new THREE.AmbientLight(0xffffff, 0.28));
+  const sun = new THREE.DirectionalLight(0xfff3e0, 0.9); sun.position.set(30, 60, 25); sun.castShadow = true; sun.shadow.mapSize.set(2048, 2048); sun.shadow.bias = -0.0005;
   Object.assign(sun.shadow.camera, { left: -60, right: 60, top: 60, bottom: -60, far: 200 }); scene.add(sun);
-  const fill = new THREE.DirectionalLight(0xbfd4ff, 0.45); fill.position.set(-40, 30, -30); scene.add(fill);
-  // starfield floor: points scattered on a big plane under the rooms
+  const fill = new THREE.DirectionalLight(0xbfd4ff, 0.4); fill.position.set(-40, 30, -30); scene.add(fill);
+  // space backdrop: a soft blue nebula under the office and a field of stars
+  { const c = document.createElement('canvas'); c.width = c.height = 512; const x = c.getContext('2d'); const gr = x.createRadialGradient(256, 256, 20, 256, 256, 256); gr.addColorStop(0, 'rgba(70,110,190,0.38)'); gr.addColorStop(.3, 'rgba(50,75,140,0.2)'); gr.addColorStop(.62, 'rgba(30,45,90,0.06)'); gr.addColorStop(1, 'rgba(10,14,26,0)'); x.fillStyle = gr; x.fillRect(0, 0, 512, 512);
+    const neb = new THREE.Mesh(new THREE.PlaneGeometry(460, 460), new THREE.MeshBasicMaterial({ map: new THREE.CanvasTexture(c), transparent: true, depthWrite: false })); neb.rotation.x = -Math.PI / 2; neb.position.y = -6; scene.add(neb); }
   const stars = new THREE.BufferGeometry(); const sp = [];
-  for (let i = 0; i < 900; i++) sp.push((Math.random() - .5) * 260, -3 - Math.random() * 20, (Math.random() - .5) * 260);
+  for (let i = 0; i < 1400; i++) sp.push((Math.random() - .5) * 320, -4 - Math.random() * 30, (Math.random() - .5) * 320);
   stars.setAttribute('position', new THREE.Float32BufferAttribute(sp, 3));
-  const starMat = new THREE.PointsMaterial({ color: 0x9fb4ff, size: .25, transparent: true, opacity: .6 }); scene.add(new THREE.Points(stars, starMat));
+  scene.add(new THREE.Points(stars, new THREE.PointsMaterial({ color: 0xaebdff, size: .28, transparent: true, opacity: .7 })));
+  const M = (color, extra) => new THREE.MeshStandardMaterial(Object.assign({ color, roughness: .85 }, extra || {}));
+  const box = (w, h, d, mat, x, y, z) => { const m = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), mat); m.position.set(x, y, z); m.castShadow = true; m.receiveShadow = true; return m; };
 
   // ---------- helpers ----------
   function textSprite(lines, opts) {
-    const o = Object.assign({ size: 40, color: '#fff', sub: cssVar('--muted'), bg: cssVar('--bubble'), scale: 0.012 }, opts);
+    const o = Object.assign({ size: 40, color: '#fff', sub: MUTED, bg: BUBBLE, scale: 0.012, font: 'system-ui, sans-serif' }, opts);
     const c = document.createElement('canvas'); const ctx = c.getContext('2d');
-    const f1 = `600 ${o.size}px system-ui, sans-serif`, f2 = `500 ${o.size * .7}px system-ui, sans-serif`;
+    const f1 = `600 ${o.size}px ${o.font}`, f2 = `500 ${o.size * .7}px ${o.font}`;
     ctx.font = f1; let w = ctx.measureText(lines[0]).width; ctx.font = f2; if (lines[1]) w = Math.max(w, ctx.measureText(lines[1]).width);
     c.width = Math.ceil(w) + 48; c.height = lines[1] ? o.size * 2.1 : o.size + 26;
     ctx.fillStyle = o.bg; ctx.beginPath(); ctx.roundRect(0, 0, c.width, c.height, 16); ctx.fill();
@@ -185,92 +195,128 @@
     const tex = new THREE.CanvasTexture(c); tex.minFilter = THREE.LinearFilter;
     const s = new THREE.Sprite(new THREE.SpriteMaterial({ map: tex, transparent: true, depthTest: false }));
     s.scale.set(c.width * o.scale, c.height * o.scale, 1); s.userData.lines = lines; s.userData.opts = o;
-    s.userData.update = (nl, no) => { const n = textSprite(nl, Object.assign({}, o, no, { bg: (no && no.bg) || cssVar(s.userData.chat ? '--chatbg' : '--bubble') })); s.material.map.dispose(); s.material.map = n.material.map; s.scale.copy(n.scale); s.userData.lines = nl; };
+    s.userData.update = (nl, no) => { const n = textSprite(nl, Object.assign({}, o, no)); s.material.map.dispose(); s.material.map = n.material.map; s.scale.copy(n.scale); s.userData.lines = nl; };
     return s;
   }
-  function desk(x, z, rot, color) {
-    const g = new THREE.Group();
-    const top = new THREE.Mesh(new THREE.BoxGeometry(1.7, .1, .8), new THREE.MeshStandardMaterial({ color: 0xd9d4c7, roughness: .8 })); top.position.y = .74; top.castShadow = true; g.add(top);
-    for (const [dx, dz] of [[-.75, -.3], [.75, -.3], [-.75, .3], [.75, .3]]) { const l = new THREE.Mesh(new THREE.BoxGeometry(.07, .74, .07), new THREE.MeshStandardMaterial({ color: 0x2b2f3a })); l.position.set(dx, .37, dz); g.add(l); }
-    const screen = new THREE.Mesh(new THREE.BoxGeometry(.8, .5, .05), new THREE.MeshStandardMaterial({ color: 0x0b0d12, emissive: color, emissiveIntensity: .15 })); screen.position.set(0, 1.08, -.22); g.add(screen);
-    const chair = new THREE.Mesh(new THREE.BoxGeometry(.5, .08, .5), new THREE.MeshStandardMaterial({ color: 0x1f2430 })); chair.position.set(0, .45, .75); g.add(chair);
-    const back = new THREE.Mesh(new THREE.BoxGeometry(.5, .5, .08), chair.material); back.position.set(0, .72, .98); g.add(back);
-    g.userData.screen = screen; g.position.set(x, 0, z); g.rotation.y = rot; return g;
+  function roomCard(name, color, icon) { // the floating team card: icon tile, name, status line with a dot, avatar stack
+    const S = 2, c = document.createElement('canvas'), ctx = c.getContext('2d'); const s = new THREE.Sprite(new THREE.SpriteMaterial({ transparent: true, depthTest: false }));
+    function draw(sub, running, nAv) {
+      ctx.font = `600 ${28 * S}px system-ui, sans-serif`; const wN = ctx.measureText(name).width; ctx.font = `500 ${19 * S}px ui-monospace, Menlo, monospace`; const wS = ctx.measureText(sub).width + 22 * S;
+      const avW = 18 * S + (nAv - 1) * 11 * S + 14 * S; c.width = Math.ceil(72 * S + Math.max(wN, wS) + avW + 20 * S); c.height = 72 * S;
+      ctx.clearRect(0, 0, c.width, c.height); ctx.fillStyle = 'rgba(15,19,29,0.93)'; ctx.beginPath(); ctx.roundRect(0, 0, c.width, c.height, 16 * S); ctx.fill(); ctx.strokeStyle = 'rgba(255,255,255,0.08)'; ctx.lineWidth = 2; ctx.stroke();
+      ctx.fillStyle = hex(color); ctx.beginPath(); ctx.roundRect(16 * S, 18 * S, 36 * S, 36 * S, 9 * S); ctx.fill();
+      ctx.fillStyle = '#fff'; ctx.font = `700 ${18 * S}px system-ui, sans-serif`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(icon, 34 * S, 36 * S); ctx.textAlign = 'left';
+      ctx.fillStyle = TEXT; ctx.font = `600 ${28 * S}px system-ui, sans-serif`; ctx.fillText(name, 66 * S, 26 * S);
+      ctx.fillStyle = running ? '#3fd27f' : '#5a6472'; ctx.beginPath(); ctx.arc(72 * S, 50 * S, 4.5 * S, 0, 7); ctx.fill();
+      ctx.fillStyle = MUTED; ctx.font = `500 ${19 * S}px ui-monospace, Menlo, monospace`; ctx.fillText(sub, 84 * S, 50 * S);
+      const pal = ['#f4845f', '#8ecae6', '#ffd166', '#b5e48c', '#c77dff']; for (let k = 0; k < nAv; k++) { const x = c.width - 26 * S - (nAv - 1 - k) * 11 * S; ctx.fillStyle = pal[k % pal.length]; ctx.beginPath(); ctx.arc(x, 36 * S, 9 * S, 0, 7); ctx.fill(); ctx.strokeStyle = '#0f131d'; ctx.lineWidth = 2 * S; ctx.stroke(); ctx.fillStyle = '#1a1020'; ctx.beginPath(); ctx.arc(x, 33 * S, 3 * S, 0, 7); ctx.fill(); }
+      if (s.material.map) s.material.map.dispose(); const tex = new THREE.CanvasTexture(c); tex.minFilter = THREE.LinearFilter; s.material.map = tex; s.material.needsUpdate = true; s.scale.set(c.width * .0065, c.height * .0065, 1);
+    }
+    s.userData.update = lines => { const m = /(\d+) running/.exec(lines[1] || ''); draw(lines[1] || '', m && +m[1] > 0, s.userData.nAv || 3); };
+    s.userData.draw = draw; return s;
   }
+  function desk(x, z, rot, color) {
+    const g = new THREE.Group(); const wood = M(0xe3d3b5, { roughness: .7 }), dark = M(0x262b36);
+    g.add(box(1.8, .1, .85, wood, 0, .76, 0));
+    for (const [dx, dz] of [[-.8, -.33], [.8, -.33], [-.8, .33], [.8, .33]]) g.add(box(.07, .76, .07, dark, dx, .38, dz));
+    g.add(box(.08, .32, .08, dark, 0, .96, -.22)); g.add(box(.5, .04, .25, dark, 0, .83, -.22)); // monitor stand
+    g.add(box(.95, .6, .06, M(0x151924), 0, 1.33, -.25));
+    const screen = new THREE.Mesh(new THREE.PlaneGeometry(.85, .5), new THREE.MeshStandardMaterial({ color: 0x0c1322, emissive: color, emissiveIntensity: .25 })); screen.position.set(0, 1.33, -.215); g.add(screen);
+    g.add(box(.6, .03, .22, M(0xf1eee8), 0, .83, .12)); // keyboard
+    const seat = box(.52, .08, .52, M(0x2a2f3b), 0, .5, .78); g.add(seat); g.add(box(.52, .55, .08, seat.material, 0, .8, 1.02)); g.add(box(.06, .42, .06, dark, 0, .25, .78)); g.add(box(.5, .05, .5, dark, 0, .05, .78));
+    g.userData.screen = screen; g.position.set(x, .5, z); g.rotation.y = rot; return g;
+  }
+  const SHIRTS = [0xf4f4f4, 0x2c3140, 0xffc857, 0x7fd1ae, 0xff8fa3, 0x8ecae6, 0xf4845f];
   function character(color, isHead) {
-    const g = new THREE.Group(); const mat = new THREE.MeshStandardMaterial({ color, roughness: .6 });
+    const g = new THREE.Group(); const shirt = isHead ? color : SHIRTS[Math.floor(Math.random() * SHIRTS.length)]; const mat = M(shirt, { roughness: .6 });
     const body = new THREE.Mesh(new THREE.CylinderGeometry(.26, .3, .6, 14), mat); body.position.y = .7; body.castShadow = true; g.add(body);
     const sh = new THREE.Mesh(new THREE.SphereGeometry(.26, 14, 10), mat); sh.position.y = 1.0; g.add(sh);
-    const head = new THREE.Mesh(new THREE.SphereGeometry(.25, 16, 16), new THREE.MeshStandardMaterial({ color: 0xf2d6c0, roughness: .8 })); head.position.y = 1.36; head.castShadow = true; g.add(head);
-    const hair = new THREE.Mesh(new THREE.SphereGeometry(.26, 16, 10, 0, Math.PI * 2, 0, Math.PI / 2.4), new THREE.MeshStandardMaterial({ color: [0x2b1d14, 0x111111, 0x6b4a2b, 0xd9b36b][Math.floor(Math.random() * 4)] })); hair.position.y = 1.4; g.add(hair);
-    const eye = new THREE.MeshStandardMaterial({ color: 0x111 }); for (const dx of [-.09, .09]) { const e = new THREE.Mesh(new THREE.SphereGeometry(.03, 8, 8), eye); e.position.set(dx, 1.38, .22); g.add(e); }
-    if (isHead) { const hat = new THREE.Mesh(new THREE.CylinderGeometry(.18, .18, .16, 16), new THREE.MeshStandardMaterial({ color: 0x1a1d26 })); hat.position.y = 1.64; g.add(hat); const brim = new THREE.Mesh(new THREE.CylinderGeometry(.31, .31, .03, 16), hat.material); brim.position.y = 1.57; g.add(brim); }
+    const skin = [0xf2d6c0, 0xe0b08a, 0xa8754f, 0x6e4a32][Math.floor(Math.random() * 4)];
+    const head = new THREE.Mesh(new THREE.SphereGeometry(.25, 16, 16), M(skin, { roughness: .8 })); head.position.y = 1.36; head.castShadow = true; g.add(head);
+    const hair = new THREE.Mesh(new THREE.SphereGeometry(.26, 16, 10, 0, Math.PI * 2, 0, Math.PI / 2.4), M([0x2b1d14, 0x111111, 0x6b4a2b, 0xd9b36b][Math.floor(Math.random() * 4)])); hair.position.y = 1.4; g.add(hair);
+    const eye = M(0x111111); for (const dx of [-.09, .09]) { const e = new THREE.Mesh(new THREE.SphereGeometry(.03, 8, 8), eye); e.position.set(dx, 1.38, .22); g.add(e); }
+    if (isHead) { const hat = new THREE.Mesh(new THREE.CylinderGeometry(.18, .18, .16, 16), M(0x1a1d26)); hat.position.y = 1.64; g.add(hat); const brim = new THREE.Mesh(new THREE.CylinderGeometry(.31, .31, .03, 16), hat.material); brim.position.y = 1.57; g.add(brim); }
     const ring = new THREE.Mesh(new THREE.RingGeometry(.42, .58, 32), new THREE.MeshBasicMaterial({ color, transparent: true, opacity: 0, side: THREE.DoubleSide })); ring.rotation.x = -Math.PI / 2; ring.position.y = .02; g.add(ring);
     const bubble = textSprite(['working…'], { size: 34, color: '#ffd400', scale: .011 }); bubble.position.y = 2.5; bubble.visible = false; g.add(bubble);
     g.userData = { body, head, ring, bubble }; return g;
   }
 
-  // ---------- layout: hub in the middle, rooms in a ring ----------
+  // ---------- layout: the Brain in the middle, eight rooms around it ----------
   const depts = data.departments; const lobby = depts.find(d => !d.agents.some(a => a.role === 'head') || d.name.toLowerCase().includes('brain')) || depts[0];
-  const rooms = depts.filter(d => d !== lobby);
+  const rooms = depts.filter(d => d !== lobby).sort((a, b) => (ORDER.indexOf(a.name) + 1 || 99) - (ORDER.indexOf(b.name) + 1 || 99));
   const agents = [], byName = new Map(), roomInfo = [];
-  const RING = 30, ROOM = 12;
+  const RING = 31, ROOM = 12;
 
   // the Brain hub
   const hub = new THREE.Group();
-  const platMat = new THREE.MeshStandardMaterial({ color: 0x1b2233, roughness: .9 }); const plat = new THREE.Mesh(new THREE.CylinderGeometry(7, 7.5, .6, 48), platMat); plat.position.y = .3; plat.receiveShadow = true; hub.add(plat);
-  for (const r of [3, 4.6, 6.2]) { const ring = new THREE.Mesh(new THREE.RingGeometry(r, r + .12, 64), new THREE.MeshBasicMaterial({ color: 0x5ee0ff, transparent: true, opacity: .5, side: THREE.DoubleSide })); ring.rotation.x = -Math.PI / 2; ring.position.y = .62; hub.add(ring); }
-  const core = new THREE.Mesh(new THREE.SphereGeometry(.9, 24, 24), new THREE.MeshStandardMaterial({ color: 0xbfefff, emissive: 0x5ee0ff, emissiveIntensity: 1.2 })); core.position.y = 2.6; hub.add(core);
-  const beam = new THREE.Mesh(new THREE.CylinderGeometry(.18, .18, 14, 12, 1, true), new THREE.MeshBasicMaterial({ color: 0x9df0ff, transparent: true, opacity: .35 })); beam.position.y = 9; hub.add(beam);
-  const glow = new THREE.PointLight(0x5ee0ff, 2.2, 40); glow.position.y = 3; hub.add(glow);
-  const brainLabel = textSprite(['THE BRAIN', 'shared memory'], { size: 44, color: cssVar('--text'), themed: true, scale: .013 }); brainLabel.position.y = 5.2; hub.add(brainLabel);
+  const glowDisc = new THREE.Mesh(new THREE.CircleGeometry(15, 64), new THREE.MeshBasicMaterial({ color: 0x2f6fc8, transparent: true, opacity: .22, blending: THREE.AdditiveBlending, depthWrite: false })); glowDisc.rotation.x = -Math.PI / 2; glowDisc.position.y = -.2; hub.add(glowDisc);
+  const plat = new THREE.Mesh(new THREE.CylinderGeometry(8, 8.8, .9, 64), M(0x161d2d)); plat.position.y = .3; plat.receiveShadow = true; hub.add(plat);
+  { const rim = new THREE.Mesh(new THREE.CylinderGeometry(8.9, 9.2, .3, 64), M(0x0f1522)); rim.position.y = -.1; hub.add(rim); }
+  for (const r of [2.6, 4.3, 6.1, 7.6]) { const ring = new THREE.Mesh(new THREE.RingGeometry(r, r + .1, 96), new THREE.MeshBasicMaterial({ color: 0x6fe3ff, transparent: true, opacity: r > 7 ? .9 : .45, side: THREE.DoubleSide })); ring.rotation.x = -Math.PI / 2; ring.position.y = .77; hub.add(ring); }
+  const orbits = new THREE.Group(); for (const [rx, rz, r] of [[1.25, .2, 5.2], [1.05, -.6, 6.0], [1.4, 1.1, 4.4]]) { const o = new THREE.Mesh(new THREE.TorusGeometry(r, .035, 8, 120), new THREE.MeshBasicMaterial({ color: 0x9fecff, transparent: true, opacity: .45 })); o.rotation.set(rx, 0, rz); orbits.add(o); } orbits.position.y = 2.8; hub.add(orbits);
+  const core = new THREE.Mesh(new THREE.SphereGeometry(1.0, 32, 32), new THREE.MeshStandardMaterial({ color: 0xcdf4ff, emissive: 0x5ee0ff, emissiveIntensity: 1.4 })); core.position.y = 2.8; hub.add(core);
+  const halo = new THREE.Mesh(new THREE.SphereGeometry(1.6, 24, 24), new THREE.MeshBasicMaterial({ color: 0x5ee0ff, transparent: true, opacity: .14, blending: THREE.AdditiveBlending, depthWrite: false })); halo.position.y = 2.8; hub.add(halo);
+  const beam = new THREE.Mesh(new THREE.CylinderGeometry(.35, .35, 26, 16, 1, true), new THREE.MeshBasicMaterial({ color: 0x9df0ff, transparent: true, opacity: .18, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide })); beam.position.y = 15; hub.add(beam);
+  const beamCore = new THREE.Mesh(new THREE.CylinderGeometry(.1, .1, 26, 8, 1, true), new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: .55, blending: THREE.AdditiveBlending, depthWrite: false })); beamCore.position.y = 15; hub.add(beamCore);
+  const glow = new THREE.PointLight(0x5ee0ff, 2.4, 42); glow.position.y = 3; hub.add(glow);
+  const brainLabel = textSprite(['THE BRAIN', 'shared memory'], { size: 40, color: TEXT, scale: .013, font: 'ui-monospace, Menlo, monospace' }); brainLabel.position.y = 6.2; hub.add(brainLabel);
   scene.add(hub);
 
-  const walkMat = new THREE.MeshStandardMaterial({ color: 0x1a2030, roughness: 1 });
+  const walkMat = M(0x151b28, { roughness: 1 }), dashMat = new THREE.LineDashedMaterial({ color: 0x3b4a6b, dashSize: .7, gapSize: .6 });
   // walkways + rooms
   rooms.forEach((d, i) => {
     const ang = -Math.PI / 2 + i * (Math.PI * 2 / rooms.length);
     const cx = Math.cos(ang) * RING, cz = Math.sin(ang) * RING, color = COLORS[d.name] || 0x8a93a6;
-    const path = new THREE.Mesh(new THREE.BoxGeometry(RING - ROOM / 2 - 6, .15, 1.6), walkMat);
-    path.position.set(Math.cos(ang) * (RING / 2 + 1), .08, Math.sin(ang) * (RING / 2 + 1)); path.rotation.y = -ang; path.receiveShadow = true; scene.add(path);
-    const g = new THREE.Group(); g.position.set(cx, 0, cz); g.rotation.y = -ang - Math.PI / 2; // back wall faces away from the hub
-    const floor = new THREE.Mesh(new THREE.BoxGeometry(ROOM, .5, ROOM), new THREE.MeshStandardMaterial({ color, roughness: .85 })); floor.position.y = .25; floor.receiveShadow = true; g.add(floor);
-    const rug = new THREE.Mesh(new THREE.BoxGeometry(ROOM - 2.4, .06, ROOM - 2.4), new THREE.MeshStandardMaterial({ color: 0xf3efe6, roughness: 1 })); rug.position.y = .53; rug.receiveShadow = true; g.add(rug);
-    const wallMat = new THREE.MeshStandardMaterial({ color: new THREE.Color(color).multiplyScalar(.75), roughness: 1 });
-    const back = new THREE.Mesh(new THREE.BoxGeometry(ROOM, 3, .3), wallMat); back.position.set(0, 1.75, -ROOM / 2); back.castShadow = true; back.receiveShadow = true; g.add(back);
-    const side = new THREE.Mesh(new THREE.BoxGeometry(.3, 3, ROOM), wallMat); side.position.set(-ROOM / 2, 1.75, 0); side.castShadow = true; g.add(side);
-    const board = new THREE.Mesh(new THREE.BoxGeometry(3, 1.5, .08), new THREE.MeshStandardMaterial({ color: 0x0d1118, emissive: color, emissiveIntensity: .25 })); board.position.set(-2.5, 2, -ROOM / 2 + .2); g.add(board);
-    const lamp = new THREE.PointLight(0xfff1d6, 1.1, 24, 1.5); lamp.position.set(0, 4, 0); g.add(lamp);
-    const plant = new THREE.Mesh(new THREE.ConeGeometry(.5, 1.3, 7), new THREE.MeshStandardMaterial({ color: 0x3f9b5a })); plant.position.set(ROOM / 2 - 1, 1.1, ROOM / 2 - 1); plant.castShadow = true; g.add(plant);
-    const couch = new THREE.Mesh(new THREE.BoxGeometry(2.2, .7, .9), new THREE.MeshStandardMaterial({ color: 0xe6e1d6 })); couch.position.set(-ROOM / 2 + 1.6, .85, ROOM / 2 - 1.2); couch.castShadow = true; g.add(couch);
+    const len = RING - ROOM / 2 - 8.5, mid = 8.8 + len / 2;
+    const path = box(len, .3, 2.2, walkMat, Math.cos(ang) * mid, .0, Math.sin(ang) * mid); path.rotation.y = -ang; path.castShadow = false; scene.add(path);
+    const dash = new THREE.Line(new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(Math.cos(ang) * 8.9, .17, Math.sin(ang) * 8.9), new THREE.Vector3(Math.cos(ang) * (RING - ROOM / 2 + .3), .17, Math.sin(ang) * (RING - ROOM / 2 + .3))]), dashMat); dash.computeLineDistances(); scene.add(dash);
+    const curve = new THREE.QuadraticBezierCurve3(new THREE.Vector3(cx * .78, 1.2, cz * .78), new THREE.Vector3(cx * .4, 7, cz * .4), new THREE.Vector3(0, 2.8, 0));
+    scene.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(curve.getPoints(40)), new THREE.LineBasicMaterial({ color, transparent: true, opacity: .28 })));
+    const g = new THREE.Group(); g.position.set(cx, 0, cz); g.rotation.y = -ang - Math.PI / 2; // the two walls face away from the hub
+    const slab = box(ROOM, 1.0, ROOM, M(color, { roughness: .8 }), 0, 0, 0); g.add(slab);
+    g.add(box(ROOM - .4, .06, ROOM - .4, M(0xf1e9d8, { roughness: .9 }), 0, .5, 0)); // pale floor
+    g.add(box(ROOM - 3.6, .04, ROOM - 5, M(new THREE.Color(color).lerp(new THREE.Color(0xffffff), .72), { roughness: 1 }), .6, .55, .6)); // rug
+    const wallMat = M(new THREE.Color(color).multiplyScalar(.42), { roughness: 1 }), trimMat = M(new THREE.Color(color).lerp(new THREE.Color(0xffffff), .25));
+    g.add(box(ROOM, 3.6, .4, wallMat, 0, .5 + 1.8, -ROOM / 2 + .2)); g.add(box(.4, 3.6, ROOM, wallMat, -ROOM / 2 + .2, .5 + 1.8, 0));
+    g.add(box(ROOM, .14, .46, trimMat, 0, 4.17, -ROOM / 2 + .2)); g.add(box(.46, .14, ROOM, trimMat, -ROOM / 2 + .2, 4.17, 0));
+    // whiteboard with a few sticky notes, a window on the side wall, a bookshelf, a hanging lamp, plants, a couch
+    g.add(box(3.4, 1.7, .1, M(0x121722), -2.8, 2.7, -ROOM / 2 + .45));
+    [[-3.9, 3.05, 0xffd166], [-3.3, 3.05, 0x8ecae6], [-2.7, 2.6, 0xb5e48c], [-2.0, 2.9, 0xffffff]].forEach(([x, y, c2]) => g.add(box(.42, .34, .04, new THREE.MeshStandardMaterial({ color: c2, emissive: c2, emissiveIntensity: .25 }), x, y, -ROOM / 2 + .52)));
+    g.add(box(.1, 1.5, 3.0, new THREE.MeshStandardMaterial({ color: 0x9ec5ff, emissive: 0x6fa8ff, emissiveIntensity: .35 }), -ROOM / 2 + .45, 2.7, 1.2));
+    const shelf = new THREE.Group(); shelf.add(box(1.7, 2.2, .5, M(0x7a5a3d), 0, 1.1, 0)); [[-.5, 0xd84a4a], [-.2, 0x3d6ef0], [.15, 0xdfb43a], [.5, 0x3aa85c]].forEach(([x, c2]) => shelf.add(box(.22, .6, .36, M(c2), x, 1.5, .1))); shelf.position.set(3.6, .5, -ROOM / 2 + .5); g.add(shelf);
+    g.add(box(.03, 2.0, .03, M(0x333a48), 0, 5.6, .5)); const bulb = new THREE.Mesh(new THREE.ConeGeometry(.5, .5, 16, 1, true), new THREE.MeshStandardMaterial({ color: 0x2a2f3b, side: THREE.DoubleSide })); bulb.position.set(0, 4.6, .5); g.add(bulb);
+    const bulbL = new THREE.Mesh(new THREE.SphereGeometry(.16, 12, 12), new THREE.MeshStandardMaterial({ color: 0xfff6dd, emissive: 0xfff1c0, emissiveIntensity: 1.5 })); bulbL.position.set(0, 4.45, .5); g.add(bulbL);
+    const lamp = new THREE.PointLight(0xfff1d6, 1.0, 24, 1.6); lamp.position.set(0, 4.2, .5); g.add(lamp);
+    for (const [px, pz] of [[ROOM / 2 - 1.1, ROOM / 2 - 1.1], [-ROOM / 2 + 1.3, ROOM / 2 - 1.1]]) { const pot = new THREE.Mesh(new THREE.CylinderGeometry(.32, .26, .5, 12), M(0x7a5a3d)); pot.position.set(px, .78, pz); g.add(pot); const leaf = new THREE.Mesh(new THREE.SphereGeometry(.62, 12, 10), M(0x3f9b5a)); leaf.position.set(px, 1.5, pz); leaf.castShadow = true; g.add(leaf); }
+    g.add(box(2.3, .55, .95, M(0xe8e3da), -ROOM / 2 + 2.0, .8, ROOM / 2 - 1.3)); g.add(box(2.3, .5, .25, M(0xe8e3da), -ROOM / 2 + 2.0, 1.2, ROOM / 2 - .95));
     scene.add(g); g.updateMatrixWorld(true);
     const world = (x, y, z) => g.localToWorld(new THREE.Vector3(x, y, z));
-    const info = { d, cx, cz, ang, color, sign: null, floor, door: world(0, .5, ROOM / 2 - .6), lounge: () => world((Math.random() - .5) * 4, .5, ROOM / 2 - 2.2 - Math.random() * 1.2) };
+    const info = { d, cx, cz, ang, color, sign: null, floor: slab, door: world(0, .5, ROOM / 2 - .6), lounge: () => world((Math.random() - .5) * 3 + 1, .5, ROOM / 2 - 2.4 - Math.random() * 1.2) };
     const n = d.agents.length, perRow = Math.min(3, n);
     d.agents.forEach((a, j) => {
       const r = Math.floor(j / perRow), c = j % perRow, inRow = Math.min(perRow, n - r * perRow);
-      const lx = -(inRow - 1) * 1.6 + c * 3.2, lz = -ROOM / 2 + 2.4 + r * 3.4;
+      const lx = -(inRow - 1) * 1.7 + c * 3.4 + .3, lz = -ROOM / 2 + 2.6 + r * 3.6;
       const dk = desk(lx, lz, 0, color); g.add(dk);
-      const ch = character(color, a.role === 'head'); const home = world(lx, .5, lz + 1.0); ch.position.copy(home); ch.rotation.y = g.rotation.y + Math.PI; scene.add(ch);
-      const tag = textSprite([a.name], { size: 30, color: cssVar('--text'), themed: true, scale: .011 }); tag.position.y = 1.9; ch.add(tag);
+      const ch = character(color, a.role === 'head'); const home = world(lx, .5, lz + .78); ch.position.copy(home); ch.rotation.y = g.rotation.y + Math.PI; scene.add(ch);
+      const tag = textSprite([a.name], { size: 30, color: TEXT, scale: .011 }); tag.position.y = 1.9; ch.add(tag);
       const rec = { ...a, team: d.name, color, mesh: ch, desk: dk, home, room: info, idleYaw: g.rotation.y + Math.PI, working: false, phase: Math.random() * 6, idleT: 3 + Math.random() * 12, path: [], state: 'desk' };
       ch.traverse(o => { o.userData.agent = rec; }); agents.push(rec); byName.set(a.name, rec);
     });
-    info.sign = textSprite([`${ICONS[d.name] || '●'} ${d.name}`, `${n} agents · 0 running`], { size: 40, color: cssVar('--text'), themed: true, scale: .013, stripe: hex(color) });
-    info.sign.position.set(cx, 5.2, cz); scene.add(info.sign);
-    roomInfo.push(info); floor.userData.room = info;
+    info.sign = roomCard(d.name, color, ICONS[d.name] || '●'); info.sign.userData.nAv = Math.min(3, n); info.sign.userData.update([d.name, `${n} agents · idle`]);
+    info.sign.position.set(cx, 7.2, cz); scene.add(info.sign);
+    roomInfo.push(info); slab.userData.room = info; g.traverse(o => { if (!o.userData.agent && !o.userData.room && o.isMesh) o.userData.roomOf = info; });
   });
   // chief of staff in the hub
-  const HUB = { d: lobby, cx: 0, cz: 0, ang: 0, color: 0x5ee0ff, hub: true, door: new THREE.Vector3(0, .6, 6), lounge: () => { const a = Math.random() * Math.PI * 2; return new THREE.Vector3(Math.cos(a) * 4.5, .6, Math.sin(a) * 4.5); } };
+  const HUB = { d: lobby, cx: 0, cz: 0, ang: 0, color: 0x5ee0ff, hub: true, door: new THREE.Vector3(0, .6, 6.5), lounge: () => { const a = Math.random() * Math.PI * 2; return new THREE.Vector3(Math.cos(a) * 5, .8, Math.sin(a) * 5); } };
   lobby.agents.forEach(a => {
-    const ch = character(0x5ee0ff, true); ch.position.set(0, .6, 4.2); scene.add(ch);
-    const tag = textSprite([a.name], { size: 30, color: cssVar('--text'), themed: true, scale: .011 }); tag.position.y = 1.9; ch.add(tag);
-    const rec = { ...a, team: lobby.name, color: 0x5ee0ff, mesh: ch, desk: { userData: { screen: { material: { emissiveIntensity: 0 } } } }, home: ch.position.clone(), room: HUB, idleYaw: 0, working: false, phase: 0, idleT: 6, path: [], state: 'desk' };
+    const ch = character(0x5ee0ff, true); ch.position.set(0, .8, 4.6); scene.add(ch);
+    const tag = textSprite([a.name], { size: 30, color: TEXT, scale: .011 }); tag.position.y = 1.9; ch.add(tag);
+    const rec = { ...a, team: lobby.name, color: 0x5ee0ff, mesh: ch, desk: { userData: { screen: { material: { emissiveIntensity: 0 } } } }, home: ch.position.clone(), room: HUB, idleYaw: 0, working: false, phase: 0, idleT: 6, path: [], state: 'desk', standing: true };
     ch.traverse(o => { o.userData.agent = rec; }); agents.push(rec); byName.set(a.name, rec);
   });
 
   // ---------- office life: walking, visiting, talking ----------
-  const hubPt = (ang, r) => new THREE.Vector3(Math.cos(ang) * r, .6, Math.sin(ang) * r);
+  const hubPt = (ang, r) => new THREE.Vector3(Math.cos(ang) * r, .8, Math.sin(ang) * r);
   function whereIs(a) { // which room (or the hub) the agent is standing in right now
     const p = a.mesh.position; if (p.length() < 8.5) return HUB;
     const ang = Math.atan2(p.z, p.x); let best = null, bd = 9;
@@ -280,13 +326,13 @@
   function routeTo(a, room, dest) { // waypoints along the walkways from where the agent is to `dest` inside `room`
     const from = whereIs(a); const path = [];
     if (from === room) return [dest];
-    if (!from.hub) { path.push(from.door.clone(), hubPt(from.ang, 7.2), hubPt(from.ang, 4.6)); }
+    if (!from.hub) { path.push(from.door.clone(), hubPt(from.ang, 8.0), hubPt(from.ang, 5.2)); }
     if (room.hub) { path.push(dest); return path; }
-    path.push(hubPt(room.ang, 4.6), hubPt(room.ang, 7.2), room.door.clone(), dest); return path;
+    path.push(hubPt(room.ang, 5.2), hubPt(room.ang, 8.0), room.door.clone(), dest); return path;
   }
   function sendTo(a, room, dest, state) { a.path = routeTo(a, room, dest); a.state = state; a.dest = dest; }
   function goHome(a) { sendTo(a, a.room, a.home.clone(), 'home'); }
-  const say = (a, text) => { if (!a.mesh.userData.say) { const s = textSprite([text], { size: 32, color: cssVar('--text'), scale: .011, bg: cssVar('--chatbg') }); s.userData.chat = true; s.position.y = 2.5; a.mesh.add(s); a.mesh.userData.say = s; } else { a.mesh.userData.say.userData.update([text]); a.mesh.userData.say.visible = true; } a.sayT = 2.6 + text.length * .03; };
+  const say = (a, text) => { if (!a.mesh.userData.say) { const s = textSprite([text], { size: 32, color: TEXT, scale: .011, bg: CHATBG }); s.position.y = 2.5; a.mesh.add(s); a.mesh.userData.say = s; } else { a.mesh.userData.say.userData.update([text]); a.mesh.userData.say.visible = true; } a.sayT = 2.6 + text.length * .03; };
   const rnd = arr => arr[Math.floor(Math.random() * arr.length)];
   function lines(a, b) { // a short exchange built from real board items and brain rules
     const its = (typeof items !== 'undefined' ? items : []).filter(i => i.status !== 'done'); const it = rnd(its.length ? its : [{ title: 'the next drop', date: 'Friday', team: b.team }]);
@@ -302,7 +348,7 @@
   const chats3d = [];
   function startChat(a, b) {
     const sameRoom = a.room === b.room; const room = sameRoom ? a.room : HUB;
-    let spot; if (sameRoom) spot = room.lounge(); else { let m = (a.room.ang + b.room.ang) / 2; if (Math.abs(a.room.ang - b.room.ang) > Math.PI) m += Math.PI; spot = hubPt(m, 5.4); }
+    let spot; if (sameRoom) spot = room.lounge(); else { let m = (a.room.ang + b.room.ang) / 2; if (Math.abs(a.room.ang - b.room.ang) > Math.PI) m += Math.PI; spot = hubPt(m, 6.0); }
     const side = new THREE.Vector3(-Math.sin(room.ang || 0), 0, Math.cos(room.ang || 0)).multiplyScalar(.55);
     sendTo(a, room, spot.clone().add(side), 'meet'); sendTo(b, room, spot.clone().sub(side), 'meet');
     const c = { a, b, script: lines(a, b), i: 0, t: 0, started: false }; a.chat = b.chat = c; chats3d.push(c);
@@ -328,51 +374,53 @@
     }
   }
 
-  // ---------- theme: the viewer or the system picks, the button overrides ----------
-  const sprites = []; const _ts = textSprite; // re-skin every label when the theme flips
-  function applyTheme() {
-    const light = isLight();
-    scene.background.set(light ? 0xe9edf5 : 0x0b0f1a); scene.fog.color.set(light ? 0xe9edf5 : 0x0b0f1a);
-    starMat.color.set(light ? 0x6b7a99 : 0x9fb4ff); starMat.opacity = light ? .25 : .6;
-    walkMat.color.set(light ? 0xb9c2d2 : 0x1a2030); platMat.color.set(light ? 0xcfd6e3 : 0x1b2233);
-    core.material.color.set(light ? 0x5fc4f0 : 0xbfefff); core.material.emissive.set(light ? 0x0a7fa8 : 0x5ee0ff); beam.material.color.set(light ? 0x2aa6d8 : 0x9df0ff);
-    document.getElementById('theme').textContent = light ? '☀' : '☾';
-    scene.traverse(o => { if (o.isSprite && o.userData.lines) o.userData.update(o.userData.lines, { bg: cssVar(o.userData.chat ? '--chatbg' : '--bubble'), color: (o.userData.chat || o.userData.opts.themed) ? cssVar('--text') : o.userData.opts.color, sub: cssVar('--muted') }); });
+  // ---------- camera: eased orbit, pan, zoom to the cursor, keyboard ----------
+  const target = new THREE.Vector3(0, 0, 0), goalT = new THREE.Vector3(0, 0, 0);
+  let yaw = .35, pitch = .95, dist = 80, gYaw = .35, gPitch = .95, gDist = 80, FIT = 80, userMoved = false;
+  const RANGE = RING + ROOM;
+  function fitDistance() { const r = RING + ROOM / 2 + 5, vf = camera.fov * Math.PI / 360, hf = Math.atan(Math.tan(vf) * camera.aspect); return r / Math.sin(Math.min(vf, hf)) * 1.0; }
+  function overview() { goalT.set(0, 0, 0); gYaw = .35; gPitch = .95; FIT = fitDistance(); setDist(FIT); userMoved = false; }
+  const setDist = v => { gDist = Math.min(230, Math.max(7, v)); document.getElementById('zoom').textContent = Math.round(FIT / gDist * 100) + '%'; };
+  function clampTarget() { const l = Math.hypot(goalT.x, goalT.z); if (l > RANGE) { goalT.x *= RANGE / l; goalT.z *= RANGE / l; } goalT.y = 0; }
+  function placeCamera(dt) {
+    const k = 1 - Math.pow(.0005, dt); // smooth, frame-rate independent easing
+    target.lerp(goalT, k); yaw += (gYaw - yaw) * k; pitch += (gPitch - pitch) * k; dist += (gDist - dist) * k;
+    camera.position.set(target.x + dist * Math.sin(yaw) * Math.cos(pitch), target.y + dist * Math.sin(pitch), target.z + dist * Math.cos(yaw) * Math.cos(pitch)); camera.lookAt(target);
   }
-  document.getElementById('theme').onclick = () => { const next = isLight() ? 'dark' : 'light'; document.documentElement.setAttribute('data-theme', next); try { localStorage.setItem('agent-hq-theme', next); } catch (e) { } applyTheme(); };
-  try { const saved = localStorage.getItem('agent-hq-theme'); if (saved) document.documentElement.setAttribute('data-theme', saved); } catch (e) { }
-  new MutationObserver(applyTheme).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
-  matchMedia('(prefers-color-scheme: light)').addEventListener('change', applyTheme);
-  applyTheme();
-
-  // ---------- camera ----------
-  const target = new THREE.Vector3(0, 0, 0); let yaw = 0.35, pitch = 0.95, dist = 78, FIT = 78;
-  function fitDistance() { // distance at which the whole office (a sphere around the ring of rooms) fits in view, whatever the aspect
-    const r = RING + ROOM / 2 + 4, vf = camera.fov * Math.PI / 360, hf = Math.atan(Math.tan(vf) * camera.aspect);
-    return r / Math.sin(Math.min(vf, hf)) * 1.02;
-  }
-  function overview() { target.set(0, 0, 0); yaw = 0.35; pitch = 0.95; FIT = fitDistance(); setDist(FIT); }
-  function placeCamera() { camera.position.set(target.x + dist * Math.sin(yaw) * Math.cos(pitch), target.y + dist * Math.sin(pitch), target.z + dist * Math.cos(yaw) * Math.cos(pitch)); camera.lookAt(target); }
+  const ray = new THREE.Raycaster(), ptr = new THREE.Vector2(), ground = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0);
+  function groundAt(cx, cy) { ptr.set((cx / innerWidth) * 2 - 1, -(cy / innerHeight) * 2 + 1); ray.setFromCamera(ptr, camera); const p = new THREE.Vector3(); return ray.ray.intersectPlane(ground, p) ? p : null; }
   let drag = null, moved = 0;
-  canvas.addEventListener('pointerdown', e => { drag = { x: e.clientX, y: e.clientY, b: e.button }; moved = 0; canvas.setPointerCapture(e.pointerId); });
+  canvas.addEventListener('pointerdown', e => { drag = { x: e.clientX, y: e.clientY, b: e.button, shift: e.shiftKey }; moved = 0; canvas.setPointerCapture(e.pointerId); userMoved = true; });
   canvas.addEventListener('pointermove', e => { if (!drag) return; const dx = e.clientX - drag.x, dy = e.clientY - drag.y; moved += Math.abs(dx) + Math.abs(dy); drag.x = e.clientX; drag.y = e.clientY;
-    if (drag.b === 2 || e.shiftKey) { target.addScaledVector(new THREE.Vector3(Math.cos(yaw), 0, -Math.sin(yaw)), -dx * dist * .0015).addScaledVector(new THREE.Vector3(-Math.sin(yaw), 0, -Math.cos(yaw)), -dy * dist * .0015); }
-    else { yaw -= dx * .005; pitch = Math.min(1.45, Math.max(.15, pitch + dy * .005)); } });
-  canvas.addEventListener('pointerup', e => { if (drag && moved < 6) pick(e); drag = null; });
+    if (drag.b === 2 || drag.b === 1 || drag.shift) { goalT.addScaledVector(new THREE.Vector3(Math.cos(yaw), 0, -Math.sin(yaw)), -dx * gDist * .0016).addScaledVector(new THREE.Vector3(-Math.sin(yaw), 0, -Math.cos(yaw)), -dy * gDist * .0016); clampTarget(); }
+    else { gYaw -= dx * .006; gPitch = Math.min(1.5, Math.max(.2, gPitch + dy * .006)); } });
+  canvas.addEventListener('pointerup', e => { if (drag && moved < 6 && e.button === 0) pick(e); drag = null; });
+  canvas.addEventListener('dblclick', e => { const p = groundAt(e.clientX, e.clientY); if (p) { goalT.copy(p); clampTarget(); setDist(Math.max(14, gDist * .6)); } });
   canvas.addEventListener('contextmenu', e => e.preventDefault());
-  const setDist = v => { dist = Math.min(220, Math.max(10, v)); document.getElementById('zoom').textContent = Math.round(FIT / dist * 100) + '%'; };
-  canvas.addEventListener('wheel', e => { setDist(dist * (1 + Math.sign(e.deltaY) * .08)); e.preventDefault(); }, { passive: false });
-  document.getElementById('zin').onclick = () => setDist(dist * .8); document.getElementById('zout').onclick = () => setDist(dist * 1.25);
-  document.getElementById('zfit').onclick = () => { userMoved = false; overview(); }; document.getElementById('overview').onclick = () => { userMoved = false; overview(); };
-  addEventListener('keydown', e => { if (e.key === 'o' && document.activeElement.tagName !== 'INPUT') { userMoved = false; overview(); } });
-  const ray = new THREE.Raycaster(), ptr = new THREE.Vector2();
+  canvas.addEventListener('wheel', e => { e.preventDefault(); userMoved = true; const before = groundAt(e.clientX, e.clientY); const f = Math.exp(Math.sign(e.deltaY) * .12); setDist(gDist * f); if (before && f < 1) { goalT.lerp(before, 1 - f); clampTarget(); } }, { passive: false });
+  let touchD = 0; canvas.addEventListener('touchmove', e => { if (e.touches.length === 2) { const d = Math.hypot(e.touches[0].clientX - e.touches[1].clientX, e.touches[0].clientY - e.touches[1].clientY); if (touchD) setDist(gDist * touchD / d); touchD = d; } }, { passive: true }); canvas.addEventListener('touchend', () => { touchD = 0; });
+  document.getElementById('zin').onclick = () => setDist(gDist * .75); document.getElementById('zout').onclick = () => setDist(gDist * 1.33);
+  document.getElementById('zfit').onclick = overview; document.getElementById('overview').onclick = overview;
+  const keys = new Set();
+  addEventListener('keydown', e => { const tag = document.activeElement.tagName; if (tag === 'INPUT' || tag === 'SELECT' || tag === 'TEXTAREA') { if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') { e.preventDefault(); askQ.focus(); } return; }
+    if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') { e.preventDefault(); askQ.focus(); return; }
+    if (e.key === 'o' || e.key === 'O') overview(); else if (/^[1-8]$/.test(e.key) && roomInfo[+e.key - 1]) flyTo(roomInfo[+e.key - 1]); else if (e.key === 'Escape') { if (tab) showTab(tab); }
+    else if (['w', 'a', 's', 'd', 'q', 'e', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', '+', '-', '='].includes(e.key)) { keys.add(e.key); e.preventDefault(); userMoved = true; } });
+  addEventListener('keyup', e => keys.delete(e.key)); addEventListener('blur', () => keys.clear());
+  function keyMove(dt) {
+    if (!keys.size) return; const sp = gDist * .9 * dt; const fwd = new THREE.Vector3(-Math.sin(yaw), 0, -Math.cos(yaw)), right = new THREE.Vector3(Math.cos(yaw), 0, -Math.sin(yaw));
+    if (keys.has('w') || keys.has('ArrowUp')) goalT.addScaledVector(fwd, sp); if (keys.has('s') || keys.has('ArrowDown')) goalT.addScaledVector(fwd, -sp);
+    if (keys.has('d') || keys.has('ArrowRight')) goalT.addScaledVector(right, sp); if (keys.has('a') || keys.has('ArrowLeft')) goalT.addScaledVector(right, -sp);
+    if (keys.has('q')) gYaw += 1.4 * dt; if (keys.has('e')) gYaw -= 1.4 * dt; if (keys.has('+') || keys.has('=')) setDist(gDist * (1 - .9 * dt)); if (keys.has('-')) setDist(gDist * (1 + .9 * dt)); clampTarget();
+  }
   function pick(e) {
     ptr.set((e.clientX / innerWidth) * 2 - 1, -(e.clientY / innerHeight) * 2 + 1); ray.setFromCamera(ptr, camera);
     const hits = ray.intersectObjects(scene.children, true);
     const ag = hits.find(h => h.object.userData.agent); if (ag) { if (tab !== 'office') showTab('office'); showCard(ag.object.userData.agent); askSel.value = ag.object.userData.agent.name; return; }
-    const rm = hits.find(h => h.object.userData.room); if (rm) flyTo(rm.object.userData.room);
+    const rm = hits.find(h => h.object.userData.room || h.object.userData.roomOf); if (rm) flyTo(rm.object.userData.room || rm.object.userData.roomOf);
   }
-  function flyTo(r) { target.set(r.cx, 0, r.cz); setDist(24); }
+  function flyTo(r) { goalT.set(r.cx, 0, r.cz); gYaw = Math.round((gYaw - .35) / (Math.PI / 2)) * (Math.PI / 2) + .35; gPitch = .85; setDist(26); userMoved = true; }
+  document.getElementById('mapc').addEventListener('click', e => { const r = e.target.getBoundingClientRect(); const x = (e.clientX - r.left) / r.width * 340, y = (e.clientY - r.top) / r.height * 200; goalT.set((x - 170) / 3.6, 0, (y - 100) / 2.1); clampTarget(); userMoved = true; });
 
   // ---------- panel / tabs ----------
   const panel = document.getElementById('panel'); let tab = null;
@@ -543,7 +591,7 @@
     const turns = chats.get(a.name) || []; chats.set(a.name, turns); turns.push({ role: 'user', content: q }); bubble('me', q);
     const sample = await samplePromise;
     if (!sample) { note.textContent = 'Asking agents works when this page is open on claude.ai. Locally, run "claude" in the repo and ask there.'; note.hidden = false; turns.pop(); return; }
-    const room = roomInfo.find(r => r.d.name === a.team); if (room) flyTo(room); else { target.set(0, 0, 2); setDist(28); }
+    const room = roomInfo.find(r => r.d.name === a.team); if (room) flyTo(room); else { goalT.set(0, 0, 0); setDist(30); }
     setWorking(a.name, true, 'asked from the dashboard'); const stop = document.getElementById('chat-stop'); stop.hidden = false;
     const out = bubble('agent thinking', 'Thinking…', a.name); askCtl = new AbortController(); stop.onclick = () => askCtl.abort();
     try {
@@ -562,7 +610,10 @@
 
   // ---------- status ----------
   const toast = document.getElementById('toast'); let toastT = null;
-  function notify(title, sub, color) { document.getElementById('toastt').textContent = title; document.getElementById('toasts').textContent = sub; const ic = document.getElementById('toastic'); ic.style.background = color || '#2bbfa8'; toast.classList.add('on'); clearTimeout(toastT); toastT = setTimeout(() => toast.classList.remove('on'), 3500); }
+  const notes = []; let unread = 0;
+  function notify(title, sub, color) { document.getElementById('toastt').textContent = title; document.getElementById('toasts').textContent = sub; const ic = document.getElementById('toastic'); ic.style.background = color || '#2bbfa8'; toast.classList.add('on'); clearTimeout(toastT); toastT = setTimeout(() => toast.classList.remove('on'), 4500);
+    notes.unshift({ title, sub, color, at: Date.now() }); if (notes.length > 30) notes.pop(); unread++; const b = document.getElementById('bellc'); b.textContent = unread; b.classList.add('on'); }
+  document.getElementById('bell').onclick = () => { unread = 0; document.getElementById('bellc').classList.remove('on'); if (tab !== 'tasks') showTab('tasks'); };
   const logEl = document.getElementById('log'), runlist = document.getElementById('runlist');
   function log(msg) { const d = document.createElement('div'); d.innerHTML = msg; logEl.prepend(d); while (logEl.children.length > 60) logEl.lastChild.remove(); document.getElementById('taskn').textContent = logEl.children.length; }
   function refreshCounts() {
@@ -608,44 +659,47 @@
     mctx.clearRect(0, 0, mc.width, mc.height); const sx = x => mc.width / 2 + x * 3.6, sz = z => mc.height / 2 + z * 2.1;
     mctx.fillStyle = '#5ee0ff'; mctx.beginPath(); mctx.arc(sx(0), sz(0), 5, 0, 7); mctx.fill();
     roomInfo.forEach(r => { mctx.fillStyle = hex(r.color); mctx.fillRect(sx(r.cx) - 11, sz(r.cz) - 7, 22, 14); const n = r.lastN || 0; if (n) { mctx.fillStyle = '#fff'; mctx.beginPath(); mctx.arc(sx(r.cx) + 9, sz(r.cz) - 6, 3, 0, 7); mctx.fill(); } });
-    mctx.strokeStyle = 'rgba(255,255,255,.5)'; mctx.lineWidth = 1; mctx.strokeRect(sx(target.x) - 20, sz(target.z) - 12, 40, 24);
+    const vw = Math.max(18, 40 * 26 / Math.max(10, gDist)); mctx.strokeStyle = 'rgba(255,255,255,.55)'; mctx.lineWidth = 1; mctx.strokeRect(sx(target.x) - vw, sz(target.z) - vw * .6, vw * 2, vw * 1.2);
   }
 
   // ---------- animate ----------
   // size the drawing buffer from the canvas's real on-screen size (viewers can lay the page out after load, with no resize event)
-  let userMoved = false; canvas.addEventListener('pointerdown', () => { userMoved = true; }); canvas.addEventListener('wheel', () => { userMoved = true; });
   function resize() {
     const w = canvas.clientWidth || innerWidth, h = canvas.clientHeight || innerHeight; if (!w || !h) return false;
     if (canvas.width !== Math.floor(w * renderer.getPixelRatio()) || canvas.height !== Math.floor(h * renderer.getPixelRatio())) { renderer.setSize(w, h, false); camera.aspect = w / h; camera.updateProjectionMatrix(); return true; }
     return false;
   }
-  function refit() { FIT = fitDistance(); if (!userMoved) overview(); else setDist(dist); }
+  function refit() { FIT = fitDistance(); if (!userMoved) overview(); else setDist(gDist); }
   addEventListener('resize', () => { resize(); refit(); }); if (window.ResizeObserver) new ResizeObserver(() => { if (resize()) refit(); }).observe(document.body);
-  resize(); overview();
+  resize(); overview(); target.copy(goalT); yaw = gYaw; pitch = gPitch; dist = gDist;
   const clock = new THREE.Clock(); let mapT = 0;
   function frame() {
     const dt = Math.min(clock.getDelta(), .05), t = clock.elapsedTime;
-    core.scale.setScalar(1 + Math.sin(t * 2) * .06); glow.intensity = 2.0 + Math.sin(t * 2) * .4; hub.children.forEach(o => { if (o.geometry && o.geometry.type === 'RingGeometry') o.rotation.z = t * .1; });
-    tickLife(dt);
+    core.scale.setScalar(1 + Math.sin(t * 2) * .06); halo.scale.setScalar(1 + Math.sin(t * 2 + 1) * .12); glow.intensity = 2.2 + Math.sin(t * 2) * .5; orbits.rotation.y = t * .25; orbits.children.forEach((o, i) => { o.rotation.z += dt * (.2 + i * .1); });
+    hub.children.forEach(o => { if (o.geometry && o.geometry.type === 'RingGeometry') o.rotation.z = t * .08; });
+    tickLife(dt); keyMove(dt);
     for (const a of agents) {
       const u = a.mesh.userData;
       if (a.working && a.state !== 'home' && a.state !== 'desk') { if (a.chat) endChat(a.chat); goHome(a); }
       const goal = a.path.length ? a.path[0] : null;
+      const seated = !goal && a.state === 'desk' && !a.standing; const wantY = a.home.y - (seated ? .24 : 0);
       if (goal) {
         const d = goal.clone().sub(a.mesh.position); d.y = 0; const len = d.length();
         if (len < .12) { a.path.shift(); if (!a.path.length) { if (a.state === 'home') a.state = 'desk'; } }
         else { a.mesh.position.addScaledVector(d.normalize(), Math.min(len, 2.4 * dt)); a.mesh.rotation.y = Math.atan2(d.x, d.z); u.body.position.y = .7 + Math.abs(Math.sin(t * 9 + a.phase)) * .06; }
+        a.mesh.position.y += (goal.y - a.mesh.position.y) * .2;
       } else {
+        a.mesh.position.y += (wantY - a.mesh.position.y) * .15;
         let face = a.idleYaw; if (a.chat) { const o = a.chat.a === a ? a.chat.b : a.chat.a; face = Math.atan2(o.mesh.position.x - a.mesh.position.x, o.mesh.position.z - a.mesh.position.z); }
         else if (a.state !== 'desk') face = a.mesh.rotation.y;
         let dy = face - a.mesh.rotation.y; dy = Math.atan2(Math.sin(dy), Math.cos(dy)); a.mesh.rotation.y += dy * .12;
         u.body.position.y = .7 + Math.sin(t * 2 + a.phase) * .015;
         if (a.chat && a.sayT > 0) u.head.position.y = 1.36 + Math.abs(Math.sin(t * 6 + a.phase)) * .03;
       }
-      if (a.working) { u.head.position.y = 1.36 + Math.sin(t * 7 + a.phase) * .04; u.ring.material.opacity = .45 + Math.sin(t * 4 + a.phase) * .3; u.ring.scale.setScalar(1 + Math.sin(t * 4 + a.phase) * .08); a.desk.userData.screen.material.emissiveIntensity = .9; }
-      else { if (!(a.chat && a.sayT > 0)) u.head.position.y = 1.36; u.ring.material.opacity += (0 - u.ring.material.opacity) * .1; a.desk.userData.screen.material.emissiveIntensity += (.15 - a.desk.userData.screen.material.emissiveIntensity) * .1; }
+      if (a.working) { u.head.position.y = 1.36 + Math.sin(t * 7 + a.phase) * .04; u.ring.material.opacity = .45 + Math.sin(t * 4 + a.phase) * .3; u.ring.scale.setScalar(1 + Math.sin(t * 4 + a.phase) * .08); a.desk.userData.screen.material.emissiveIntensity = 1.1; }
+      else { if (!(a.chat && a.sayT > 0)) u.head.position.y = 1.36; u.ring.material.opacity += (0 - u.ring.material.opacity) * .1; a.desk.userData.screen.material.emissiveIntensity += (.25 - a.desk.userData.screen.material.emissiveIntensity) * .1; }
     }
-    if (resize()) refit(); placeCamera(); renderer.render(scene, camera); if ((mapT += dt) > .25) { mapT = 0; drawMap(); } requestAnimationFrame(frame);
+    if (resize()) refit(); placeCamera(dt); renderer.render(scene, camera); if ((mapT += dt) > .25) { mapT = 0; drawMap(); } requestAnimationFrame(frame);
   }
   frame();
 })();
