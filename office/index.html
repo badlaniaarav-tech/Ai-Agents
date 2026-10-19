@@ -124,13 +124,14 @@
     </div>
   </div>
   <div data-view="tasks" style="display:none">
-    <h2>Running now</h2><ul id="runlist"><li style="color:var(--muted)">nobody</li></ul>
+    <h2>Running now <span id="where" class="kv" style="text-transform:none; letter-spacing:0; float:right"></span></h2><ul id="runlist"><li style="color:var(--muted)">nobody</li></ul>
     <form id="addtask" class="addrow"><input id="t-title" placeholder="New task…" required><select id="t-team"></select><input id="t-date" type="date"><select id="t-type"><option value="task">task</option><option value="post">post</option><option value="meeting">meeting</option></select><button type="submit">Add</button></form>
     <div id="board"></div>
     <h2 style="margin-top:14px">Log</h2><div id="log" style="font-size:12px; color:var(--muted)"></div>
   </div>
   <div data-view="calendar" style="display:none">
-    <div class="calhead"><button id="cprev">‹</button><h2 id="calmonth" style="margin:0"></h2><button id="cnext">›</button><button id="ctoday">today</button></div>
+    <div class="calhead"><button id="cprev">‹</button><h2 id="calmonth" style="margin:0"></h2><button id="cnext">›</button><button id="ctoday">today</button><button id="besttime" title="Best times to post, from Metricool">Best times</button></div>
+    <div id="bestbox" hidden></div>
     <div id="calgrid"></div>
     <div id="dayhead" class="kv" style="margin-top:10px"></div><div id="daylist"></div>
   </div>
@@ -272,11 +273,11 @@
     const dash = new THREE.Line(new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(Math.cos(ang) * 8.9, .17, Math.sin(ang) * 8.9), new THREE.Vector3(Math.cos(ang) * (RING - ROOM / 2 + .3), .17, Math.sin(ang) * (RING - ROOM / 2 + .3))]), dashMat); dash.computeLineDistances(); scene.add(dash);
     const curve = new THREE.QuadraticBezierCurve3(new THREE.Vector3(cx * .78, 1.2, cz * .78), new THREE.Vector3(cx * .4, 7, cz * .4), new THREE.Vector3(0, 2.8, 0));
     scene.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(curve.getPoints(40)), new THREE.LineBasicMaterial({ color, transparent: true, opacity: .28 })));
-    const g = new THREE.Group(); g.position.set(cx, 0, cz); g.rotation.y = -ang - Math.PI / 2; // the two walls face away from the hub
-    const slab = box(ROOM, 1.0, ROOM, M(color, { roughness: .8 }), 0, 0, 0); g.add(slab);
-    g.add(box(ROOM - .4, .06, ROOM - .4, M(0xf1e9d8, { roughness: .9 }), 0, .5, 0)); // pale floor
-    g.add(box(ROOM - 3.6, .04, ROOM - 5, M(new THREE.Color(color).lerp(new THREE.Color(0xffffff), .72), { roughness: 1 }), .6, .55, .6)); // rug
-    const wallMat = M(new THREE.Color(color).multiplyScalar(.42), { roughness: 1 }), trimMat = M(new THREE.Color(color).lerp(new THREE.Color(0xffffff), .25));
+    const g = new THREE.Group(); g.position.set(cx, 0, cz); // every room faces the camera the same way, walls on the two far sides, as in the video
+    const slab = box(ROOM, 1.0, ROOM, M(new THREE.Color(color).multiplyScalar(.62), { roughness: .85 }), 0, 0, 0); g.add(slab);
+    g.add(box(ROOM - .3, .06, ROOM - .3, M(new THREE.Color(color).lerp(new THREE.Color(0xffffff), .36), { roughness: .95 }), 0, .5, 0)); // floor in the team tint
+    g.add(box(ROOM - 3.6, .04, ROOM - 5, M(new THREE.Color(color).lerp(new THREE.Color(0xffffff), .6), { roughness: 1 }), .6, .55, .8)); // rug
+    const wallMat = M(new THREE.Color(color).multiplyScalar(.78), { roughness: 1 }), trimMat = M(new THREE.Color(color).lerp(new THREE.Color(0xffffff), .35));
     g.add(box(ROOM, 3.6, .4, wallMat, 0, .5 + 1.8, -ROOM / 2 + .2)); g.add(box(.4, 3.6, ROOM, wallMat, -ROOM / 2 + .2, .5 + 1.8, 0));
     g.add(box(ROOM, .14, .46, trimMat, 0, 4.17, -ROOM / 2 + .2)); g.add(box(.46, .14, ROOM, trimMat, -ROOM / 2 + .2, 4.17, 0));
     // whiteboard with a few sticky notes, a window on the side wall, a bookshelf, a hanging lamp, plants, a couch
@@ -291,15 +292,16 @@
     g.add(box(2.3, .55, .95, M(0xe8e3da), -ROOM / 2 + 2.0, .8, ROOM / 2 - 1.3)); g.add(box(2.3, .5, .25, M(0xe8e3da), -ROOM / 2 + 2.0, 1.2, ROOM / 2 - .95));
     scene.add(g); g.updateMatrixWorld(true);
     const world = (x, y, z) => g.localToWorld(new THREE.Vector3(x, y, z));
-    const info = { d, cx, cz, ang, color, sign: null, floor: slab, door: world(0, .5, ROOM / 2 - .6), lounge: () => world((Math.random() - .5) * 3 + 1, .5, ROOM / 2 - 2.4 - Math.random() * 1.2) };
+    const toHub = new THREE.Vector3(-Math.cos(ang), 0, -Math.sin(ang)); const k = (ROOM / 2 - .6) / Math.max(Math.abs(toHub.x), Math.abs(toHub.z));
+    const info = { d, cx, cz, ang, color, sign: null, floor: slab, door: new THREE.Vector3(cx + toHub.x * k, .5, cz + toHub.z * k), lounge: () => new THREE.Vector3(cx + toHub.x * 2.2 + (Math.random() - .5) * 3, .5, cz + Math.max(1.2, toHub.z * 2.2) + (Math.random() - .5) * 2) };
     const n = d.agents.length, perRow = Math.min(3, n);
     d.agents.forEach((a, j) => {
       const r = Math.floor(j / perRow), c = j % perRow, inRow = Math.min(perRow, n - r * perRow);
       const lx = -(inRow - 1) * 1.7 + c * 3.4 + .3, lz = -ROOM / 2 + 2.6 + r * 3.6;
       const dk = desk(lx, lz, 0, color); g.add(dk);
-      const ch = character(color, a.role === 'head'); const home = world(lx, .5, lz + .78); ch.position.copy(home); ch.rotation.y = g.rotation.y + Math.PI; scene.add(ch);
+      const ch = character(color, a.role === 'head'); const home = world(lx, .5, lz + .78); ch.position.copy(home); ch.rotation.y = Math.PI; scene.add(ch);
       const tag = textSprite([a.name], { size: 30, color: TEXT, scale: .011 }); tag.position.y = 1.9; ch.add(tag);
-      const rec = { ...a, team: d.name, color, mesh: ch, desk: dk, home, room: info, idleYaw: g.rotation.y + Math.PI, working: false, phase: Math.random() * 6, idleT: 3 + Math.random() * 12, path: [], state: 'desk' };
+      const rec = { ...a, team: d.name, color, mesh: ch, desk: dk, home, room: info, idleYaw: Math.PI, working: false, phase: Math.random() * 6, idleT: 3 + Math.random() * 12, path: [], state: 'desk' };
       ch.traverse(o => { o.userData.agent = rec; }); agents.push(rec); byName.set(a.name, rec);
     });
     info.sign = roomCard(d.name, color, ICONS[d.name] || '●'); info.sign.userData.nAv = Math.min(3, n); info.sign.userData.update([d.name, `${n} agents · idle`]);
@@ -376,10 +378,10 @@
 
   // ---------- camera: eased orbit, pan, zoom to the cursor, keyboard ----------
   const target = new THREE.Vector3(0, 0, 0), goalT = new THREE.Vector3(0, 0, 0);
-  let yaw = .35, pitch = .95, dist = 80, gYaw = .35, gPitch = .95, gDist = 80, FIT = 80, userMoved = false;
+  const YAW0 = Math.PI / 4, PITCH0 = .86; let yaw = YAW0, pitch = PITCH0, dist = 80, gYaw = YAW0, gPitch = PITCH0, gDist = 80, FIT = 80, userMoved = false;
   const RANGE = RING + ROOM;
   function fitDistance() { const r = RING + ROOM / 2 + 5, vf = camera.fov * Math.PI / 360, hf = Math.atan(Math.tan(vf) * camera.aspect); return r / Math.sin(Math.min(vf, hf)) * 1.0; }
-  function overview() { goalT.set(0, 0, 0); gYaw = .35; gPitch = .95; FIT = fitDistance(); setDist(FIT); userMoved = false; }
+  function overview() { goalT.set(0, 0, 0); gYaw = YAW0; gPitch = PITCH0; FIT = fitDistance(); setDist(FIT); userMoved = false; }
   const setDist = v => { gDist = Math.min(230, Math.max(7, v)); document.getElementById('zoom').textContent = Math.round(FIT / gDist * 100) + '%'; };
   function clampTarget() { const l = Math.hypot(goalT.x, goalT.z); if (l > RANGE) { goalT.x *= RANGE / l; goalT.z *= RANGE / l; } goalT.y = 0; }
   function placeCamera(dt) {
@@ -419,8 +421,8 @@
     const ag = hits.find(h => h.object.userData.agent); if (ag) { if (tab !== 'office') showTab('office'); showCard(ag.object.userData.agent); askSel.value = ag.object.userData.agent.name; return; }
     const rm = hits.find(h => h.object.userData.room || h.object.userData.roomOf); if (rm) flyTo(rm.object.userData.room || rm.object.userData.roomOf);
   }
-  function flyTo(r) { goalT.set(r.cx, 0, r.cz); gYaw = Math.round((gYaw - .35) / (Math.PI / 2)) * (Math.PI / 2) + .35; gPitch = .85; setDist(26); userMoved = true; }
-  document.getElementById('mapc').addEventListener('click', e => { const r = e.target.getBoundingClientRect(); const x = (e.clientX - r.left) / r.width * 340, y = (e.clientY - r.top) / r.height * 200; goalT.set((x - 170) / 3.6, 0, (y - 100) / 2.1); clampTarget(); userMoved = true; });
+  function flyTo(r) { goalT.set(r.cx, 0, r.cz); gYaw = YAW0; gPitch = .8; setDist(26); userMoved = true; }
+  document.getElementById('mapc').addEventListener('click', e => { const r = e.target.getBoundingClientRect(); const u = ((e.clientX - r.left) / r.width * 340 - 170) / 3.4, v = ((e.clientY - r.top) / r.height * 200 - 100) / 2.0; goalT.set((u + v) * Math.SQRT1_2, 0, (v - u) * Math.SQRT1_2); clampTarget(); userMoved = true; });
 
   // ---------- panel / tabs ----------
   const panel = document.getElementById('panel'); let tab = null;
@@ -438,17 +440,32 @@
   const STATUSES = ['todo', 'doing', 'review', 'done'], SLABEL = { todo: 'To do', doing: 'Doing', review: 'Review', done: 'Done' };
   const teamColor = t => hex(COLORS[t] || 0x5ee0ff), esc = s => String(s || '').replace(/[<>&]/g, c => ({ '<': '&lt;', '>': '&gt;', '&': '&amp;' }[c]));
   // the board lives in office/tasks.json through serve.py; without the server (the published page) it lives in this browser
-  let serverTasks = null; const LS = 'agent-hq-tasks';
+  let serverTasks = null, db = null, dbUnsub = null; const LS = 'agent-hq-tasks';
+  const dbPromise = (window.claude && window.claude.use) ? window.claude.use('db').catch(() => null) : Promise.resolve(null);
   function saveLocal() { try { localStorage.setItem(LS, JSON.stringify({ items })); } catch (e) { } }
   async function loadTasks() {
     try { const j = await fetch('/tasks', { cache: 'no-store' }).then(r => r.ok ? r.json() : Promise.reject()); items = j.items || []; serverTasks = true; }
-    catch (e) { if (serverTasks === null) { serverTasks = false; let local = null; try { local = JSON.parse(localStorage.getItem(LS) || 'null'); } catch (e2) { }
+    catch (e) { if (serverTasks === null) { serverTasks = false; db = await dbPromise;
+      if (db) { // the artifact's own database: everything saves to the owner's claude.ai account and follows them across devices
+        dbUnsub = db.collection('tasks').onSnapshot(snap => { items = snap.docs.filter(d => d.exists).map(d => ({ id: d.id, ...d.data() })); afterTasks(); }, err => { if (err.code === 'revoked' || err.code === 'not_granted') { db = null; } });
+        return;
+      }
+      let local = null; try { local = JSON.parse(localStorage.getItem(LS) || 'null'); } catch (e2) { }
       if (local && local.items) items = local.items; else { try { const j = await fetch('tasks.json', { cache: 'no-store' }).then(r => r.json()); items = j.items || []; } catch (e3) { } } } }
     afterTasks();
   }
+  const dbErr = { quota_exceeded: 'The board is full. Remove some done tasks first.', invalid_argument: 'You can view this office but not change its board.', unavailable: 'Could not reach the database just now. Try again.' };
   async function postTask(op, item) {
     if (serverTasks) { try { const j = await fetch('/tasks', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ op, item }) }).then(r => r.json()); if (!j.ok) throw 0; await loadTasks(); return j.item; } catch (e) { notify('Tasks', 'The office server did not save that. Is python3 office/serve.py still running?', '#e64a4a'); return null; } }
     let out = item;
+    if (db) {
+      try {
+        if (op === 'add') { out = { type: 'task', status: 'todo', agent: '', notes: '', ...item, created: Date.now() }; const ref = await db.collection('tasks').add(out); out = { id: ref.id, ...out }; }
+        else if (op === 'update') { const { id, ...rest } = item; await db.doc('tasks/' + id).update(JSON.parse(JSON.stringify(rest))); out = { ...(items.find(x => x.id === id) || {}), ...item }; }
+        else if (op === 'remove') await db.doc('tasks/' + item.id).delete();
+        return out; // the snapshot delivers the new state
+      } catch (e) { notify('Board', dbErr[e?.code] || `Could not save (${e?.code || 'error'}).`, '#e64a4a'); return null; }
+    }
     if (op === 'add') { out = { id: Math.random().toString(36).slice(2, 10), type: 'task', status: 'todo', agent: '', notes: '', ...item }; items.push(out); }
     else if (op === 'update') { const i = items.find(x => x.id === item.id); if (i) { Object.assign(i, item); out = i; } }
     else if (op === 'remove') items = items.filter(x => x.id !== item.id);
@@ -456,6 +473,7 @@
   }
   function afterTasks() {
     const open = items.filter(i => i.status !== 'done'); document.getElementById('taskn').textContent = open.length;
+    const w = document.getElementById('where'); if (w) w.textContent = serverTasks ? 'saved to office/tasks.json' : db ? 'saved to your claude.ai account' : 'saved in this browser only';
     if (tab === 'tasks') renderBoard(); if (tab === 'calendar') renderCal(); refreshCounts();
   }
   const tTeam = document.getElementById('t-team'); roomInfo.forEach(r => { const o = document.createElement('option'); o.value = r.d.name; o.textContent = r.d.name; tTeam.appendChild(o); });
@@ -492,6 +510,41 @@
     const dl = document.getElementById('daylist'); dl.innerHTML = list.map(taskCard).join('') + `<form class="addrow" id="dayadd" style="margin-top:8px"><input placeholder="Add for this day…" required><select>${roomInfo.map(r => `<option>${r.d.name}</option>`).join('')}</select><select><option>task</option><option>post</option><option>meeting</option></select><button type="submit">Add</button></form>`;
     wireActs(dl); dl.querySelector('#dayadd').onsubmit = e => { e.preventDefault(); const [inp, team, type] = e.target.querySelectorAll('input,select'); postTask('add', { title: inp.value.trim(), team: team.value, type: type.value, date: selDay }); };
   }
+  // ---------- best times to post: Metricool, called as the viewer through the mcp capability ----------
+  const METRICOOL = 'Metricool Social Media Management', NETS = ['instagram', 'tiktok', 'youtube', 'twitter', 'linkedin', 'facebook'];
+  const mcpPromise = (window.claude && window.claude.use) ? window.claude.use('mcp').catch(() => null) : Promise.resolve(null);
+  let best = null; // { tz, nets: { instagram: [{day, hour, value}], ... } }
+  const mcpCopy = { server_not_connected: 'Add Metricool in claude.ai Settings → Connectors, then try again.', needs_reauth: 'Reconnect Metricool in claude.ai Settings → Connectors.', not_in_manifest: 'Metricool is turned off for this page. Allow it in the page permissions.', approval_required: 'Allow Metricool for this page when claude.ai asks, then press Best times again.', selection_required: 'Choose which Metricool connector this page should use when claude.ai asks.', blocked_by_policy: 'Your organization does not allow Metricool here.' };
+  const asDay = s => { const m = /^(mon|tue|wed|thu|fri|sat|sun)/i.exec(String(s)); return m ? ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'].indexOf(m[1].toLowerCase()) : (isFinite(+s) ? +s % 7 : -1); };
+  function slotsFrom(payload) { // tolerant: the connector's shape is not documented; find rows that carry a day, an hour and a value
+    const rows = []; const walk = o => { if (Array.isArray(o)) o.forEach(walk); else if (o && typeof o === 'object') { const k = Object.keys(o); const dayK = k.find(x => /day|weekday|dow/i.test(x)), hourK = k.find(x => /hour|time/i.test(x)), valK = k.find(x => /value|score|weight|count|engagement/i.test(x)); if (dayK !== undefined && hourK !== undefined && valK !== undefined && isFinite(+o[valK])) rows.push({ day: asDay(o[dayK]), hour: parseInt(String(o[hourK]), 10), value: +o[valK] }); else k.forEach(x => walk(o[x])); } };
+    walk(payload); return rows.filter(r => r.day >= 0 && r.hour >= 0 && r.hour < 24).sort((a, b) => b.value - a.value).slice(0, 5);
+  }
+  function nextDate(day, hour) { const d = new Date(); d.setHours(hour, 0, 0, 0); let add = (day - d.getDay() + 7) % 7; if (add === 0 && d < new Date()) add = 7; d.setDate(d.getDate() + add); return d; }
+  function renderBest(msg) {
+    const box = document.getElementById('bestbox'); box.hidden = false;
+    if (msg) { box.innerHTML = `<p class="kv">${esc(msg)}</p>`; return; }
+    const DAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+    box.innerHTML = `<h2 style="margin-top:8px">Best times to post <span class="kv" style="text-transform:none; letter-spacing:0">from Metricool · ${esc(best.tz)}</span></h2>` + Object.entries(best.nets).map(([n, rows]) => `<div class="res"><h3>${n}</h3><pre>${rows.length ? rows.map(r => `${DAYS[r.day]} ${String(r.hour).padStart(2, '0')}:00  ${'▮'.repeat(Math.max(1, Math.round(r.value / Math.max(...rows.map(x => x.value)) * 8)))}`).join('\n') : 'no data yet (nothing published on this network)'}</pre></div>`).join('') +
+      `<div class="resacts"><button id="placeposts">Put undated posts on the best slots</button></div>`;
+    document.getElementById('placeposts').onclick = async () => { const posts = items.filter(i => i.type === 'post' && i.status !== 'done' && (!i.date || i.date < new Date().toISOString().slice(0, 10))); const slots = Object.values(best.nets).flat().sort((a, b) => b.value - a.value); let k = 0; for (const p of posts) { const s = slots[k++ % Math.max(1, slots.length)]; if (!s) break; const d = nextDate(s.day, s.hour); await postTask('update', { id: p.id, date: d.toISOString().slice(0, 10), notes: `${(p.notes || '').replace(/ · best slot.*$/, '')} · best slot ${d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`.replace(/^ · /, '') }); } notify('Calendar', `${posts.length} post${posts.length === 1 ? '' : 's'} placed on the best slots`); renderCal(); };
+  }
+  document.getElementById('besttime').onclick = async function () {
+    const mcp = await mcpPromise; if (!mcp) { renderBest('Best times need this page open on claude.ai with the Metricool connector. In Claude Code, type /best-time instead.'); return; }
+    this.disabled = true; renderBest('Asking Metricool…');
+    try {
+      const brands = (await mcp.callTool(METRICOOL, 'getBrandSettings', {})).payload;
+      const flat = []; const walk = o => { if (Array.isArray(o)) o.forEach(walk); else if (o && typeof o === 'object') { flat.push(o); Object.values(o).forEach(walk); } }; walk(brands);
+      const brand = flat.find(o => o.blogId !== undefined || o.brandId !== undefined || o.id !== undefined) || {};
+      const brandId = String(brand.blogId ?? brand.brandId ?? brand.id ?? ''), tz = brand.timezone || brand.timeZone || Intl.DateTimeFormat().resolvedOptions().timeZone;
+      if (!brandId) throw { code: 'tool_error', message: typeof brands === 'string' ? brands : 'Metricool returned no brand. Connect a social network in Metricool first.' };
+      const from = new Date(), to = new Date(Date.now() + 7 * 864e5), iso = d => d.toISOString().replace(/\.\d+Z$/, '+00:00');
+      best = { tz, nets: {} };
+      await Promise.all(NETS.map(async n => { try { const r = await mcp.callTool(METRICOOL, 'getBestTimeToPostByNetwork', { brandId, fromDate: iso(from), toDate: iso(to), timezone: tz, socialNetwork: n }); best.nets[n] = slotsFrom(r.payload); } catch (e) { if (e.code === 'tool_error') best.nets[n] = []; else throw e; } }));
+      renderBest();
+    } catch (e) { renderBest(mcpCopy[e.code] || (e.code === 'tool_error' ? `Metricool says: ${String(e.message || '').slice(0, 300)}` : `Metricool did not answer (${e.code || 'error'}). Try again.`)); }
+    finally { this.disabled = false; }
+  };
   document.getElementById('cprev').onclick = () => { calMonth.setMonth(calMonth.getMonth() - 1); renderCal(); };
   document.getElementById('cnext').onclick = () => { calMonth.setMonth(calMonth.getMonth() + 1); renderCal(); };
   document.getElementById('ctoday').onclick = () => { calMonth = new Date(); calMonth.setDate(1); selDay = new Date().toISOString().slice(0, 10); renderCal(); };
@@ -656,10 +709,10 @@
   // ---------- minimap ----------
   const mc = document.getElementById('mapc'), mctx = mc.getContext('2d');
   function drawMap() {
-    mctx.clearRect(0, 0, mc.width, mc.height); const sx = x => mc.width / 2 + x * 3.6, sz = z => mc.height / 2 + z * 2.1;
-    mctx.fillStyle = '#5ee0ff'; mctx.beginPath(); mctx.arc(sx(0), sz(0), 5, 0, 7); mctx.fill();
-    roomInfo.forEach(r => { mctx.fillStyle = hex(r.color); mctx.fillRect(sx(r.cx) - 11, sz(r.cz) - 7, 22, 14); const n = r.lastN || 0; if (n) { mctx.fillStyle = '#fff'; mctx.beginPath(); mctx.arc(sx(r.cx) + 9, sz(r.cz) - 6, 3, 0, 7); mctx.fill(); } });
-    const vw = Math.max(18, 40 * 26 / Math.max(10, gDist)); mctx.strokeStyle = 'rgba(255,255,255,.55)'; mctx.lineWidth = 1; mctx.strokeRect(sx(target.x) - vw, sz(target.z) - vw * .6, vw * 2, vw * 1.2);
+    mctx.clearRect(0, 0, mc.width, mc.height); const rot = (x, z) => [(x - z) * Math.SQRT1_2, (x + z) * Math.SQRT1_2]; const sx = (x, z) => mc.width / 2 + rot(x, z)[0] * 3.4, sz = (x, z) => mc.height / 2 + rot(x, z)[1] * 2.0;
+    mctx.fillStyle = '#5ee0ff'; mctx.beginPath(); mctx.arc(sx(0, 0), sz(0, 0), 5, 0, 7); mctx.fill();
+    roomInfo.forEach(r => { mctx.fillStyle = hex(r.color); mctx.fillRect(sx(r.cx, r.cz) - 11, sz(r.cx, r.cz) - 7, 22, 14); const n = r.lastN || 0; if (n) { mctx.fillStyle = '#fff'; mctx.beginPath(); mctx.arc(sx(r.cx, r.cz) + 9, sz(r.cx, r.cz) - 6, 3, 0, 7); mctx.fill(); } });
+    const vw = Math.max(18, 40 * 26 / Math.max(10, gDist)); mctx.strokeStyle = 'rgba(255,255,255,.55)'; mctx.lineWidth = 1; mctx.strokeRect(sx(target.x, target.z) - vw, sz(target.x, target.z) - vw * .6, vw * 2, vw * 1.2);
   }
 
   // ---------- animate ----------
