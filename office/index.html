@@ -205,7 +205,7 @@
     </section>
     <section class="card">
       <h2>Golf clips</h2>
-      <button type="button" id="clip-up" class="drop"><span class="ic">⬆</span><span class="big">Choose from camera roll</span><span class="sub">pick one or more swing videos · big clips get shrunk here first</span></button><input id="clip-file" type="file" accept="video/*" multiple hidden>
+      <button type="button" id="clip-up" class="drop"><span class="ic">⬆</span><span class="big">Choose from camera roll</span><span class="sub">pick one or more swing videos · up to 45 MB each</span></button><input id="clip-file" type="file" accept="video/*" multiple hidden>
       <input id="clip-note" class="note" placeholder="Description for the caption, e.g. “new driver, first round back”">
       <p class="kv hintline">The office writes the caption and hashtags and makes the thumbnail, in about a minute. Then press <b>Send</b> on the clip and Metricool holds it until you approve. The edited video with spoken captions and music comes from <b>/edit-clips</b> in Claude Code.</p>
       <div id="clips"></div>
@@ -745,7 +745,8 @@
   async function addClips(list) { for (const f of [...list]) await addClip(f); }
   dropBtn.ondrop = e => { e.preventDefault(); dropBtn.classList.remove('over'); addClips(e.dataTransfer.files); };
   document.getElementById('clip-file').onchange = e => { const files = [...e.target.files]; e.target.value = ''; addClips(files); };
-  const CAP = 20 * 1024 * 1024; // the asset store's limit per file
+  const CAP = 20 * 1024 * 1024; // the asset store's limit per file (set by claude.ai)
+  const MAX_IN = 45 * 1024 * 1024; // the biggest clip the page accepts; anything between CAP and MAX_IN gets shrunk first
   async function shrink(file, onProgress) { // re-encode a big camera-roll clip in the browser: short side 720, ~3.5 Mbit/s, no audio (the stills are what the team needs; the original stays on your phone for /edit-clips)
     if (!('MediaRecorder' in window) || !HTMLCanvasElement.prototype.captureStream) throw new Error('no recorder');
     const v = document.createElement('video'); v.src = URL.createObjectURL(file); v.muted = true; v.playsInline = true; v.preload = 'auto';
@@ -760,6 +761,7 @@
   }
   async function addClip(f) {
     if (!f.type.startsWith('video/')) { notify('Golf clips', 'That is not a video. Use an mp4 or mov.', '#e64a4a'); return; }
+    if (f.size > MAX_IN) { notify('Golf clips', `${f.name} is ${Math.round(f.size / 1048576)} MB. Keep clips under 45 MB: trim it in Photos first.`, '#e64a4a'); return; }
     const assets = await assetsPromise; let media = '', assetId = ''; const original = f;
     const label = dropBtn.querySelector('.big'), was = label.textContent; dropBtn.classList.add('busy');
     try {
