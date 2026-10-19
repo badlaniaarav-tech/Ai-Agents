@@ -96,7 +96,7 @@
   .wcard { width:min(420px, 100%); background:var(--panel); border:1px solid var(--line); border-radius:16px; padding:20px; box-shadow:0 20px 60px rgba(0,0,0,.5) }
   .wcard label { display:block; font-size:12px; color:var(--muted); margin:10px 0 0 } .wcard label input[type=text], .wcard label input:not([type=radio]) { display:block; width:100%; margin-top:4px; background:var(--well); color:var(--text); border:1px solid var(--line); border-radius:8px; padding:8px 10px; font:inherit; font-size:13px }
   .wopts { display:flex; gap:14px; font-size:13px } .wopts label { display:flex; align-items:center; gap:6px; margin:0; color:var(--text) }
-  .wcard .two { display:grid; grid-template-columns:1fr 1fr; gap:8px } .wcard label.chk { display:flex; align-items:center; gap:8px; color:var(--text); font-size:13px; margin-top:10px }
+  .wcard .two { display:grid; grid-template-columns:1fr 1fr; gap:8px } .wcard input[readonly] { color:var(--muted); border-style:dashed } .wcard label.chk { display:flex; align-items:center; gap:8px; color:var(--text); font-size:13px; margin-top:10px }
   .people { display:flex; flex-wrap:wrap; gap:8px; margin:8px 0 } .person { display:flex; flex-direction:column; align-items:center; gap:4px; width:92px; padding:8px 6px; background:var(--well); border:1px solid var(--line); border-radius:10px; color:var(--text); font:inherit; font-size:12px; cursor:pointer } .person small { color:var(--muted); font-size:10px; max-width:100%; overflow:hidden; text-overflow:ellipsis } .person.on { border-color:var(--accent); background:var(--well2) }
   .wcard a { color:var(--accent) }
   .wcard button.primary { width:100%; margin-top:14px; background:var(--accent); color:#06121c; font-weight:600; border:0; border-radius:9px; padding:10px; font:inherit; font-size:14px; cursor:pointer }
@@ -948,10 +948,11 @@
     if (stay) { const m = members.find(x => x.id === stay.mid && x.hash === stay.token); if (m) { await openMember(m, true); return; } }
     showLogin(members);
   }
+  let claudeLogin = ''; userPromise.then(async u => { try { const me = u ? await u.me() : null; claudeLogin = me?.email || me?.name || ''; const f = document.getElementById('w-claude'); if (f && claudeLogin) f.value = claudeLogin; } catch (e) { } });
   function showLogin(members) {
     const w = document.getElementById('welcome'); w.classList.add('on'); const pick = document.getElementById('w-pick'), create = document.getElementById('w-create');
     pick.innerHTML = members.length ? `${members.length > 1 ? `<div class="people">${members.map(m => `<button class="person" data-mid="${m.id}"><span class="me">${esc((m.name || '?')[0].toUpperCase())}</span><span>${esc(m.name)}</span></button>`).join('')}</div>` : ''}
-      <label>Email<input id="w-login-email" type="email" autocomplete="username" placeholder="you@example.com" value="${members.length === 1 ? esc(members[0].email) : ''}"></label>
+      <div class="two"><label>Email<input id="w-login-email" type="email" autocomplete="username" placeholder="you@example.com" value="${members.length === 1 ? esc(members[0].email) : ''}"></label><label>Claude login<input id="w-claude" value="${esc(claudeLogin || 'signed in')}" readonly title="The claude.ai account this page was opened with (step 1)"></label></div>
       <label>Password<input id="w-pass" type="password" autocomplete="current-password"></label>
       <label class="chk"><input id="w-stay" type="checkbox" checked> Stay signed in on this device</label>
       <button id="w-enter" class="primary">Enter the office</button><p class="kv" id="w-err"></p>
