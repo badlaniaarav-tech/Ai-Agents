@@ -79,6 +79,36 @@
       "status": "todo",
       "date": "2026-10-20",
       "notes": "/standup"
+    },
+    {
+      "id": "7cf53496",
+      "type": "clip",
+      "title": "Clip: swing",
+      "team": "Creative",
+      "agent": "creative-director",
+      "status": "review",
+      "date": "2026-10-19",
+      "notes": "driver swing at the range",
+      "result": {
+        "plan": "A driver swing on a range. Good tempo, early extension.\nAngle: Fix early extension with one feel.\nCut: Trim the setup; hook on the impact frame.",
+        "outputs": [
+          {
+            "agent": "script-writer",
+            "brief": "title, hooks, caption, tags, cover",
+            "text": "TITLE\nStop standing up at impact\n\nHOOKS\n1. Your hips are the problem\n2. One feel fixed my drive\n3. Watch the right knee\n\nCAPTION\nShort caption here.\n\nTAGS\n#golfswing #golftips\n\nCOVER TEXT\nSTOP STANDING UP\n\nALT TEXT\nGolfer hitting a driver."
+          }
+        ],
+        "review": "PASS. Ready for your OK.",
+        "reviewer": "brand-checker",
+        "startedAt": 1792427783226,
+        "caption": "Short caption here.",
+        "tags": [
+          "golfswing",
+          "golftips"
+        ],
+        "title": "Stop standing up at impact",
+        "finishedAt": 1792427789776
+      }
     }
   ]
 }
