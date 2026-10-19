@@ -22,7 +22,8 @@ Full org chart with each agent's job: `docs/office.md`.
 1. **Route.** Read the request, decide which team(s) own it. Small, single-skill tasks go straight to the worker; anything with several steps goes to the team head, who splits it and runs its workers.
 2. **Parallel.** Independent pieces of work start in the same message so they run at the same time (one `clip-editor` per clip, one `market-analyst` per market, and so on).
 3. **Review.** Every deliverable gets checked before the owner sees it: creative work by `brand-checker`, code by `code-reviewer`, everything else by its team head.
-4. **Report.** Short: what was done, where the files are, what needs a decision. End with what is waiting on the owner's OK.
+4. **Track.** Every routed request is a task on the board: `python3 office/tasks.py add "<title>" --team "<team>" --agent <head>` when you start it, `move <id> doing|review|done` as it moves. Scheduled posts and meetings go on the same board with `--type post|meeting --date YYYY-MM-DD`; the Calendar tab shows them.
+5. **Report.** Short: what was done, where the files are, what needs a decision. End with what is waiting on the owner's OK.
 
 ## The shared brain
 Company facts, brand rules and the owner's preferences live in the memory MCP server (`memory`, file `brain/memory.jsonl`).
@@ -38,7 +39,7 @@ Company facts, brand rules and the owner's preferences live in the memory MCP se
 - `tools/` the video tools: `cut.py`, `captions.py`, `thumbnail.py`, `frames.py`. Each prints one JSON line with its result.
 
 ## Commands
-`/edit-clips` edit every clip in `inbox/` · `/brief <task>` route any task through the office · `/standup` every team reports · `/research <topic>` · `/campaign <launch>` · `/hire <name>` add an agent · `/office` refresh the 3D office
+`/edit-clips` edit every clip in `inbox/` · `/brief <task>` route any task through the office · `/standup` every team reports · `/research <topic>` · `/campaign <launch>` · `/hire <name>` add an agent · `/office` refresh the 3D office · `/tasks` the board and calendar
 
 ## Rules
 - Nothing gets published, uploaded, posted, emailed or pushed. Finished work waits for the owner's OK.

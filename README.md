@@ -17,7 +17,7 @@ Built from three Bekhruz AI videos:
 | Office charter | `CLAUDE.md` | The chief of staff's instructions: teams, how work flows, the brain, the rules |
 | 31 agents | `.claude/agents/*.md` | One file per agent: who it is, when to use it, its tools, its steps |
 | Org chart | `docs/office.md` | Every agent and its job, plus how a request moves |
-| Commands | `.claude/commands/` | `/brief`, `/edit-clips`, `/standup`, `/research`, `/campaign`, `/hire` |
+| Commands | `.claude/commands/` | `/brief`, `/edit-clips`, `/standup`, `/research`, `/campaign`, `/hire`, `/office`, `/tasks` |
 | Approvals | `.claude/settings.json` | What agents may do alone, what asks you, what is never allowed |
 | Shared brain | `.mcp.json` + `brain/memory.jsonl` | Memory MCP server with the **Company** and **Brand rules** entities |
 | Video tools | `tools/` | `cut.py`, `captions.py`, `thumbnail.py`, `frames.py` for the creative pipeline |
@@ -31,7 +31,7 @@ Teams: Research, Inbox, Scripts, Dev, TBX Shop, Social, Creative, Analytics. See
 python3 office/serve.py        # then open http://localhost:8787
 ```
 
-Drag to orbit, wheel to zoom, click a character for its job, tools and model, click a room to fly to it. The top bar has the Office, Tasks (live log) and Brain (shared memory) tabs and the "31 agents · N running" counter; the minimap is bottom right. Press "Demo" to see what it looks like when agents are busy.
+Drag to orbit, wheel to zoom, click a character for its job, tools and model, click a room to fly to it. The top bar has the Office, Tasks, Calendar and Brain tabs and the "31 agents · N running" counter; the minimap is bottom right. **Tasks** is a board (to do, doing, review, done) plus who is running right now and the live log. **Calendar** is a month view of tasks, scheduled posts and meetings by date. Both read and write `office/tasks.json`, the same file the agents update with `python3 office/tasks.py` (see `/tasks`), so what the office does and what you add by hand land in one place. **Brain** shows the shared memory. Press "Demo" to see what it looks like when agents are busy.
 
 It is live: hooks in `.claude/settings.json` append every sub-agent start and stop to `office/events.jsonl`, and the page polls that file. Run Claude Code in this repo in another terminal, give it a task, and watch the characters work. After `/hire`, run `/office` (or `python3 office/build.py`) to regenerate `office/agents.json`.
 
@@ -57,6 +57,7 @@ Then tell it about your company once, for example: *"We sell X to Y. Our voice i
 | `/campaign launch of the October drop` | Social and TBX Shop heads plan; posts, replies, newsletter, ads and pricing run in parallel |
 | `/edit-clips` | One `clip-editor` per clip in `inbox/`, then `brand-checker` |
 | `/standup` | Every team head reports; status goes to `work/analytics/status.md` |
+| `/tasks add "Hoodie drop" --team "TBX Shop" --date 2026-10-24` | Puts it on the board and the calendar in Agent HQ |
 | `/hire podcast-producer: turns long recordings into episode outlines` | Adds a new agent file and updates the org chart |
 
 Or just talk to it. Anything you say in plain words gets routed the same way as `/brief`.

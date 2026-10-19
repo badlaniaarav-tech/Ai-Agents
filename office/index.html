@@ -45,7 +45,26 @@
   #map canvas { width:100%; height:110px; display:block; background:#0e1322; border-radius:8px; border:1px solid var(--line) }
   #map .b { display:flex; gap:4px; margin-top:6px }
   #map button { flex:1; background:#0e1322; color:var(--text); border:1px solid var(--line); border-radius:6px; font:inherit; font-size:12px; cursor:pointer; padding:3px 0 }
-  @media (max-width:860px) { #panel { width:min(320px, calc(100% - 24px)) } #tabs button b, #nav .owner { display:none } #map { display:none } }
+  #panel.wide { width:460px }
+  .addrow { display:grid; grid-template-columns:1fr auto; gap:6px; margin:8px 0 10px }
+  .addrow input, .addrow select, .addrow button { background:#0e1322; color:var(--text); border:1px solid var(--line); border-radius:7px; padding:6px 8px; font:inherit; font-size:12px; min-width:0 }
+  .addrow input#t-title { grid-column:1 / -1 }
+  .addrow button { cursor:pointer; background:#1c2436 }
+  .col { margin-top:10px } .col h3 { font-size:11px; text-transform:uppercase; letter-spacing:.08em; color:var(--muted); margin:0 0 4px; display:flex; justify-content:space-between }
+  .task { display:grid; grid-template-columns:4px 1fr auto; gap:8px; align-items:center; background:#0e1322; border:1px solid var(--line); border-radius:9px; padding:7px 8px; margin-bottom:5px }
+  .task .bar { width:4px; height:100%; min-height:26px; border-radius:2px }
+  .task .ti { font-size:13px } .task .meta { font-size:11px; color:var(--muted) }
+  .task .acts { display:flex; gap:3px } .task .acts button { background:transparent; color:var(--muted); border:1px solid var(--line); border-radius:5px; width:24px; height:24px; cursor:pointer; font-size:12px; padding:0 }
+  .task .acts button:hover { color:var(--text); background:#1c2436 }
+  .type { font-size:10px; padding:1px 5px; border-radius:4px; background:#1c2436; color:var(--muted); margin-left:4px; text-transform:uppercase; letter-spacing:.05em }
+  .calhead { display:flex; align-items:center; gap:6px; margin-bottom:8px } .calhead h2 { flex:1; text-transform:none; letter-spacing:0; font-size:14px; color:var(--text) }
+  .calhead button { background:#0e1322; color:var(--text); border:1px solid var(--line); border-radius:6px; padding:3px 9px; font:inherit; font-size:12px; cursor:pointer }
+  #calgrid { display:grid; grid-template-columns:repeat(7, 1fr); gap:3px }
+  #calgrid .dow { font-size:10px; color:var(--muted); text-align:center; text-transform:uppercase; letter-spacing:.06em; padding-bottom:2px }
+  #calgrid .day { min-height:56px; background:#0e1322; border:1px solid var(--line); border-radius:7px; padding:3px 4px; cursor:pointer; font-size:11px; color:var(--muted); overflow:hidden }
+  #calgrid .day.other { opacity:.4 } #calgrid .day.today { border-color:var(--accent) } #calgrid .day.sel { background:#1c2436 } #calgrid .day .n { color:var(--text); font-weight:500 }
+  #calgrid .chip { display:block; font-size:10px; color:#fff; border-radius:3px; padding:0 3px; margin-top:2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis }
+  @media (max-width:860px) { #panel, #panel.wide { width:min(320px, calc(100% - 24px)) } #tabs button b, #nav .owner { display:none } #map { display:none } }
 </style>
 </head>
 <body>
@@ -53,7 +72,7 @@
 
 <div id="nav">
   <div class="logo">HQ</div><h1>Agent HQ</h1><span class="owner" id="owner">Aarav</span>
-  <div id="tabs"><button class="on" data-tab="office">Office</button><button data-tab="tasks">Tasks<b id="taskn">0</b></button><button data-tab="brain">Brain</button></div>
+  <div id="tabs"><button class="on" data-tab="office">Office</button><button data-tab="tasks">Tasks<b id="taskn">0</b></button><button data-tab="calendar">Calendar</button><button data-tab="brain">Brain</button></div>
   <span class="pill live" id="live"><b id="count">0</b> agents · <b id="running">0</b> running</span>
   <button id="demo">Demo</button>
 </div>
@@ -69,7 +88,17 @@
       <p class="desc"></p><div class="kv tools"></div><div class="kv model"></div>
     </div>
   </div>
-  <div data-view="tasks" style="display:none"><h2>Running now</h2><ul id="runlist"><li style="color:var(--muted)">nobody</li></ul><h2 style="margin-top:12px">Log</h2><div id="log" style="font-size:12px; color:var(--muted)"></div></div>
+  <div data-view="tasks" style="display:none">
+    <h2>Running now</h2><ul id="runlist"><li style="color:var(--muted)">nobody</li></ul>
+    <form id="addtask" class="addrow"><input id="t-title" placeholder="New task…" required><select id="t-team"></select><input id="t-date" type="date"><select id="t-type"><option value="task">task</option><option value="post">post</option><option value="meeting">meeting</option></select><button type="submit">Add</button></form>
+    <div id="board"></div>
+    <h2 style="margin-top:14px">Log</h2><div id="log" style="font-size:12px; color:var(--muted)"></div>
+  </div>
+  <div data-view="calendar" style="display:none">
+    <div class="calhead"><button id="cprev">‹</button><h2 id="calmonth" style="margin:0"></h2><button id="cnext">›</button><button id="ctoday">today</button></div>
+    <div id="calgrid"></div>
+    <div id="dayhead" class="kv" style="margin-top:10px"></div><div id="daylist"></div>
+  </div>
   <div data-view="brain" style="display:none"><h2>The Brain</h2><p id="brainsum" style="color:var(--muted)">Start <b>python3 office/serve.py</b> to read brain/memory.jsonl here.</p><div id="brainlist"></div></div>
 </div>
 
@@ -222,11 +251,53 @@
   const panel = document.getElementById('panel'); let tab = null;
   function showTab(name) {
     if (tab === name) { tab = null; panel.classList.remove('on'); document.querySelectorAll('#tabs button').forEach(b => b.classList.toggle('on', b.dataset.tab === 'office')); return; }
-    tab = name; panel.classList.add('on');
+    tab = name; panel.classList.add('on'); panel.classList.toggle('wide', name === 'tasks' || name === 'calendar');
     panel.querySelectorAll('[data-view]').forEach(v => v.style.display = v.dataset.view === name ? 'block' : 'none');
     document.querySelectorAll('#tabs button').forEach(b => b.classList.toggle('on', b.dataset.tab === name));
-    if (name === 'brain') loadBrain();
+    if (name === 'brain') loadBrain(); if (name === 'tasks') renderBoard(); if (name === 'calendar') renderCal();
   }
+
+  // ---------- tasks + calendar (office/tasks.json via /tasks) ----------
+  let items = [], calMonth = new Date(); calMonth.setDate(1); let selDay = new Date().toISOString().slice(0, 10);
+  const STATUSES = ['todo', 'doing', 'review', 'done'], SLABEL = { todo: 'To do', doing: 'Doing', review: 'Review', done: 'Done' };
+  const teamColor = t => hex(COLORS[t] || 0x5ee0ff), esc = s => String(s || '').replace(/[<>&]/g, c => ({ '<': '&lt;', '>': '&gt;', '&': '&amp;' }[c]));
+  async function loadTasks() { try { const j = await fetch('/tasks', { cache: 'no-store' }).then(r => r.json()); items = j.items || []; } catch (e) { try { const j = await fetch('tasks.json', { cache: 'no-store' }).then(r => r.json()); items = j.items || []; } catch (e2) { } } afterTasks(); }
+  async function postTask(op, item) { try { const j = await fetch('/tasks', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ op, item }) }).then(r => r.json()); if (!j.ok) throw 0; await loadTasks(); } catch (e) { notify('Tasks', 'Start python3 office/serve.py to save changes', '#e64a4a'); } }
+  function afterTasks() {
+    const open = items.filter(i => i.status !== 'done'); document.getElementById('taskn').textContent = open.length;
+    if (tab === 'tasks') renderBoard(); if (tab === 'calendar') renderCal(); refreshCounts();
+  }
+  const tTeam = document.getElementById('t-team'); roomInfo.forEach(r => { const o = document.createElement('option'); o.value = r.d.name; o.textContent = r.d.name; tTeam.appendChild(o); });
+  document.getElementById('t-date').value = selDay;
+  document.getElementById('addtask').onsubmit = e => { e.preventDefault(); const t = document.getElementById('t-title'); postTask('add', { title: t.value.trim(), team: tTeam.value, date: document.getElementById('t-date').value, type: document.getElementById('t-type').value, agent: (roomInfo.find(r => r.d.name === tTeam.value)?.d.agents.find(a => a.role === 'head') || {}).name || '' }); t.value = ''; };
+  function taskCard(i) {
+    const si = STATUSES.indexOf(i.status);
+    return `<div class="task"><div class="bar" style="background:${teamColor(i.team)}"></div><div><div class="ti">${esc(i.title)}${i.type !== 'task' ? `<span class="type">${i.type}</span>` : ''}</div><div class="meta">${esc(i.team)}${i.agent ? ' · ' + esc(i.agent) : ''}${i.date ? ' · ' + i.date : ''}${i.notes ? ' · ' + esc(i.notes) : ''}</div></div>
+      <div class="acts">${si > 0 ? `<button title="back" data-mv="${i.id}:${STATUSES[si - 1]}">‹</button>` : ''}${si < 3 ? `<button title="forward" data-mv="${i.id}:${STATUSES[si + 1]}">›</button>` : ''}<button title="remove" data-rm="${i.id}">✕</button></div></div>`;
+  }
+  function wireActs(el) { el.querySelectorAll('[data-mv]').forEach(b => b.onclick = () => { const [id, status] = b.dataset.mv.split(':'); postTask('update', { id, status }); }); el.querySelectorAll('[data-rm]').forEach(b => b.onclick = () => postTask('remove', { id: b.dataset.rm })); }
+  function renderBoard() {
+    const board = document.getElementById('board');
+    board.innerHTML = STATUSES.map(s => { const list = items.filter(i => i.status === s).sort((a, b) => (a.date || '').localeCompare(b.date || '')); return `<div class="col"><h3><span>${SLABEL[s]}</span><span>${list.length}</span></h3>${list.map(taskCard).join('') || '<div class="kv">—</div>'}</div>`; }).join('');
+    wireActs(board);
+  }
+  function renderCal() {
+    const y = calMonth.getFullYear(), m = calMonth.getMonth(), today = new Date().toISOString().slice(0, 10);
+    document.getElementById('calmonth').textContent = calMonth.toLocaleString(undefined, { month: 'long', year: 'numeric' });
+    const first = new Date(y, m, 1), start = new Date(first); start.setDate(1 - ((first.getDay() + 6) % 7)); // weeks start Monday
+    let html = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map(d => `<div class="dow">${d}</div>`).join('');
+    for (let k = 0; k < 42; k++) { const d = new Date(start); d.setDate(start.getDate() + k); const iso = d.toISOString().slice(0, 10); const day = items.filter(i => i.date === iso);
+      html += `<div class="day${d.getMonth() !== m ? ' other' : ''}${iso === today ? ' today' : ''}${iso === selDay ? ' sel' : ''}" data-day="${iso}"><span class="n">${d.getDate()}</span>${day.slice(0, 3).map(i => `<span class="chip" style="background:${teamColor(i.team)}">${esc(i.title)}</span>`).join('')}${day.length > 3 ? `<span class="chip" style="background:#273047">+${day.length - 3}</span>` : ''}</div>`; }
+    const grid = document.getElementById('calgrid'); grid.innerHTML = html;
+    grid.querySelectorAll('.day').forEach(el => el.onclick = () => { selDay = el.dataset.day; document.getElementById('t-date').value = selDay; renderCal(); });
+    const list = items.filter(i => i.date === selDay); document.getElementById('dayhead').textContent = `${new Date(selDay + 'T00:00').toDateString()} · ${list.length} item${list.length === 1 ? '' : 's'}`;
+    const dl = document.getElementById('daylist'); dl.innerHTML = list.map(taskCard).join('') + `<form class="addrow" id="dayadd" style="margin-top:8px"><input placeholder="Add for this day…" required><select>${roomInfo.map(r => `<option>${r.d.name}</option>`).join('')}</select><select><option>task</option><option>post</option><option>meeting</option></select><button type="submit">Add</button></form>`;
+    wireActs(dl); dl.querySelector('#dayadd').onsubmit = e => { e.preventDefault(); const [inp, team, type] = e.target.querySelectorAll('input,select'); postTask('add', { title: inp.value.trim(), team: team.value, type: type.value, date: selDay }); };
+  }
+  document.getElementById('cprev').onclick = () => { calMonth.setMonth(calMonth.getMonth() - 1); renderCal(); };
+  document.getElementById('cnext').onclick = () => { calMonth.setMonth(calMonth.getMonth() + 1); renderCal(); };
+  document.getElementById('ctoday').onclick = () => { calMonth = new Date(); calMonth.setDate(1); selDay = new Date().toISOString().slice(0, 10); renderCal(); };
+  loadTasks(); setInterval(loadTasks, 5000);
   document.querySelectorAll('#tabs button').forEach(b => b.onclick = () => showTab(b.dataset.tab));
   const teamsEl = document.getElementById('teams'), card = document.getElementById('card');
   roomInfo.forEach(r => { const row = document.createElement('div'); row.className = 'row'; row.innerHTML = `<span class="sw" style="background:${hex(r.color)}"></span><span class="n">${r.d.name}</span><span class="c" data-team="${r.d.name}">${r.d.agents.length} agents</span>`; row.onclick = () => flyTo(r); teamsEl.appendChild(row); });
@@ -247,7 +318,13 @@
   function refreshCounts() {
     const run = agents.filter(a => a.working); document.getElementById('running').textContent = run.length;
     runlist.innerHTML = run.length ? run.map(a => `<li><b>${a.name}</b> <span class="kv">${a.team}</span></li>`).join('') : '<li style="color:var(--muted)">nobody</li>';
-    roomInfo.forEach(r => { const n = r.d.agents.filter(a => byName.get(a.name)?.working).length; if (r.lastN !== n) { r.lastN = n; r.sign.userData.update([`${ICONS[r.d.name] || '●'} ${r.d.name}`, `${r.d.agents.length} agents · ${n} running`]); } });
+    const today = new Date().toISOString().slice(0, 10);
+    roomInfo.forEach(r => {
+      const n = r.d.agents.filter(a => byName.get(a.name)?.working).length;
+      const posts = (typeof items !== 'undefined' ? items : []).filter(i => i.team === r.d.name && i.type === 'post' && i.status !== 'done' && i.date >= today).length;
+      const line = n ? `${r.d.agents.length} agents · ${n} running` : posts ? `${posts} post${posts === 1 ? '' : 's'} scheduled` : `${r.d.agents.length} agents · idle`;
+      if (r.lastLine !== line) { r.lastLine = line; r.lastN = n; r.sign.userData.update([`${ICONS[r.d.name] || '●'} ${r.d.name}`, line]); }
+    });
   }
   function setWorking(name, on, why) {
     const a = byName.get(name); if (!a) return;

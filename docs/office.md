@@ -52,7 +52,7 @@ owner  ->  chief of staff (the Brain)  ->  team head  ->  workers (parallel)
 
 ## The 3D office
 
-`office/index.html` draws this chart as a 3D floor: the Brain in the middle, one room per team around it, one desk and character per agent, heads wear a hat. The top bar has Office, Tasks (the live log) and Brain (the memory file) tabs, the running counter, and the model chips; the minimap sits bottom right. `office/build.py` turns the table in `CLAUDE.md` plus the agent files into `office/agents.json`; `office/serve.py` serves the page, streams `office/events.jsonl` (written by the hooks in `.claude/settings.json` on every sub-agent start and stop) and exposes the brain at `/brain`.
+`office/index.html` draws this chart as a 3D floor: the Brain in the middle, one room per team around it, one desk and character per agent, heads wear a hat. The top bar has Office, Tasks (the board: to do, doing, review, done, plus the live log), Calendar (tasks, scheduled posts and meetings by date) and Brain (the memory file) tabs, the running counter, and the model chips; the minimap sits bottom right. `office/build.py` turns the table in `CLAUDE.md` plus the agent files into `office/agents.json`; `office/serve.py` serves the page, streams `office/events.jsonl` (written by the hooks in `.claude/settings.json` on every sub-agent start and stop) exposes the brain at `/brain`, and reads and writes the board at `/tasks`. The board lives in `office/tasks.json`; agents change it with `python3 office/tasks.py add|move|remove|list`.
 
 ## Adding an agent
 
