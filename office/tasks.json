@@ -79,29 +79,6 @@
       "status": "todo",
       "date": "2026-10-20",
       "notes": "/standup"
-    },
-    {
-      "id": "43478e98",
-      "type": "task",
-      "title": "cut my swing video into a reel",
-      "team": "Creative",
-      "agent": "creative-director",
-      "status": "doing",
-      "date": "2026-10-19",
-      "notes": "",
-      "result": {
-        "plan": "p",
-        "outputs": [
-          {
-            "agent": "clip-editor",
-            "brief": "b",
-            "text": ""
-          }
-        ],
-        "review": "",
-        "reviewer": "",
-        "startedAt": 1792426972278
-      }
     }
   ]
 }
