@@ -226,30 +226,90 @@
     const lamp = new THREE.PointLight(0xfff1d6, 1.1, 24, 1.5); lamp.position.set(0, 4, 0); g.add(lamp);
     const plant = new THREE.Mesh(new THREE.ConeGeometry(.5, 1.3, 7), new THREE.MeshStandardMaterial({ color: 0x3f9b5a })); plant.position.set(ROOM / 2 - 1, 1.1, ROOM / 2 - 1); plant.castShadow = true; g.add(plant);
     const couch = new THREE.Mesh(new THREE.BoxGeometry(2.2, .7, .9), new THREE.MeshStandardMaterial({ color: 0xe6e1d6 })); couch.position.set(-ROOM / 2 + 1.6, .85, ROOM / 2 - 1.2); couch.castShadow = true; g.add(couch);
-    scene.add(g);
+    scene.add(g); g.updateMatrixWorld(true);
+    const world = (x, y, z) => g.localToWorld(new THREE.Vector3(x, y, z));
+    const info = { d, cx, cz, ang, color, sign: null, floor, door: world(0, .5, ROOM / 2 - .6), lounge: () => world((Math.random() - .5) * 4, .5, ROOM / 2 - 2.2 - Math.random() * 1.2) };
     const n = d.agents.length, perRow = Math.min(3, n);
     d.agents.forEach((a, j) => {
       const r = Math.floor(j / perRow), c = j % perRow, inRow = Math.min(perRow, n - r * perRow);
       const lx = -(inRow - 1) * 1.6 + c * 3.2, lz = -ROOM / 2 + 2.4 + r * 3.4;
       const dk = desk(lx, lz, 0, color); g.add(dk);
-      const ch = character(color, a.role === 'head'); ch.position.set(lx, .5, lz + 1.0); g.add(ch);
+      const ch = character(color, a.role === 'head'); const home = world(lx, .5, lz + 1.0); ch.position.copy(home); ch.rotation.y = g.rotation.y + Math.PI; scene.add(ch);
       const tag = textSprite([a.name], { size: 30, color: '#e8edf5', scale: .011 }); tag.position.y = 1.9; ch.add(tag);
-      const home = ch.position.clone(), lobbyPos = new THREE.Vector3((Math.random() - .5) * 3, .5, ROOM / 2 - 2 - Math.random());
-      const rec = { ...a, team: d.name, color, mesh: ch, desk: dk, home, lobby: lobbyPos, working: false, phase: Math.random() * 6, idleT: 4 + Math.random() * 10 };
+      const rec = { ...a, team: d.name, color, mesh: ch, desk: dk, home, room: info, idleYaw: g.rotation.y + Math.PI, working: false, phase: Math.random() * 6, idleT: 3 + Math.random() * 12, path: [], state: 'desk' };
       ch.traverse(o => { o.userData.agent = rec; }); agents.push(rec); byName.set(a.name, rec);
     });
-    const sign = textSprite([`${ICONS[d.name] || '●'} ${d.name}`, `${n} agents · 0 running`], { size: 40, color: '#e8edf5', scale: .013, stripe: hex(color) });
-    sign.position.set(cx, 5.2, cz); scene.add(sign);
-    roomInfo.push({ d, cx, cz, color, sign, floor });
-    floor.userData.room = roomInfo[roomInfo.length - 1];
+    info.sign = textSprite([`${ICONS[d.name] || '●'} ${d.name}`, `${n} agents · 0 running`], { size: 40, color: '#e8edf5', scale: .013, stripe: hex(color) });
+    info.sign.position.set(cx, 5.2, cz); scene.add(info.sign);
+    roomInfo.push(info); floor.userData.room = info;
   });
   // chief of staff in the hub
+  const HUB = { d: lobby, cx: 0, cz: 0, ang: 0, color: 0x5ee0ff, hub: true, door: new THREE.Vector3(0, .6, 6), lounge: () => { const a = Math.random() * Math.PI * 2; return new THREE.Vector3(Math.cos(a) * 4.5, .6, Math.sin(a) * 4.5); } };
   lobby.agents.forEach(a => {
     const ch = character(0x5ee0ff, true); ch.position.set(0, .6, 4.2); scene.add(ch);
     const tag = textSprite([a.name], { size: 30, color: '#e8edf5', scale: .011 }); tag.position.y = 1.9; ch.add(tag);
-    const rec = { ...a, team: lobby.name, color: 0x5ee0ff, mesh: ch, desk: { userData: { screen: { material: { emissiveIntensity: 0 } } } }, home: ch.position.clone(), lobby: new THREE.Vector3(3, .6, -3), working: false, phase: 0, idleT: 8 };
+    const rec = { ...a, team: lobby.name, color: 0x5ee0ff, mesh: ch, desk: { userData: { screen: { material: { emissiveIntensity: 0 } } } }, home: ch.position.clone(), room: HUB, idleYaw: 0, working: false, phase: 0, idleT: 6, path: [], state: 'desk' };
     ch.traverse(o => { o.userData.agent = rec; }); agents.push(rec); byName.set(a.name, rec);
   });
+
+  // ---------- office life: walking, visiting, talking ----------
+  const hubPt = (ang, r) => new THREE.Vector3(Math.cos(ang) * r, .6, Math.sin(ang) * r);
+  function whereIs(a) { // which room (or the hub) the agent is standing in right now
+    const p = a.mesh.position; if (p.length() < 8.5) return HUB;
+    const ang = Math.atan2(p.z, p.x); let best = null, bd = 9;
+    for (const r of roomInfo) { const d = Math.abs(((ang - r.ang + Math.PI * 3) % (Math.PI * 2)) - Math.PI); if (d < bd) { bd = d; best = r; } }
+    return best || HUB;
+  }
+  function routeTo(a, room, dest) { // waypoints along the walkways from where the agent is to `dest` inside `room`
+    const from = whereIs(a); const path = [];
+    if (from === room) return [dest];
+    if (!from.hub) { path.push(from.door.clone(), hubPt(from.ang, 7.2), hubPt(from.ang, 4.6)); }
+    if (room.hub) { path.push(dest); return path; }
+    path.push(hubPt(room.ang, 4.6), hubPt(room.ang, 7.2), room.door.clone(), dest); return path;
+  }
+  function sendTo(a, room, dest, state) { a.path = routeTo(a, room, dest); a.state = state; a.dest = dest; }
+  function goHome(a) { sendTo(a, a.room, a.home.clone(), 'home'); }
+  const say = (a, text) => { if (!a.mesh.userData.say) { const s = textSprite([text], { size: 32, color: '#e8edf5', scale: .011, bg: 'rgba(30,38,58,0.95)' }); s.position.y = 2.5; a.mesh.add(s); a.mesh.userData.say = s; } else { a.mesh.userData.say.userData.update([text]); a.mesh.userData.say.visible = true; } a.sayT = 2.6 + text.length * .03; };
+  const rnd = arr => arr[Math.floor(Math.random() * arr.length)];
+  function lines(a, b) { // a short exchange built from real board items and brain rules
+    const its = (typeof items !== 'undefined' ? items : []).filter(i => i.status !== 'done'); const it = rnd(its.length ? its : [{ title: 'the next drop', date: 'Friday', team: b.team }]);
+    const rule = rnd((brain?.entities || []).flatMap(e => e.observations).filter(o => o.length < 70).concat(['nothing goes out without the owner\'s OK']));
+    const other = rnd(agents.filter(x => x !== a && x !== b)); const t = it.title.length > 34 ? it.title.slice(0, 32) + '…' : it.title;
+    const openers = [`Got a minute? I'm on "${t}".`, `Did you see the board? "${t}" is due ${it.date || 'soon'}.`, `Quick one about ${b.team}.`, `The brain has a new rule: ${rule}.`, `Who owns "${t}"?`, `Standup is at the Brain tomorrow.`];
+    const replies = [`Sure. Put it under work/ and I'll review.`, `Remember: ${rule}.`, `brand-checker will flag that. Keep it tight.`, `Start the workers in one message so they run in parallel.`, `That's ${other.name}'s, on ${other.team}.`, `${it.team} has it. I'll move it to doing.`, `Nothing is sent without the owner's OK.`, `I'll add it to the calendar.`];
+    const closers = [`Thanks, back to my desk.`, `On it.`, `Deal.`, `Moving it to review.`, `See you at standup.`, `Good. Go.`];
+    const n = 3 + Math.floor(Math.random() * 3), out = [[a, rnd(openers)], [b, rnd(replies)]];
+    while (out.length < n) out.push([out.length % 2 ? b : a, rnd(replies)]);
+    out.push([out.length % 2 ? b : a, rnd(closers)]); return out;
+  }
+  const chats3d = [];
+  function startChat(a, b) {
+    const sameRoom = a.room === b.room; const room = sameRoom ? a.room : HUB;
+    let spot; if (sameRoom) spot = room.lounge(); else { let m = (a.room.ang + b.room.ang) / 2; if (Math.abs(a.room.ang - b.room.ang) > Math.PI) m += Math.PI; spot = hubPt(m, 5.4); }
+    const side = new THREE.Vector3(-Math.sin(room.ang || 0), 0, Math.cos(room.ang || 0)).multiplyScalar(.55);
+    sendTo(a, room, spot.clone().add(side), 'meet'); sendTo(b, room, spot.clone().sub(side), 'meet');
+    const c = { a, b, script: lines(a, b), i: 0, t: 0, started: false }; a.chat = b.chat = c; chats3d.push(c);
+  }
+  function endChat(c) { for (const x of [c.a, c.b]) { x.chat = null; if (x.mesh.userData.say) x.mesh.userData.say.visible = false; if (!x.working) goHome(x); } const k = chats3d.indexOf(c); if (k >= 0) chats3d.splice(k, 1); }
+  function tickLife(dt) {
+    for (const c of [...chats3d]) {
+      if (c.a.working || c.b.working) { endChat(c); continue; }
+      if (!c.started) { if (c.a.state === 'meet' && c.b.state === 'meet' && !c.a.path.length && !c.b.path.length) { c.started = true; c.t = 0; c.a.state = c.b.state = 'chat'; } else continue; }
+      c.t -= dt; if (c.t <= 0) { if (c.i >= c.script.length) { endChat(c); log(`<span style="color:var(--text)">${c.a.name}</span> and <span style="color:var(--text)">${c.b.name}</span> talked`); continue; } const [who, text] = c.script[c.i++]; say(who, text); c.t = 2.2 + text.length * .035; }
+    }
+    for (const a of agents) {
+      if (a.sayT !== undefined) { a.sayT -= dt; if (a.sayT < 0 && a.state !== 'chat' && a.mesh.userData.say) a.mesh.userData.say.visible = false; }
+      if (a.working || a.chat) continue;
+      a.idleT -= dt; if (a.idleT > 0) continue; a.idleT = 6 + Math.random() * 14;
+      if (a.state === 'desk') {
+        const r = Math.random();
+        if (r < .35) { const free = agents.filter(x => x !== a && !x.working && !x.chat && x.state === 'desk' && (Math.random() < .7 ? x.room === a.room : true)); if (free.length && chats3d.length < 4) { startChat(a, rnd(free)); continue; } }
+        if (r < .5) sendTo(a, a.room, a.room.lounge(), 'stroll');
+        else if (r < .58) sendTo(a, HUB, HUB.lounge(), 'visit');
+        else if (r < .63) { const other = rnd(roomInfo.filter(x => x !== a.room)); sendTo(a, other, other.lounge(), 'visit'); }
+      } else if (!a.path.length) goHome(a);
+    }
+  }
 
   // ---------- camera ----------
   const target = new THREE.Vector3(0, 0, 0); let yaw = 0.35, pitch = 0.95, dist = 78, FIT = 78;
@@ -447,13 +507,24 @@
   function frame() {
     const dt = Math.min(clock.getDelta(), .05), t = clock.elapsedTime;
     core.scale.setScalar(1 + Math.sin(t * 2) * .06); glow.intensity = 2.0 + Math.sin(t * 2) * .4; hub.children.forEach(o => { if (o.geometry && o.geometry.type === 'RingGeometry') o.rotation.z = t * .1; });
+    tickLife(dt);
     for (const a of agents) {
-      const u = a.mesh.userData; a.idleT -= dt; if (!a.working && a.idleT < 0) { a.idleT = 6 + Math.random() * 12; a.wander = a.wander ? null : a.lobby; }
-      const goal = a.working ? a.home : (a.wander || a.home); const d = goal.clone().sub(a.mesh.position); d.y = 0; const len = d.length();
-      if (len > .05) { a.mesh.position.addScaledVector(d.normalize(), Math.min(len, 2 * dt)); a.mesh.rotation.y = Math.atan2(d.x, d.z); u.body.position.y = .7 + Math.abs(Math.sin(t * 9 + a.phase)) * .06; }
-      else { a.mesh.rotation.y += (0 - a.mesh.rotation.y) * .1; u.body.position.y = .7 + Math.sin(t * 2 + a.phase) * .015; }
+      const u = a.mesh.userData;
+      if (a.working && a.state !== 'home' && a.state !== 'desk') { if (a.chat) endChat(a.chat); goHome(a); }
+      const goal = a.path.length ? a.path[0] : null;
+      if (goal) {
+        const d = goal.clone().sub(a.mesh.position); d.y = 0; const len = d.length();
+        if (len < .12) { a.path.shift(); if (!a.path.length) { if (a.state === 'home') a.state = 'desk'; } }
+        else { a.mesh.position.addScaledVector(d.normalize(), Math.min(len, 2.4 * dt)); a.mesh.rotation.y = Math.atan2(d.x, d.z); u.body.position.y = .7 + Math.abs(Math.sin(t * 9 + a.phase)) * .06; }
+      } else {
+        let face = a.idleYaw; if (a.chat) { const o = a.chat.a === a ? a.chat.b : a.chat.a; face = Math.atan2(o.mesh.position.x - a.mesh.position.x, o.mesh.position.z - a.mesh.position.z); }
+        else if (a.state !== 'desk') face = a.mesh.rotation.y;
+        let dy = face - a.mesh.rotation.y; dy = Math.atan2(Math.sin(dy), Math.cos(dy)); a.mesh.rotation.y += dy * .12;
+        u.body.position.y = .7 + Math.sin(t * 2 + a.phase) * .015;
+        if (a.chat && a.sayT > 0) u.head.position.y = 1.36 + Math.abs(Math.sin(t * 6 + a.phase)) * .03;
+      }
       if (a.working) { u.head.position.y = 1.36 + Math.sin(t * 7 + a.phase) * .04; u.ring.material.opacity = .45 + Math.sin(t * 4 + a.phase) * .3; u.ring.scale.setScalar(1 + Math.sin(t * 4 + a.phase) * .08); a.desk.userData.screen.material.emissiveIntensity = .9; }
-      else { u.head.position.y = 1.36; u.ring.material.opacity += (0 - u.ring.material.opacity) * .1; a.desk.userData.screen.material.emissiveIntensity += (.15 - a.desk.userData.screen.material.emissiveIntensity) * .1; }
+      else { if (!(a.chat && a.sayT > 0)) u.head.position.y = 1.36; u.ring.material.opacity += (0 - u.ring.material.opacity) * .1; a.desk.userData.screen.material.emissiveIntensity += (.15 - a.desk.userData.screen.material.emissiveIntensity) * .1; }
     }
     placeCamera(); renderer.render(scene, camera); if ((mapT += dt) > .25) { mapT = 0; drawMap(); } requestAnimationFrame(frame);
   }
