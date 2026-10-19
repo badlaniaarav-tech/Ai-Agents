@@ -9,7 +9,7 @@ Compare us with our Instagram competitors: $ARGUMENTS
      - ours: `IGEV01` followers, `IGEV37` posts, `IGEV22` reels, `IGEV13` likes, `IGEV21` engagement, `IGEV43` followers gained, `IGEV44` lost, `IGEV23` reel views
      - competitors: `IGCO02` handle, `IGCO03` name, `IGCO07` followers, `IGCO08` posts, `IGCO12` reels, `IGCO09` avg likes, `IGCO06` comments, `IGCO10` engagement
      - their posts: `IGCP01` competitor, `IGCP04` text, `IGCP05` published, `IGCP07` likes, `IGCP08` comments, `IGCP09` interactions, `IGCP10` engagement, `IGCP11` url
-   - If the competitor rows are empty, tell the owner to add competitors in Metricool (Analytics → Instagram → Competitors) and stop.
+   - If the competitor rows are empty, find them yourself: start **competitor-analyst** and **trend-scout** in the same message to search the web for six Instagram accounts in the same niche (golf swing coaching and content; a mix of similar size and larger), each with handle, rough size and what earns them reach. Save to `work/research/instagram-competitors/candidates.md`, show the list, and ask the owner to add the ones they want in Metricool (Analytics → Instagram → Competitors). Metricool only tracks accounts added there.
 2. If the tools are not available: say so and point the owner to the Competitors tab in Agent HQ, which asks Metricool directly.
 3. Write `work/research/instagram-competitors/<date>.md`: a table of us versus each competitor, their top eight posts with links, and then start **research-director** with that file to answer: what they do that we don't (format, hooks, cadence, posting times), and three changes for our next two weeks. Add the task to the board (`python3 office/tasks.py add`).
 4. Report the table and the three changes. Nothing is posted.

@@ -1,12 +1,107 @@
 {
   "items": [
-    {"id": "t1", "type": "task", "title": "Weekly report for last week", "team": "Analytics", "agent": "analytics-lead", "status": "review", "date": "2026-10-20", "notes": "Views, sales, costs. Three findings, three recommendations."},
-    {"id": "t2", "type": "task", "title": "Edit the three clips in inbox/", "team": "Creative", "agent": "creative-director", "status": "doing", "date": "2026-10-19", "notes": "/edit-clips"},
-    {"id": "t3", "type": "task", "title": "Script: 'one brain for all agents' explainer", "team": "Scripts", "agent": "script-writer", "status": "todo", "date": "2026-10-22", "notes": ""},
-    {"id": "t4", "type": "task", "title": "Hoodie drop: listing copy, ads, pricing", "team": "TBX Shop", "agent": "shop-manager", "status": "todo", "date": "2026-10-24", "notes": "Launch plan from project-manager first."},
-    {"id": "t5", "type": "task", "title": "Triage this week's inbox", "team": "Inbox", "agent": "inbox-manager", "status": "done", "date": "2026-10-17", "notes": ""},
-    {"id": "p1", "type": "post", "title": "Short: agents walking to their desks", "team": "Social", "agent": "social-media-manager", "status": "todo", "date": "2026-10-21", "notes": "TikTok + Shorts, 9am"},
-    {"id": "p2", "type": "post", "title": "Thread: how the shared brain works", "team": "Social", "agent": "social-media-manager", "status": "todo", "date": "2026-10-23", "notes": "X, LinkedIn"},
-    {"id": "m1", "type": "meeting", "title": "Standup", "team": "The Brain", "agent": "chief-of-staff", "status": "todo", "date": "2026-10-20", "notes": "/standup"}
+    {
+      "id": "t1",
+      "type": "task",
+      "title": "Weekly report for last week",
+      "team": "Analytics",
+      "agent": "analytics-lead",
+      "status": "review",
+      "date": "2026-10-20",
+      "notes": "Views, sales, costs. Three findings, three recommendations."
+    },
+    {
+      "id": "t2",
+      "type": "task",
+      "title": "Edit the three clips in inbox/",
+      "team": "Creative",
+      "agent": "creative-director",
+      "status": "doing",
+      "date": "2026-10-19",
+      "notes": "/edit-clips"
+    },
+    {
+      "id": "t3",
+      "type": "task",
+      "title": "Script: 'one brain for all agents' explainer",
+      "team": "Scripts",
+      "agent": "script-writer",
+      "status": "todo",
+      "date": "2026-10-22",
+      "notes": ""
+    },
+    {
+      "id": "t4",
+      "type": "task",
+      "title": "Hoodie drop: listing copy, ads, pricing",
+      "team": "TBX Shop",
+      "agent": "shop-manager",
+      "status": "todo",
+      "date": "2026-10-24",
+      "notes": "Launch plan from project-manager first."
+    },
+    {
+      "id": "t5",
+      "type": "task",
+      "title": "Triage this week's inbox",
+      "team": "Inbox",
+      "agent": "inbox-manager",
+      "status": "done",
+      "date": "2026-10-17",
+      "notes": ""
+    },
+    {
+      "id": "p1",
+      "type": "post",
+      "title": "Short: agents walking to their desks",
+      "team": "Social",
+      "agent": "social-media-manager",
+      "status": "todo",
+      "date": "2026-10-21",
+      "notes": "TikTok + Shorts, 9am"
+    },
+    {
+      "id": "p2",
+      "type": "post",
+      "title": "Thread: how the shared brain works",
+      "team": "Social",
+      "agent": "social-media-manager",
+      "status": "todo",
+      "date": "2026-10-23",
+      "notes": "X, LinkedIn"
+    },
+    {
+      "id": "m1",
+      "type": "meeting",
+      "title": "Standup",
+      "team": "The Brain",
+      "agent": "chief-of-staff",
+      "status": "todo",
+      "date": "2026-10-20",
+      "notes": "/standup"
+    },
+    {
+      "id": "43478e98",
+      "type": "task",
+      "title": "cut my swing video into a reel",
+      "team": "Creative",
+      "agent": "creative-director",
+      "status": "doing",
+      "date": "2026-10-19",
+      "notes": "",
+      "result": {
+        "plan": "p",
+        "outputs": [
+          {
+            "agent": "clip-editor",
+            "brief": "b",
+            "text": ""
+          }
+        ],
+        "review": "",
+        "reviewer": "",
+        "startedAt": 1792426972278
+      }
+    }
   ]
 }

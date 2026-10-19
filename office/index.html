@@ -50,6 +50,9 @@
   #chips { position:fixed; left:12px; bottom:12px; display:flex; gap:6px; align-items:center; font-size:11px; color:var(--muted) }
   #chips span { padding:4px 9px; border:1px solid var(--line); border-radius:7px; background:var(--well); color:var(--text) }
   #hint { position:fixed; left:12px; top:76px; font-size:12px; color:var(--muted); background:var(--panel); border:1px solid var(--line); border-radius:8px; padding:6px 10px }
+  #pad { position:fixed; right:212px; bottom:12px; display:grid; grid-template-columns:repeat(3, 34px); gap:4px; background:var(--panel); border:1px solid var(--line); border-radius:12px; padding:8px }
+  #pad button { height:30px; background:var(--well); color:var(--text); border:1px solid var(--line); border-radius:6px; font:inherit; font-size:13px; cursor:pointer; touch-action:none; user-select:none }
+  #pad button:active { background:var(--well2) }
   #map { position:fixed; right:12px; bottom:12px; width:190px; background:var(--panel); border:1px solid var(--line); border-radius:12px; padding:8px }
   #map .t { display:flex; justify-content:space-between; font-size:10px; letter-spacing:.1em; color:var(--muted); margin-bottom:6px }
   #map canvas { width:100%; height:110px; display:block; background:var(--well); border-radius:8px; border:1px solid var(--line) }
@@ -79,7 +82,9 @@
   @media (max-width:980px) { #ask select { display:none } }
   .addrow { display:grid; grid-template-columns:1fr auto; gap:6px; margin:8px 0 10px }
   .addrow input, .addrow select, .addrow button { background:var(--well); color:var(--text); border:1px solid var(--line); border-radius:7px; padding:6px 8px; font:inherit; font-size:12px; min-width:0 }
-  .addrow input#t-title { grid-column:1 / -1 }
+  .addrow .withmic { grid-column:1 / -1; display:flex; gap:6px } .addrow .withmic input { flex:1 }
+  .mic { background:var(--well); color:var(--muted); border:1px solid var(--line); border-radius:7px; width:34px; cursor:pointer; font-size:14px } .mic.on { color:#fff; background:#e64a4a; border-color:#e64a4a; animation:pulse 1s infinite } @keyframes pulse { 50% { opacity:.6 } }
+  #ask .mic { border:0; border-left:1px solid var(--line); border-radius:0; height:100%; width:32px }
   .addrow button { cursor:pointer; background:var(--well2) }
   .col { margin-top:10px } .col h3 { font-size:11px; text-transform:uppercase; letter-spacing:.08em; color:var(--muted); margin:0 0 4px; display:flex; justify-content:space-between }
   .task { display:grid; grid-template-columns:4px 1fr auto; gap:8px; align-items:center; background:var(--well); border:1px solid var(--line); border-radius:9px; padding:7px 8px; margin-bottom:5px }
@@ -96,7 +101,7 @@
   #calgrid .day { min-height:56px; background:var(--well); border:1px solid var(--line); border-radius:7px; padding:3px 4px; cursor:pointer; font-size:11px; color:var(--muted); overflow:hidden }
   #calgrid .day.other { opacity:.4 } #calgrid .day.today { border-color:var(--accent) } #calgrid .day.sel { background:var(--well2) } #calgrid .day .n { color:var(--text); font-weight:500 }
   #calgrid .chip { display:block; font-size:10px; color:#fff; border-radius:3px; padding:0 3px; margin-top:2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis }
-  @media (max-width:860px) { #ask, #hint { display:none } #nav { height:auto; flex-wrap:wrap; padding:8px 10px; row-gap:6px } #tabs { margin:0; order:5; flex-basis:100% } #panel, #panel.wide { width:min(320px, calc(100% - 24px)) } #tabs button b, #nav .owner, #bell, #nav .me { display:none } #map { display:none } }
+  @media (max-width:860px) { #ask, #hint { display:none } #nav { height:auto; flex-wrap:wrap; padding:8px 10px; row-gap:6px } #tabs { margin:0; order:5; flex-basis:100% } #panel, #panel.wide { width:min(320px, calc(100% - 24px)) } #tabs button b, #nav .owner, #bell, #nav .me { display:none } #map, #pad { display:none } }
 </style>
 </head>
 <body>
@@ -105,7 +110,7 @@
 <div id="nav">
   <div class="logo">HQ</div><h1>Agent HQ</h1><span class="owner" id="owner"><span class="av">A</span>Aarav ▾</span>
   <div id="tabs"><button class="on" data-tab="office">Office</button><button data-tab="tasks">Tasks<b id="taskn">0</b></button><button data-tab="calendar">Calendar</button><button data-tab="competitors">Competitors</button><button data-tab="brain">Brain</button></div>
-  <form id="ask" autocomplete="off"><select id="ask-agent" title="Which agent"></select><input id="ask-q" placeholder="Ask any agent…" aria-label="Ask any agent"><kbd>⌘K</kbd><button type="submit" title="Ask">↵</button></form>
+  <form id="ask" autocomplete="off"><select id="ask-agent" title="Which agent"></select><input id="ask-q" placeholder="Ask any agent…" aria-label="Ask any agent"><button type="button" id="ask-mic" class="mic" title="Say it">🎤</button><kbd>⌘K</kbd><button type="submit" title="Ask">↵</button></form>
   <span class="pill live" id="live"><b id="count">0</b> agents · <b id="running">0</b> running</span>
   <button id="overview" title="See the whole office (O)">Overview</button>
   <button id="demo">Demo</button>
@@ -126,8 +131,9 @@
   </div>
   <div data-view="tasks" style="display:none">
     <h2>Running now <span id="where" class="kv" style="text-transform:none; letter-spacing:0; float:right"></span></h2><ul id="runlist"><li style="color:var(--muted)">nobody</li></ul>
-    <form id="addtask" class="addrow"><input id="t-title" placeholder="New task…" required><select id="t-team"></select><input id="t-date" type="date"><select id="t-type"><option value="task">task</option><option value="post">post</option><option value="meeting">meeting</option></select><button type="submit">Add</button></form>
+    <form id="addtask" class="addrow"><div class="withmic"><input id="t-title" placeholder="New task… or press the mic and say it" required><button type="button" id="t-mic" class="mic" title="Dictate">🎤</button></div><select id="t-team"></select><input id="t-date" type="date"><select id="t-type"><option value="task">task</option><option value="post">post</option><option value="meeting">meeting</option></select><button type="submit">Add</button></form>
     <div id="board"></div>
+    <div class="resacts"><button id="t-export" title="Save a copy of the board and results as a file">Export backup</button><label class="resacts" style="margin:0"><button type="button" onclick="this.nextElementSibling.click()">Import backup</button><input id="t-import" type="file" accept="application/json" hidden></label></div>
     <h2 style="margin-top:14px">Log</h2><div id="log" style="font-size:12px; color:var(--muted)"></div>
   </div>
   <div data-view="calendar" style="display:none">
@@ -146,7 +152,7 @@
     <div id="res-body"></div>
   </div>
   <div data-view="competitors" style="display:none">
-    <div class="calhead"><h2 style="margin:0">Instagram competitors</h2><select id="cmp-range"><option value="30">last 30 days</option><option value="7">last 7 days</option><option value="90">last 90 days</option></select><button id="cmp-load">Load</button></div>
+    <div class="calhead"><h2 style="margin:0">Instagram competitors</h2><select id="cmp-range"><option value="30">last 30 days</option><option value="7">last 7 days</option><option value="90">last 90 days</option></select><button id="cmp-load">Load</button><button id="cmp-suggest0" title="Let the office find accounts to benchmark against">Find for me</button></div>
     <p class="kv">Numbers come from your Metricool brand. Add competitors in Metricool under Analytics → Instagram → Competitors, then press Load.</p>
     <div id="cmp-body"></div>
   </div>
@@ -154,6 +160,7 @@
 </div>
 
 <div id="chips">RUNS ON <span>Opus</span><span>Sonnet</span><span>Haiku</span><span>headless · cloud</span></div>
+<div id="pad"><button data-key="q" title="rotate left">⟲</button><button data-key="w" title="forward">▲</button><button data-key="e" title="rotate right">⟳</button><button data-key="a" title="left">◀</button><button data-key="s" title="back">▼</button><button data-key="d" title="right">▶</button></div>
 <div id="map"><div class="t"><span>MAP</span><span id="zoom">100%</span></div><canvas id="mapc" width="340" height="200"></canvas><div class="b"><button id="zout">−</button><button id="zin">+</button><button id="zfit">⤢</button></div></div>
 
 <script src="vendor/three.min.js"></script>
@@ -404,13 +411,15 @@
   canvas.addEventListener('pointerdown', e => { drag = { x: e.clientX, y: e.clientY, b: e.button, shift: e.shiftKey }; moved = 0; canvas.setPointerCapture(e.pointerId); userMoved = true; });
   canvas.addEventListener('pointermove', e => { if (!drag) return; const dx = e.clientX - drag.x, dy = e.clientY - drag.y; moved += Math.abs(dx) + Math.abs(dy); drag.x = e.clientX; drag.y = e.clientY;
     if (drag.b === 2 || drag.b === 1 || drag.shift) { goalT.addScaledVector(new THREE.Vector3(Math.cos(yaw), 0, -Math.sin(yaw)), -dx * gDist * .0016).addScaledVector(new THREE.Vector3(-Math.sin(yaw), 0, -Math.cos(yaw)), -dy * gDist * .0016); clampTarget(); }
-    else { gYaw -= dx * .006; gPitch = Math.min(1.5, Math.max(.2, gPitch + dy * .006)); } });
+    else { gYaw -= dx * .0045; gPitch = Math.min(1.5, Math.max(.2, gPitch + dy * .0045)); } });
   canvas.addEventListener('pointerup', e => { if (drag && moved < 6 && e.button === 0) pick(e); drag = null; });
   canvas.addEventListener('dblclick', e => { const p = groundAt(e.clientX, e.clientY); if (p) { goalT.copy(p); clampTarget(); setDist(Math.max(14, gDist * .6)); } });
   canvas.addEventListener('contextmenu', e => e.preventDefault());
   canvas.addEventListener('wheel', e => { e.preventDefault(); userMoved = true; const before = groundAt(e.clientX, e.clientY); const f = Math.exp(Math.sign(e.deltaY) * .12); setDist(gDist * f); if (before && f < 1) { goalT.lerp(before, 1 - f); clampTarget(); } }, { passive: false });
   let touchD = 0; canvas.addEventListener('touchmove', e => { if (e.touches.length === 2) { const d = Math.hypot(e.touches[0].clientX - e.touches[1].clientX, e.touches[0].clientY - e.touches[1].clientY); if (touchD) setDist(gDist * touchD / d); touchD = d; } }, { passive: true }); canvas.addEventListener('touchend', () => { touchD = 0; });
   document.getElementById('zin').onclick = () => setDist(gDist * .75); document.getElementById('zout').onclick = () => setDist(gDist * 1.33);
+  // on-screen pad: hold a button to pan or rotate, for trackpads and touch
+  document.querySelectorAll('#pad button[data-key]').forEach(b => { const k = b.dataset.key; const down = e => { e.preventDefault(); keys.add(k); userMoved = true; }, up = () => keys.delete(k); b.addEventListener('pointerdown', down); b.addEventListener('pointerup', up); b.addEventListener('pointerleave', up); b.addEventListener('pointercancel', up); });
   document.getElementById('zfit').onclick = overview; document.getElementById('overview').onclick = overview;
   const keys = new Set();
   addEventListener('keydown', e => { const tag = document.activeElement.tagName; if (tag === 'INPUT' || tag === 'SELECT' || tag === 'TEXTAREA') { if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') { e.preventDefault(); askQ.focus(); } return; }
@@ -485,11 +494,31 @@
     const w = document.getElementById('where'); if (w) w.textContent = serverTasks ? 'saved to office/tasks.json' : db ? 'saved to your claude.ai account' : 'saved in this browser only';
     if (tab === 'tasks') renderBoard(); if (tab === 'calendar') renderCal(); refreshCounts();
   }
-  const tTeam = document.getElementById('t-team'); roomInfo.forEach(r => { const o = document.createElement('option'); o.value = r.d.name; o.textContent = r.d.name; tTeam.appendChild(o); });
+  const tTeam = document.getElementById('t-team'); { const o = document.createElement('option'); o.value = ''; o.textContent = 'Auto: pick the team for me'; tTeam.appendChild(o); } roomInfo.forEach(r => { const o = document.createElement('option'); o.value = r.d.name; o.textContent = r.d.name; tTeam.appendChild(o); });
+  const HINTS = { Creative: /video|clip|edit|thumbnail|cover|reel|short|footage|swing/i, Scripts: /script|hook|title|caption|seo|description|idea/i, Social: /post|instagram|tiktok|social|comment|dm|newsletter|email|outreach|sponsor/i, 'TBX Shop': /shop|product|drop|hoodie|merch|price|ad |ads|listing|store/i, Dev: /code|bug|site|website|app|api|feature|deploy|fix/i, Research: /research|market|competitor|trend|why|compare|find out/i, Analytics: /report|numbers|views|followers|analytics|growth|metrics|weekly/i, Inbox: /inbox|reply|customer|quote|proposal|support|refund/i };
+  async function pickTeam(title) { // the chief of staff routes it: Claude when available, keywords otherwise
+    const sample = await samplePromise;
+    if (sample) { try { const r = await sample.json(`Route this task to one team of Agent HQ. Teams:\n${roster()}\nTask: "${title}"\nReply with only JSON {"team": "<exact team name>", "why": "<six words>"}.`, { modelTier: 'quick' }); if (r && roomInfo.some(x => x.d.name === r.team)) return r.team; } catch (e) { } }
+    for (const [team, re] of Object.entries(HINTS)) if (re.test(title)) return team; return 'Research';
+  }
   document.getElementById('t-date').value = selDay;
   document.getElementById('addtask').onsubmit = async e => { e.preventDefault(); const t = document.getElementById('t-title'); if (!t.value.trim()) return;
-    const added = await postTask('add', { title: t.value.trim(), team: tTeam.value, date: document.getElementById('t-date').value, type: document.getElementById('t-type').value, agent: (roomInfo.find(r => r.d.name === tTeam.value)?.d.agents.find(a => a.role === 'head') || {}).name || '' }); t.value = '';
+    const title = t.value.trim(); t.value = ''; const team = tTeam.value || await pickTeam(title); if (!tTeam.value) notify('Chief of staff', `"${title}" goes to ${team}`, teamColor(team));
+    const added = await postTask('add', { title, team, date: document.getElementById('t-date').value, type: document.getElementById('t-type').value, agent: (roomInfo.find(r => r.d.name === team)?.d.agents.find(a => a.role === 'head') || {}).name || '' });
     if (added) runTask(added); };
+  // voice: dictate a task or a question (browser speech recognition; needs microphone access, which some embedded views refuse)
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  function dictate(btn, input, then) {
+    if (!SR) { notify('Voice', 'This browser has no speech recognition. Chrome, Edge and Safari do.', '#e64a4a'); return; }
+    if (btn.rec) { btn.rec.stop(); return; }
+    const rec = new SR(); rec.lang = navigator.language || 'en-US'; rec.interimResults = true; rec.continuous = false; btn.rec = rec; btn.classList.add('on'); const before = input.value;
+    rec.onresult = e => { let s = ''; for (const r of e.results) s += r[0].transcript; input.value = (before ? before + ' ' : '') + s; };
+    rec.onerror = e => { btn.classList.remove('on'); btn.rec = null; notify('Voice', e.error === 'not-allowed' || e.error === 'service-not-allowed' ? 'Microphone access was refused here. Allow it in the browser, or type instead.' : `Voice stopped (${e.error}).`, '#e64a4a'); };
+    rec.onend = () => { btn.classList.remove('on'); btn.rec = null; if (input.value.trim() && input.value !== before && then) then(); };
+    try { rec.start(); } catch (e) { btn.classList.remove('on'); btn.rec = null; }
+  }
+  document.getElementById('t-mic').onclick = e => { e.preventDefault(); dictate(e.currentTarget, document.getElementById('t-title')); };
+  document.getElementById('ask-mic').onclick = e => { e.preventDefault(); dictate(e.currentTarget, askQ, () => document.getElementById('ask').requestSubmit()); };
   function taskCard(i) {
     const si = STATUSES.indexOf(i.status), busy = runs.has(i.id);
     return `<div class="task${busy ? ' busy' : ''}"><div class="bar" style="background:${teamColor(i.team)}"></div><div><div class="ti">${esc(i.title)}${i.type !== 'task' ? `<span class="type">${i.type}</span>` : ''}${busy ? '<span class="type live">running</span>' : ''}</div><div class="meta">${esc(i.team)}${i.agent ? ' · ' + esc(i.agent) : ''}${i.date ? ' · ' + i.date : ''}${i.notes ? ' · ' + esc(i.notes) : ''}</div></div>
@@ -522,12 +551,14 @@
   // ---------- best times to post: Metricool, called as the viewer through the mcp capability ----------
   const METRICOOL = 'Metricool Social Media Management', NETS = ['instagram', 'tiktok', 'youtube', 'twitter', 'linkedin', 'facebook'];
   const mcpPromise = (window.claude && window.claude.use) ? window.claude.use('mcp').catch(() => null) : Promise.resolve(null);
-  let best = null; // { tz, nets: { instagram: [{day, hour, value}], ... } }
+  let best = null, brandInfo = null; // { tz, nets: { instagram: [{day, hour, value}], ... } }; the Metricool brand once read
   const mcpCopy = { server_not_connected: 'Add Metricool in claude.ai Settings → Connectors, then try again.', needs_reauth: 'Reconnect Metricool in claude.ai Settings → Connectors.', not_in_manifest: 'Metricool is turned off for this page. Allow it in the page permissions.', approval_required: 'Allow Metricool for this page when claude.ai asks, then press Best times again.', selection_required: 'Choose which Metricool connector this page should use when claude.ai asks.', blocked_by_policy: 'Your organization does not allow Metricool here.' };
   const asDay = s => { const m = /^(mon|tue|wed|thu|fri|sat|sun)/i.exec(String(s)); return m ? ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'].indexOf(m[1].toLowerCase()) : (isFinite(+s) ? +s % 7 : -1); };
-  function slotsFrom(payload) { // tolerant: the connector's shape is not documented; find rows that carry a day, an hour and a value
-    const rows = []; const walk = o => { if (Array.isArray(o)) o.forEach(walk); else if (o && typeof o === 'object') { const k = Object.keys(o); const dayK = k.find(x => /day|weekday|dow/i.test(x)), hourK = k.find(x => /hour|time/i.test(x)), valK = k.find(x => /value|score|weight|count|engagement/i.test(x)); if (dayK !== undefined && hourK !== undefined && valK !== undefined && isFinite(+o[valK])) rows.push({ day: asDay(o[dayK]), hour: parseInt(String(o[hourK]), 10), value: +o[valK] }); else k.forEach(x => walk(o[x])); } };
-    walk(payload); return rows.filter(r => r.day >= 0 && r.hour >= 0 && r.hour < 24).sort((a, b) => b.value - a.value).slice(0, 5);
+  function slotsFrom(payload) { // Metricool: {data:[{dayOfWeek:1..7 (Mon..Sun), bestTimesByHour:[{hourOfDay, value}]}]}
+    const rows = []; const days = (payload && payload.data) || (Array.isArray(payload) ? payload : []);
+    for (const d of days) { const day = +d.dayOfWeek % 7; for (const h of d.bestTimesByHour || []) if (isFinite(+h.value)) rows.push({ day, hour: +h.hourOfDay, value: +h.value }); }
+    const top = rows.sort((a, b) => b.value - a.value); const out = []; // best five, at most two per day so the week is covered
+    for (const r of top) { if (out.filter(x => x.day === r.day).length < 2) out.push(r); if (out.length === 5) break; } return out;
   }
   function nextDate(day, hour) { const d = new Date(); d.setHours(hour, 0, 0, 0); let add = (day - d.getDay() + 7) % 7; if (add === 0 && d < new Date()) add = 7; d.setDate(d.getDate() + add); return d; }
   function renderBest(msg) {
@@ -545,7 +576,7 @@
       const brands = (await mcp.callTool(METRICOOL, 'getBrandSettings', {})).payload;
       const flat = []; const walk = o => { if (Array.isArray(o)) o.forEach(walk); else if (o && typeof o === 'object') { flat.push(o); Object.values(o).forEach(walk); } }; walk(brands);
       const brand = flat.find(o => o.blogId !== undefined || o.brandId !== undefined || o.id !== undefined) || {};
-      const brandId = String(brand.blogId ?? brand.brandId ?? brand.id ?? ''), tz = brand.timezone || brand.timeZone || Intl.DateTimeFormat().resolvedOptions().timeZone;
+      const brandId = String(brand.blogId ?? brand.brandId ?? brand.id ?? ''), tz = brand.timezone || brand.timeZone || Intl.DateTimeFormat().resolvedOptions().timeZone; brandInfo = { brandId, tz, email: brand.ownerUsername || '', handle: brand.networksData?.instagramData || '' };
       if (!brandId) throw { code: 'tool_error', message: typeof brands === 'string' ? brands : 'Metricool returned no brand. Connect a social network in Metricool first.' };
       const from = new Date(), to = new Date(Date.now() + 7 * 864e5), iso = d => d.toISOString().replace(/\.\d+Z$/, '+00:00');
       best = { tz, nets: {} };
@@ -558,8 +589,9 @@
   const CMP = { you: ['IGEV01', 'IGEV37', 'IGEV22', 'IGEV13', 'IGEV21', 'IGEV43', 'IGEV44', 'IGEV23'], them: ['IGCO02', 'IGCO03', 'IGCO07', 'IGCO08', 'IGCO12', 'IGCO09', 'IGCO06', 'IGCO10'], posts: ['IGCP01', 'IGCP04', 'IGCP05', 'IGCP07', 'IGCP08', 'IGCP09', 'IGCP10', 'IGCP11'] };
   const NAMES = { IGEV01: 'followers', IGEV37: 'posts', IGEV22: 'reels', IGEV13: 'likes', IGEV21: 'engagement', IGEV43: 'gained', IGEV44: 'lost', IGEV23: 'reelViews', IGCO02: 'handle', IGCO03: 'name', IGCO07: 'followers', IGCO08: 'posts', IGCO12: 'reels', IGCO09: 'likes', IGCO06: 'comments', IGCO10: 'engagement', IGCP01: 'handle', IGCP04: 'text', IGCP05: 'published', IGCP07: 'likes', IGCP08: 'comments', IGCP09: 'interactions', IGCP10: 'engagement', IGCP11: 'url' };
   let cmpData = null;
-  function rowsFrom(payload, ids) { // tolerant: rows keyed by field id or by metric name, in an array or under a data/rows member
+  function rowsFrom(payload, ids) { // Metricool: {rows:[[v1, v2, ..., "YYYYMMDD"]]} in the order of the requested metrics; objects keyed by id/name are read too
     const out = []; const seen = new Set();
+    if (payload && Array.isArray(payload.rows) && payload.rows.every(Array.isArray)) { for (const row of payload.rows) { const r = {}; ids.forEach((id, i) => { if (row[i] !== null && row[i] !== undefined) r[NAMES[id]] = row[i]; }); if (row.length > ids.length) r.date = row[ids.length]; if (Object.keys(r).length > 1 || (Object.keys(r).length === 1 && !r.date)) out.push(r); } return out; }
     const walk = o => { if (!o || typeof o !== 'object' || seen.has(o)) return; seen.add(o); if (Array.isArray(o)) { o.forEach(walk); return; }
       const keys = Object.keys(o); const hit = keys.filter(k => ids.includes(k) || Object.values(NAMES).includes(k) || ids.some(id => k.toLowerCase() === NAMES[id]?.toLowerCase()));
       if (hit.length >= 2) { const r = {}; keys.forEach(k => { const id = ids.find(x => x === k || NAMES[x]?.toLowerCase() === String(k).toLowerCase()); if (id) r[NAMES[id]] = o[k]; }); out.push(r); }
@@ -570,37 +602,55 @@
   function renderCmp(msg) {
     const body = document.getElementById('cmp-body'); if (msg) { body.innerHTML = `<p class="kv">${esc(msg)}</p>`; return; }
     const { you, them, posts, days } = cmpData;
-    const row = (label, r, me) => `<tr class="${me ? 'me' : ''}"><td>${me ? label : `<a href="https://instagram.com/${esc(r.handle || '')}" target="_blank" rel="noopener">@${esc(r.handle || r.name || '?')}</a>`}</td><td>${fmt(num(r.followers))}</td><td>${fmt(num(r.posts))}</td><td>${fmt(num(r.reels))}</td><td>${fmt(num(r.likes))}</td><td>${fmt(num(r.engagement))}</td></tr>`;
+    const row = (label, r, me) => `<tr class="${me ? 'me' : ''}"><td>${me ? (brandInfo?.handle ? '@' + esc(brandInfo.handle) + ' (you)' : label) : `<a href="https://instagram.com/${esc(r.handle || '')}" target="_blank" rel="noopener">@${esc(r.handle || r.name || '?')}</a>`}</td><td>${fmt(num(r.followers))}</td><td>${fmt(num(r.posts))}</td><td>${fmt(num(r.reels))}</td><td>${fmt(num(r.likes))}</td><td>${fmt(num(r.engagement))}</td></tr>`;
     body.innerHTML = `<div class="cmpwrap"><table class="cmp"><tr><th>account</th><th>followers</th><th>posts ${days}d</th><th>reels</th><th>avg likes</th><th>engagement</th></tr>${you ? row('You', you, true) : ''}${them.map(r => row('', r)).join('')}</table></div>` +
       (them.length ? '' : '<p class="kv">No competitors yet. Add them in Metricool (Analytics → Instagram → Competitors) and press Load again.</p>') +
       (posts.length ? `<h2>Their top posts</h2><div class="cmpwrap"><table class="cmp"><tr><th>account</th><th style="text-align:left">post</th><th>likes</th><th>comments</th><th>eng.</th></tr>${posts.slice(0, 12).map(p => `<tr><td>@${esc(String(p.handle || '').split(':').pop())}</td><td style="text-align:left; white-space:normal; max-width:220px">${p.url ? `<a href="${esc(p.url)}" target="_blank" rel="noopener">` : ''}${esc(String(p.text || '').slice(0, 70))}${p.url ? '</a>' : ''}</td><td>${fmt(num(p.likes))}</td><td>${fmt(num(p.comments))}</td><td>${fmt(num(p.engagement))}</td></tr>`).join('')}</table></div>` : '') +
-      `<div class="resacts"><button id="cmp-ask">Ask Research why they get more reach</button></div>`;
+      `<div class="resacts"><button id="cmp-ask">Ask Research why they get more reach</button><button id="cmp-suggest">Find competitors for me</button></div><div id="cmp-suggest-out"></div>`;
+    document.getElementById('cmp-suggest').onclick = suggestCompetitors;
     document.getElementById('cmp-ask').onclick = async () => {
       const summary = `Our Instagram (last ${days} days): ${you ? Object.entries(you).map(([k, v]) => `${k} ${v}`).join(', ') : 'no data'}.\nCompetitors: ${them.map(r => `@${r.handle}: followers ${r.followers}, posts ${r.posts}, reels ${r.reels}, avg likes ${r.likes}, engagement ${r.engagement}`).join('; ') || 'none'}.\nTheir top posts: ${posts.slice(0, 8).map(p => `@${String(p.handle || '').split(':').pop()} "${String(p.text || '').slice(0, 60)}" likes ${p.likes} comments ${p.comments}`).join('; ') || 'none'}.`;
       const added = await postTask('add', { title: `Why competitors out-reach us on Instagram (${days}d)`, team: 'Research', agent: 'research-director', type: 'task', date: new Date().toISOString().slice(0, 10), notes: summary.slice(0, 1800) });
       if (added) runTask(added);
     };
   }
+  async function suggestCompetitors() {
+    const out = document.getElementById('cmp-suggest-out'); const sample = await samplePromise; if (!sample) { out.innerHTML = '<p class="kv">Finding competitors needs this page open on claude.ai. In Claude Code, /competitors searches the web for them.</p>'; return; }
+    out.innerHTML = '<p class="kv">Thinking…</p>';
+    try {
+      const list = await sample.json(`You help a creator find Instagram accounts to benchmark against. The creator: ${brainText()}\nInstagram handle: @${brandInfo?.handle || 'unknown'} (golf swing content, creator account). Reply with only a JSON array of 6 objects {"handle": "<instagram handle without @>", "why": "<one line: what they do that earns reach>", "size": "<rough follower range>"}: accounts in the same niche, a mix of similar-size and larger ones, real accounts you are confident exist.`, { modelTier: 'quick' });
+      const rows = Array.isArray(list) ? list.slice(0, 8) : [];
+      out.innerHTML = `<h2 style="margin-top:10px">Suggested competitors</h2><div class="cmpwrap"><table class="cmp"><tr><th>account</th><th style="text-align:left">why they win</th><th>size</th></tr>${rows.map(r => `<tr><td><a href="https://instagram.com/${esc(r.handle)}" target="_blank" rel="noopener">@${esc(r.handle)}</a></td><td style="text-align:left; white-space:normal">${esc(r.why)}</td><td>${esc(r.size || '')}</td></tr>`).join('')}</table></div><p class="kv">Check they are real, then add them in Metricool (Analytics → Instagram → Competitors). Metricool only tracks accounts you add there; after that, Load shows their numbers here.</p>`;
+    } catch (e) { out.innerHTML = `<p class="kv">${esc(errCopy[e.code] || 'Could not get suggestions. Try again.')}</p>`; }
+  }
   document.getElementById('cmp-load').onclick = async function () {
     const mcp = await mcpPromise; if (!mcp) { renderCmp('Competitors need this page open on claude.ai with the Metricool connector. In Claude Code, type /competitors instead.'); return; }
     this.disabled = true; renderCmp('Asking Metricool…'); const days = +document.getElementById('cmp-range').value;
     try {
       const brands = (await mcp.callTool(METRICOOL, 'getBrandSettings', {})).payload; const flat = []; const walk = o => { if (Array.isArray(o)) o.forEach(walk); else if (o && typeof o === 'object') { flat.push(o); Object.values(o).forEach(walk); } }; walk(brands);
-      const brand = flat.find(o => o.blogId !== undefined || o.brandId !== undefined || o.id !== undefined) || {}; const brandId = String(brand.blogId ?? brand.brandId ?? brand.id ?? '');
+      const brand = flat.find(o => o.blogId !== undefined || o.brandId !== undefined || o.id !== undefined) || {}; const brandId = String(brand.blogId ?? brand.brandId ?? brand.id ?? ''); brandInfo = { brandId, tz: brand.timezone || 'America/New_York', email: brand.ownerUsername || '', handle: brand.networksData?.instagramData || '' };
       if (!brandId) throw { code: 'tool_error', message: typeof brands === 'string' ? brands : 'Metricool returned no brand. Connect Instagram in Metricool first.' };
       const iso = d => d.toISOString().replace(/\.\d+Z$/, '+00:00'), to = new Date(), from = new Date(Date.now() - days * 864e5);
       const call = metrics => mcp.callTool(METRICOOL, 'getAnalyticsDataByMetrics', { brandId, from: iso(from), to: iso(to), metrics }).then(r => r.payload).catch(e => { if (e.code === 'tool_error') return null; throw e; });
       const [y, c, p] = await Promise.all([call(CMP.you), call(CMP.them), call(CMP.posts)]);
       const them = rowsFrom(c, CMP.them).filter(r => r.handle || r.name), posts = rowsFrom(p, CMP.posts).filter(r => r.likes !== undefined || r.text).sort((a, b) => (num(b.interactions) || 0) - (num(a.interactions) || 0));
-      const youRows = rowsFrom(y, CMP.you); const you = youRows.length ? youRows.reduce((acc, r) => { Object.entries(r).forEach(([k, v]) => { const n = num(v); if (n !== null) acc[k] = (k === 'followers' || k === 'engagement') ? n : (acc[k] || 0) + n; }); return acc; }, {}) : null;
+      const youRows = rowsFrom(y, CMP.you).sort((a, b) => String(a.date || '').localeCompare(String(b.date || ''))); const you = youRows.length ? youRows.reduce((acc, r) => { Object.entries(r).forEach(([k, v]) => { if (k === 'date') return; const n = num(v); if (n !== null) acc[k] = (k === 'followers' || k === 'engagement') ? n : (acc[k] || 0) + n; }); return acc; }, {}) : null;
       cmpData = { you, them, posts, days }; renderCmp();
     } catch (e) { renderCmp(mcpCopy[e.code] || (e.code === 'tool_error' ? `Metricool says: ${String(e.message || '').slice(0, 300)}` : `Metricool did not answer (${e.code || 'error'}). Try again.`)); }
     finally { this.disabled = false; }
   };
+  document.getElementById('cmp-suggest0').onclick = () => { document.getElementById('cmp-body').innerHTML = '<div id="cmp-suggest-out"></div>'; suggestCompetitors(); };
   document.getElementById('cprev').onclick = () => { calMonth.setMonth(calMonth.getMonth() - 1); renderCal(); };
   document.getElementById('cnext').onclick = () => { calMonth.setMonth(calMonth.getMonth() + 1); renderCal(); };
   document.getElementById('ctoday').onclick = () => { calMonth = new Date(); calMonth.setDate(1); selDay = new Date().toISOString().slice(0, 10); renderCal(); };
   loadTasks(); setInterval(loadTasks, 5000);
+  const dlPromise = (window.claude && window.claude.use) ? window.claude.use('downloads').catch(() => null) : Promise.resolve(null);
+  document.getElementById('t-export').onclick = async () => {
+    const data = JSON.stringify({ exportedAt: new Date().toISOString(), items }, null, 2), name = `agent-hq-backup-${new Date().toISOString().slice(0, 10)}.json`;
+    const dl = await dlPromise; if (dl) { try { await dl.save({ filename: name, data }); notify('Backup', 'Saved. Keep it or email it to yourself.'); } catch (e) { if (e.code !== 'cancelled') notify('Backup', 'Could not save the file here.', '#e64a4a'); } return; }
+    const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([data], { type: 'application/json' })); a.download = name; a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+  };
+  document.getElementById('t-import').onchange = async e => { const f = e.target.files[0]; if (!f) return; try { const j = JSON.parse(await f.text()); const list = Array.isArray(j.items) ? j.items : []; let n = 0; for (const it of list) { const { id, ...rest } = it; if (items.some(x => x.id === id)) await postTask('update', { id, ...rest }); else await postTask('add', rest); n++; } notify('Backup', `${n} item${n === 1 ? '' : 's'} restored`); } catch (err) { notify('Backup', 'That file is not an Agent HQ backup.', '#e64a4a'); } e.target.value = ''; };
   document.querySelectorAll('#tabs button').forEach(b => b.onclick = () => showTab(b.dataset.tab));
   const teamsEl = document.getElementById('teams'), card = document.getElementById('card');
   roomInfo.forEach(r => { const row = document.createElement('div'); row.className = 'row'; row.innerHTML = `<span class="sw" style="background:${hex(r.color)}"></span><span class="n">${r.d.name}</span><span class="c" data-team="${r.d.name}">${r.d.agents.length} agents</span>`; row.onclick = () => flyTo(r); teamsEl.appendChild(row); });
@@ -642,10 +692,28 @@
     document.getElementById('res-title').textContent = i.title; document.getElementById('res-meta').textContent = `${i.team} · ${cur.status}${r.finishedAt ? ' · finished ' + new Date(r.finishedAt).toLocaleString() : runs.has(i.id) ? ' · running' : ''}`; document.getElementById('res-sw').style.background = teamColor(i.team);
     const sec = (title, text, who) => `<div class="res"><h3>${who ? `<span class="sw" style="background:${teamColor(byName.get(who)?.team || i.team)}"></span>` : ''}${esc(title)}</h3><pre${text ? '' : ' class="wait"'}>${esc(text || 'working…')}</pre></div>`;
     document.getElementById('res-body').innerHTML = sec(`${head.name} · plan`, r.plan, head.name) + (r.outputs || []).map(o => sec(`${o.agent} · ${o.brief ? o.brief.slice(0, 60) + (o.brief.length > 60 ? '…' : '') : 'deliverable'}`, o.text, o.agent)).join('') + (r.reviewer ? sec(`${r.reviewer} · review`, r.review, r.reviewer) : '') + (r.error ? `<p class="kv">${esc(r.error)}</p>` : '') +
-      `<div class="resacts">${!runs.has(i.id) ? `<button data-run2="${i.id}">Run again</button>` : `<button data-stop2="${i.id}">Stop</button>`}${cur.status !== 'done' ? `<button data-done2="${i.id}">Mark done</button>` : ''}</div>`;
+      `<div class="resacts">${!runs.has(i.id) ? `<button data-run2="${i.id}">Run again</button>` : `<button data-stop2="${i.id}">Stop</button>`}${cur.status !== 'done' ? `<button data-done2="${i.id}">Mark done</button>` : ''}${i.type === 'post' && !runs.has(i.id) ? `<button data-review2="${i.id}">Send to Metricool for my approval</button>` : ''}</div>${i.type === 'post' ? `<div id="review-box" class="kv" style="margin-top:8px">${esc(r.metricool || '')}</div>` : ''}`;
     const body = document.getElementById('res-body');
-    body.querySelector('[data-run2]')?.addEventListener('click', () => runTask(i)); body.querySelector('[data-stop2]')?.addEventListener('click', () => runs.get(i.id)?.abort()); body.querySelector('[data-done2]')?.addEventListener('click', () => { postTask('update', { id: i.id, status: 'done' }); showTab('tasks'); });
+    body.querySelector('[data-run2]')?.addEventListener('click', () => runTask(i)); body.querySelector('[data-review2]')?.addEventListener('click', () => sendForApproval(i)); body.querySelector('[data-stop2]')?.addEventListener('click', () => runs.get(i.id)?.abort()); body.querySelector('[data-done2]')?.addEventListener('click', () => { postTask('update', { id: i.id, status: 'done' }); showTab('tasks'); });
     if (tab !== 'task') showTab('task'); document.getElementById('res-back').onclick = () => showTab('tasks');
+  }
+  async function sendForApproval(i) { // Metricool holds the post until you approve it; it emails you (and the Metricool app notifies you)
+    const box = document.getElementById('review-box'); const mcp = await mcpPromise; if (!mcp) { box.textContent = 'Needs this page open on claude.ai with the Metricool connector.'; return; }
+    const r = i.result || {}; const text = (r.outputs || []).map(o => o.text).filter(Boolean).join('\n\n') || i.notes || i.title;
+    box.innerHTML = `<p>Instagram needs an image or video. Paste a public link to the media (a Google Drive or Dropbox share link works if Metricool has Drive linked):</p><div class="addrow" style="margin:6px 0"><input id="rv-media" placeholder="https://… .mp4 or .jpg"><select id="rv-type"><option>REEL</option><option>POST</option><option>STORY</option></select><input id="rv-when" type="datetime-local"><button id="rv-go">Send for approval</button></div><p>Caption to send (edit the task result to change it):</p><pre style="white-space:pre-wrap">${esc(text.slice(0, 1200))}</pre><div id="rv-out"></div>`;
+    const when = document.getElementById('rv-when'); const d = new Date(Date.now() + 36e5); when.value = (i.date && i.date > new Date().toISOString().slice(0, 10) ? i.date + 'T10:00' : d.toISOString().slice(0, 16));
+    document.getElementById('rv-go').onclick = async () => {
+      const out = document.getElementById('rv-out'); const media = document.getElementById('rv-media').value.trim(); if (!media) { out.textContent = 'Add the media link first.'; return; }
+      try {
+        if (!brandInfo) { const brands = (await mcp.callTool(METRICOOL, 'getBrandSettings', {})).payload; const b = (brands && brands.data && brands.data[0]) || {}; brandInfo = { brandId: String(b.id || ''), tz: b.timezone || 'America/New_York', email: b.ownerUsername || '', handle: b.networksData?.instagramData || '' }; }
+        const local = when.value; const dt = new Date(local); const off = -dt.getTimezoneOffset(); const sign = off >= 0 ? '+' : '-'; const pad = n => String(Math.abs(n)).padStart(2, '0'); const iso = `${local}:00${sign}${pad(Math.floor(Math.abs(off) / 60))}:${pad(Math.abs(off) % 60)}`;
+        const info = { autoPublish: true, descendants: [], draft: false, firstCommentText: '', hasNotReadNotes: false, media: [media], mediaAltText: [], providers: [{ network: 'instagram' }], publicationDate: { dateTime: local + ':00', timezone: brandInfo.tz }, shortener: false, smartLinkData: { ids: [] }, text: text.slice(0, 2200), instagramData: { type: document.getElementById('rv-type').value, collaborators: [], showReelOnFeed: true, isAiGenerated: false } };
+        out.textContent = 'Sending to Metricool…';
+        const res = await mcp.callTool(METRICOOL, 'createScheduledPostForReview', { blogId: brandInfo.brandId, date: iso, info: JSON.stringify(info), reviewers: brandInfo.email, approvalSystem: 'any', notify: true });
+        const pl = res.payload || {}; const url = pl.plannerUrl || (typeof pl === 'string' ? '' : JSON.stringify(pl).match(/https?:\/\/[^"\s]+/)?.[0]);
+        i.result = { ...r, metricool: `Sent for your approval on ${local.replace('T', ' ')} (${brandInfo.tz}). Metricool emailed ${brandInfo.email}; nothing posts until you approve it there.${url ? ' ' + url : ''}` }; await postTask('update', { id: i.id, status: 'review', result: i.result }); notify('Approval needed', `"${i.title}" is waiting in Metricool for your OK`, '#e8902a'); openResult(i);
+      } catch (e) { out.textContent = mcpCopy[e.code] || (e.code === 'tool_error' ? `Metricool says: ${String(e.message || '').slice(0, 400)}` : `Metricool did not answer (${e.code || 'error'}).`); }
+    };
   }
   async function runTask(item) {
     const sample = await samplePromise;
