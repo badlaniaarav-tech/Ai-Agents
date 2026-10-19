@@ -97,7 +97,7 @@
   .wcard label { display:block; font-size:12px; color:var(--muted); margin:10px 0 0 } .wcard label input[type=text], .wcard label input:not([type=radio]) { display:block; width:100%; margin-top:4px; background:var(--well); color:var(--text); border:1px solid var(--line); border-radius:8px; padding:8px 10px; font:inherit; font-size:13px }
   .wopts { display:flex; gap:14px; font-size:13px } .wopts label { display:flex; align-items:center; gap:6px; margin:0; color:var(--text) }
   .wcard .two { display:grid; grid-template-columns:1fr 1fr; gap:8px } .wcard label.chk { display:flex; align-items:center; gap:8px; color:var(--text); font-size:13px; margin-top:10px }
-  .people { display:flex; flex-wrap:wrap; gap:8px; margin:8px 0 } .person { display:flex; flex-direction:column; align-items:center; gap:4px; width:110px; padding:10px 6px; background:var(--well); border:1px solid var(--line); border-radius:10px; color:var(--text); font:inherit; font-size:12px; cursor:pointer } .person small { color:var(--muted); font-size:10px; max-width:100%; overflow:hidden; text-overflow:ellipsis } .person.on { border-color:var(--accent); background:var(--well2) }
+  .people { display:flex; flex-wrap:wrap; gap:8px; margin:8px 0 } .person { display:flex; flex-direction:column; align-items:center; gap:4px; width:92px; padding:8px 6px; background:var(--well); border:1px solid var(--line); border-radius:10px; color:var(--text); font:inherit; font-size:12px; cursor:pointer } .person small { color:var(--muted); font-size:10px; max-width:100%; overflow:hidden; text-overflow:ellipsis } .person.on { border-color:var(--accent); background:var(--well2) }
   .wcard a { color:var(--accent) }
   .wcard button.primary { width:100%; margin-top:14px; background:var(--accent); color:#06121c; font-weight:600; border:0; border-radius:9px; padding:10px; font:inherit; font-size:14px; cursor:pointer }
   .mic { background:var(--well); color:var(--muted); border:1px solid var(--line); border-radius:7px; width:34px; cursor:pointer; font-size:14px } .mic.on { color:#fff; background:#e64a4a; border-color:#e64a4a; animation:pulse 1s infinite } @keyframes pulse { 50% { opacity:.6 } }
@@ -138,7 +138,7 @@
   <div class="wcard">
     <div class="logo" style="width:40px; height:40px; font-size:16px; margin-bottom:10px">HQ</div>
     <h2 style="margin:0 0 4px; font-size:18px">Sign in to your office</h2>
-    <p class="kv" id="w-account">This claude.ai account can hold several people. Each person has their own password, board and clips.</p>
+    <p class="kv" id="w-account">Step 1, claude.ai: done. Step 2: your email and password for your own office on this account.</p>
     <div id="w-pick"></div>
     <div id="w-create">
       <label>Your name<input id="w-name" placeholder="Name" autocomplete="name"></label>
@@ -950,10 +950,18 @@
   }
   function showLogin(members) {
     const w = document.getElementById('welcome'); w.classList.add('on'); const pick = document.getElementById('w-pick'), create = document.getElementById('w-create');
-    pick.innerHTML = members.length ? `<div class="kv">Who is this?</div><div class="people">${members.map(m => `<button class="person" data-mid="${m.id}"><span class="me">${esc((m.name || '?')[0].toUpperCase())}</span><span>${esc(m.name)}</span><small>${esc(m.email || '')}</small></button>`).join('')}</div><div id="w-unlock" hidden><label>Password<input id="w-pass" type="password" autocomplete="current-password"></label><label class="chk"><input id="w-stay" type="checkbox" checked> Stay signed in on this device</label><button id="w-enter" class="primary">Enter</button><p class="kv" id="w-err"></p></div><p class="kv"><a href="#" id="w-new">Add another person</a></p>` : '';
-    create.hidden = members.length > 0; pick.hidden = !members.length; let chosen = null; ['w-name', 'w-email', 'w-pass2', 'w-pass3', 'w-office'].forEach(id => { document.getElementById(id).value = ''; }); document.getElementById('w-err2').textContent = '';
-    pick.querySelectorAll('.person').forEach(b => b.onclick = () => { chosen = members.find(m => m.id === b.dataset.mid); pick.querySelectorAll('.person').forEach(x => x.classList.toggle('on', x === b)); document.getElementById('w-unlock').hidden = false; document.getElementById('w-pass').focus(); });
-    const tryEnter = async () => { if (!chosen) return; const h = await sha(chosen.salt + document.getElementById('w-pass').value); if (h !== chosen.hash) { document.getElementById('w-err').textContent = 'That password does not match.'; return; } await openMember(chosen, document.getElementById('w-stay').checked); };
+    pick.innerHTML = members.length ? `${members.length > 1 ? `<div class="people">${members.map(m => `<button class="person" data-mid="${m.id}"><span class="me">${esc((m.name || '?')[0].toUpperCase())}</span><span>${esc(m.name)}</span></button>`).join('')}</div>` : ''}
+      <label>Email<input id="w-login-email" type="email" autocomplete="username" placeholder="you@example.com" value="${members.length === 1 ? esc(members[0].email) : ''}"></label>
+      <label>Password<input id="w-pass" type="password" autocomplete="current-password"></label>
+      <label class="chk"><input id="w-stay" type="checkbox" checked> Stay signed in on this device</label>
+      <button id="w-enter" class="primary">Enter the office</button><p class="kv" id="w-err"></p>
+      <p class="kv">New here? <a href="#" id="w-new">Create your profile</a></p>` : '';
+    create.hidden = members.length > 0; pick.hidden = !members.length; ['w-name', 'w-email', 'w-pass2', 'w-pass3', 'w-office'].forEach(id => { document.getElementById(id).value = ''; }); document.getElementById('w-err2').textContent = '';
+    const emailBox = pick.querySelector('#w-login-email');
+    pick.querySelectorAll('.person').forEach(b => b.onclick = () => { const m = members.find(x => x.id === b.dataset.mid); emailBox.value = m.email; pick.querySelectorAll('.person').forEach(x => x.classList.toggle('on', x === b)); document.getElementById('w-pass').focus(); });
+    const tryEnter = async () => { const em = emailBox.value.trim().toLowerCase(); const chosen = members.find(m => (m.email || '').toLowerCase() === em); const err = document.getElementById('w-err');
+      if (!chosen) { err.textContent = 'No profile with that email on this account. Create one below.'; return; }
+      const h = await sha(chosen.salt + document.getElementById('w-pass').value); if (h !== chosen.hash) { err.textContent = 'That password does not match.'; return; } await openMember(chosen, document.getElementById('w-stay').checked); };
     pick.querySelector('#w-enter') && (pick.querySelector('#w-enter').onclick = tryEnter); pick.querySelector('#w-pass') && pick.querySelector('#w-pass').addEventListener('keydown', e => { if (e.key === 'Enter') tryEnter(); });
     pick.querySelector('#w-new') && (pick.querySelector('#w-new').onclick = e => { e.preventDefault(); pick.hidden = true; create.hidden = false; });
     document.getElementById('w-go').onclick = async () => {
