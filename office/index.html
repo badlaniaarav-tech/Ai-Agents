@@ -6,23 +6,26 @@
 <title>Agent HQ</title>
 <style>
   /* Agent HQ is a night-time floor plan: one deliberately dark look, so the colors are fixed rather than themed. */
-  :root { --bg:#0b0f1a; --panel:rgba(20,25,38,.92); --line:#273047; --text:#e8edf5; --muted:#8e9ab0; --accent:#5ee0ff; --ok:#3fd27f; color-scheme:dark }
+  :root { --bg:#0b0f1a; --panel:rgba(20,25,38,.92); --well:var(--well); --well2:var(--well2); --line:#273047; --text:#e8edf5; --muted:#8e9ab0; --accent:#5ee0ff; --ok:#3fd27f; --bubble:rgba(12,16,26,0.86); --chatbg:rgba(30,38,58,0.95); color-scheme:dark }
+  @media (prefers-color-scheme: light) { :root:not([data-theme="dark"]) { --bg:#e9edf5; --panel:rgba(255,255,255,.92); --well:#f3f5f9; --well2:#e2e7f0; --line:#cfd6e2; --text:#141a26; --muted:#5b667a; --accent:#0a7fa8; --ok:#1f9d57; --bubble:rgba(255,255,255,0.92); --chatbg:rgba(255,255,255,0.96); color-scheme:light } }
+  :root[data-theme="light"] { --bg:#e9edf5; --panel:rgba(255,255,255,.92); --well:#f3f5f9; --well2:#e2e7f0; --line:#cfd6e2; --text:#141a26; --muted:#5b667a; --accent:#0a7fa8; --ok:#1f9d57; --bubble:rgba(255,255,255,0.92); --chatbg:rgba(255,255,255,0.96); color-scheme:light }
   * { box-sizing:border-box }
   html, body { margin:0; height:100%; background:var(--bg); color:var(--text); font:14px/1.45 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; overflow:hidden }
   #scene { position:fixed; inset:0; width:100%; height:100%; display:block }
   #nav { position:fixed; top:12px; left:12px; right:12px; height:52px; display:flex; align-items:center; gap:10px; padding:0 14px; background:var(--panel); border:1px solid var(--line); border-radius:14px; backdrop-filter:blur(8px) }
   #nav .logo { width:28px; height:28px; border-radius:8px; background:linear-gradient(135deg,#5ee0ff,#7c6cff); display:grid; place-items:center; font-weight:700; color:#0b0f1a; font-size:13px }
+  #theme { cursor:pointer; background:var(--well); color:var(--text); border:1px solid var(--line); border-radius:8px; width:34px; height:30px; font:inherit; font-size:14px; display:grid; place-items:center }
   #nav h1 { font-size:15px; margin:0 10px 0 0; font-weight:600 }
   #nav .owner { color:var(--muted); font-size:12px; padding:4px 10px; border:1px solid var(--line); border-radius:999px }
-  #tabs { margin:0 auto; display:flex; gap:4px; background:#0e1322; border:1px solid var(--line); border-radius:10px; padding:3px }
+  #tabs { margin:0 auto; display:flex; gap:4px; background:var(--well); border:1px solid var(--line); border-radius:10px; padding:3px }
   #tabs button { background:transparent; color:var(--muted); border:0; border-radius:8px; padding:6px 14px; font:inherit; font-size:13px; cursor:pointer }
-  #tabs button.on { background:#1c2436; color:var(--text) }
+  #tabs button.on { background:var(--well2); color:var(--text) }
   #tabs button b { font-weight:600; color:var(--accent); margin-left:6px; font-size:11px }
-  .pill { padding:5px 11px; border:1px solid var(--line); border-radius:999px; background:#0e1322; color:var(--muted); font-size:12px; white-space:nowrap }
+  .pill { padding:5px 11px; border:1px solid var(--line); border-radius:999px; background:var(--well); color:var(--muted); font-size:12px; white-space:nowrap }
   .pill b { color:var(--text); font-weight:600 }
   .pill.live::before { content:""; display:inline-block; width:8px; height:8px; border-radius:50%; background:#5a6472; margin-right:7px }
   .pill.live.on::before { background:var(--ok); box-shadow:0 0 8px var(--ok) }
-  #demo, #overview { cursor:pointer; background:#0e1322; color:var(--text); border:1px solid var(--line); border-radius:8px; padding:6px 10px; font:inherit; font-size:12px; white-space:nowrap }
+  #demo, #overview { cursor:pointer; background:var(--well); color:var(--text); border:1px solid var(--line); border-radius:8px; padding:6px 10px; font:inherit; font-size:12px; white-space:nowrap }
   #panel { position:fixed; top:76px; right:12px; width:320px; max-height:calc(100% - 170px); overflow:auto; background:var(--panel); border:1px solid var(--line); border-radius:14px; padding:14px; display:none }
   #panel.on { display:block }
   #panel h2 { font-size:12px; text-transform:uppercase; letter-spacing:.06em; color:var(--muted); margin:0 0 8px }
@@ -39,52 +42,52 @@
   #toast .ic { width:30px; height:30px; border-radius:8px; display:grid; place-items:center; font-size:14px; flex:none }
   #toast small { display:block; color:var(--muted) }
   #chips { position:fixed; left:12px; bottom:12px; display:flex; gap:6px; align-items:center; font-size:11px; color:var(--muted) }
-  #chips span { padding:4px 9px; border:1px solid var(--line); border-radius:7px; background:#0e1322; color:var(--text) }
+  #chips span { padding:4px 9px; border:1px solid var(--line); border-radius:7px; background:var(--well); color:var(--text) }
   #hint { position:fixed; left:12px; top:76px; font-size:12px; color:var(--muted); background:var(--panel); border:1px solid var(--line); border-radius:8px; padding:6px 10px }
   #map { position:fixed; right:12px; bottom:12px; width:190px; background:var(--panel); border:1px solid var(--line); border-radius:12px; padding:8px }
   #map .t { display:flex; justify-content:space-between; font-size:10px; letter-spacing:.1em; color:var(--muted); margin-bottom:6px }
-  #map canvas { width:100%; height:110px; display:block; background:#0e1322; border-radius:8px; border:1px solid var(--line) }
+  #map canvas { width:100%; height:110px; display:block; background:var(--well); border-radius:8px; border:1px solid var(--line) }
   #map .b { display:flex; gap:4px; margin-top:6px }
-  #map button { flex:1; background:#0e1322; color:var(--text); border:1px solid var(--line); border-radius:6px; font:inherit; font-size:12px; cursor:pointer; padding:3px 0 }
+  #map button { flex:1; background:var(--well); color:var(--text); border:1px solid var(--line); border-radius:6px; font:inherit; font-size:12px; cursor:pointer; padding:3px 0 }
   #panel.wide { width:460px }
-  #ask { display:flex; align-items:center; gap:0; border:1px solid var(--line); border-radius:9px; background:#0e1322; overflow:hidden; height:34px }
+  #ask { display:flex; align-items:center; gap:0; border:1px solid var(--line); border-radius:9px; background:var(--well); overflow:hidden; height:34px }
   #ask select { background:transparent; color:var(--muted); border:0; border-right:1px solid var(--line); padding:0 6px; height:100%; font:inherit; font-size:12px; max-width:150px }
   #ask input { background:transparent; color:var(--text); border:0; padding:0 10px; height:100%; width:210px; font:inherit; font-size:13px; outline:none }
-  #ask input:focus { background:#131a2a }
+  #ask input:focus { background:var(--well2) }
   #ask button { background:transparent; color:var(--muted); border:0; border-left:1px solid var(--line); height:100%; padding:0 10px; cursor:pointer; font:inherit }
   #ask button:hover { color:var(--text) }
   .askhead { display:flex; align-items:center; gap:10px; padding-bottom:10px; border-bottom:1px solid var(--line); margin-bottom:10px }
-  .askhead > div { flex:1 } .askhead button { background:#0e1322; color:var(--text); border:1px solid var(--line); border-radius:6px; padding:4px 9px; font:inherit; font-size:12px; cursor:pointer }
+  .askhead > div { flex:1 } .askhead button { background:var(--well); color:var(--text); border:1px solid var(--line); border-radius:6px; padding:4px 9px; font:inherit; font-size:12px; cursor:pointer }
   #chat { display:flex; flex-direction:column; gap:8px }
   .msg { max-width:92%; padding:8px 11px; border-radius:12px; font-size:13px; white-space:pre-wrap; word-break:break-word; line-height:1.5 }
-  .msg.me { align-self:flex-end; background:#1c2436; border-bottom-right-radius:4px }
-  .msg.agent { align-self:flex-start; background:#0e1322; border:1px solid var(--line); border-bottom-left-radius:4px }
+  .msg.me { align-self:flex-end; background:var(--well2); border-bottom-right-radius:4px }
+  .msg.agent { align-self:flex-start; background:var(--well); border:1px solid var(--line); border-bottom-left-radius:4px }
   .msg.agent.thinking { color:var(--muted); font-style:italic }
   .msg .who { display:block; font-size:11px; color:var(--muted); margin-bottom:3px; font-style:normal }
   .task.busy { border-color:var(--accent) } .type.live { color:var(--ok); background:rgba(63,210,127,.12) }
   .res { margin-bottom:12px } .res h3 { font-size:12px; text-transform:uppercase; letter-spacing:.06em; color:var(--muted); margin:0 0 4px; display:flex; gap:8px; align-items:center }
-  .res pre { margin:0; white-space:pre-wrap; word-break:break-word; font:inherit; font-size:13px; line-height:1.5; background:#0e1322; border:1px solid var(--line); border-radius:9px; padding:9px 11px }
+  .res pre { margin:0; white-space:pre-wrap; word-break:break-word; font:inherit; font-size:13px; line-height:1.5; background:var(--well); border:1px solid var(--line); border-radius:9px; padding:9px 11px }
   .res pre.wait { color:var(--muted); font-style:italic }
-  .resacts { display:flex; gap:6px; margin-top:8px } .resacts button { background:#0e1322; color:var(--text); border:1px solid var(--line); border-radius:6px; padding:5px 10px; font:inherit; font-size:12px; cursor:pointer }
+  .resacts { display:flex; gap:6px; margin-top:8px } .resacts button { background:var(--well); color:var(--text); border:1px solid var(--line); border-radius:6px; padding:5px 10px; font:inherit; font-size:12px; cursor:pointer }
   @media (max-width:1180px) { #ask input { width:140px } #ask select { max-width:110px } }
   @media (max-width:980px) { #ask select { display:none } }
   .addrow { display:grid; grid-template-columns:1fr auto; gap:6px; margin:8px 0 10px }
-  .addrow input, .addrow select, .addrow button { background:#0e1322; color:var(--text); border:1px solid var(--line); border-radius:7px; padding:6px 8px; font:inherit; font-size:12px; min-width:0 }
+  .addrow input, .addrow select, .addrow button { background:var(--well); color:var(--text); border:1px solid var(--line); border-radius:7px; padding:6px 8px; font:inherit; font-size:12px; min-width:0 }
   .addrow input#t-title { grid-column:1 / -1 }
-  .addrow button { cursor:pointer; background:#1c2436 }
+  .addrow button { cursor:pointer; background:var(--well2) }
   .col { margin-top:10px } .col h3 { font-size:11px; text-transform:uppercase; letter-spacing:.08em; color:var(--muted); margin:0 0 4px; display:flex; justify-content:space-between }
-  .task { display:grid; grid-template-columns:4px 1fr auto; gap:8px; align-items:center; background:#0e1322; border:1px solid var(--line); border-radius:9px; padding:7px 8px; margin-bottom:5px }
+  .task { display:grid; grid-template-columns:4px 1fr auto; gap:8px; align-items:center; background:var(--well); border:1px solid var(--line); border-radius:9px; padding:7px 8px; margin-bottom:5px }
   .task .bar { width:4px; height:100%; min-height:26px; border-radius:2px }
   .task .ti { font-size:13px } .task .meta { font-size:11px; color:var(--muted) }
   .task .acts { display:flex; gap:3px } .task .acts button { background:transparent; color:var(--muted); border:1px solid var(--line); border-radius:5px; width:24px; height:24px; cursor:pointer; font-size:12px; padding:0 }
-  .task .acts button:hover { color:var(--text); background:#1c2436 }
-  .type { font-size:10px; padding:1px 5px; border-radius:4px; background:#1c2436; color:var(--muted); margin-left:4px; text-transform:uppercase; letter-spacing:.05em }
+  .task .acts button:hover { color:var(--text); background:var(--well2) }
+  .type { font-size:10px; padding:1px 5px; border-radius:4px; background:var(--well2); color:var(--muted); margin-left:4px; text-transform:uppercase; letter-spacing:.05em }
   .calhead { display:flex; align-items:center; gap:6px; margin-bottom:8px } .calhead h2 { flex:1; text-transform:none; letter-spacing:0; font-size:14px; color:var(--text) }
-  .calhead button { background:#0e1322; color:var(--text); border:1px solid var(--line); border-radius:6px; padding:3px 9px; font:inherit; font-size:12px; cursor:pointer }
+  .calhead button { background:var(--well); color:var(--text); border:1px solid var(--line); border-radius:6px; padding:3px 9px; font:inherit; font-size:12px; cursor:pointer }
   #calgrid { display:grid; grid-template-columns:repeat(7, 1fr); gap:3px }
   #calgrid .dow { font-size:10px; color:var(--muted); text-align:center; text-transform:uppercase; letter-spacing:.06em; padding-bottom:2px }
-  #calgrid .day { min-height:56px; background:#0e1322; border:1px solid var(--line); border-radius:7px; padding:3px 4px; cursor:pointer; font-size:11px; color:var(--muted); overflow:hidden }
-  #calgrid .day.other { opacity:.4 } #calgrid .day.today { border-color:var(--accent) } #calgrid .day.sel { background:#1c2436 } #calgrid .day .n { color:var(--text); font-weight:500 }
+  #calgrid .day { min-height:56px; background:var(--well); border:1px solid var(--line); border-radius:7px; padding:3px 4px; cursor:pointer; font-size:11px; color:var(--muted); overflow:hidden }
+  #calgrid .day.other { opacity:.4 } #calgrid .day.today { border-color:var(--accent) } #calgrid .day.sel { background:var(--well2) } #calgrid .day .n { color:var(--text); font-weight:500 }
   #calgrid .chip { display:block; font-size:10px; color:#fff; border-radius:3px; padding:0 3px; margin-top:2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis }
   @media (max-width:860px) { #ask, #hint { display:none } #nav { height:auto; flex-wrap:wrap; padding:8px 10px; row-gap:6px } #tabs { margin:0; order:5; flex-basis:100% } #panel, #panel.wide { width:min(320px, calc(100% - 24px)) } #tabs button b, #nav .owner { display:none } #map { display:none } }
 </style>
@@ -97,6 +100,7 @@
   <div id="tabs"><button class="on" data-tab="office">Office</button><button data-tab="tasks">Tasks<b id="taskn">0</b></button><button data-tab="calendar">Calendar</button><button data-tab="brain">Brain</button></div>
   <form id="ask" autocomplete="off"><select id="ask-agent" title="Which agent"></select><input id="ask-q" placeholder="Ask any agent…" aria-label="Ask any agent"><button type="submit" title="Ask">↵</button></form>
   <span class="pill live" id="live"><b id="count">0</b> agents · <b id="running">0</b> running</span>
+  <button id="theme" title="Switch light / dark">☾</button>
   <button id="overview" title="See the whole office (O)">Overview</button>
   <button id="demo">Demo</button>
 </div>
@@ -145,6 +149,8 @@
   const ICONS = { Research:'🔍', Inbox:'✉', Scripts:'✎', Dev:'⌘', 'TBX Shop':'🛍', Social:'♥', Creative:'▶', Analytics:'▤' };
   const data = await fetch('agents.json').then(r => r.json()).catch(() => ({ departments: [] }));
   const hex = c => '#' + c.toString(16).padStart(6, '0');
+  const cssVar = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+  const isLight = () => cssVar('color-scheme').includes('light');
 
   // ---------- renderer ----------
   const canvas = document.getElementById('scene');
@@ -163,11 +169,11 @@
   const stars = new THREE.BufferGeometry(); const sp = [];
   for (let i = 0; i < 900; i++) sp.push((Math.random() - .5) * 260, -3 - Math.random() * 20, (Math.random() - .5) * 260);
   stars.setAttribute('position', new THREE.Float32BufferAttribute(sp, 3));
-  scene.add(new THREE.Points(stars, new THREE.PointsMaterial({ color: 0x9fb4ff, size: .25, transparent: true, opacity: .6 })));
+  const starMat = new THREE.PointsMaterial({ color: 0x9fb4ff, size: .25, transparent: true, opacity: .6 }); scene.add(new THREE.Points(stars, starMat));
 
   // ---------- helpers ----------
   function textSprite(lines, opts) {
-    const o = Object.assign({ size: 40, color: '#fff', sub: '#9aa6bd', bg: 'rgba(12,16,26,0.86)', scale: 0.012 }, opts);
+    const o = Object.assign({ size: 40, color: '#fff', sub: cssVar('--muted'), bg: cssVar('--bubble'), scale: 0.012 }, opts);
     const c = document.createElement('canvas'); const ctx = c.getContext('2d');
     const f1 = `600 ${o.size}px system-ui, sans-serif`, f2 = `500 ${o.size * .7}px system-ui, sans-serif`;
     ctx.font = f1; let w = ctx.measureText(lines[0]).width; ctx.font = f2; if (lines[1]) w = Math.max(w, ctx.measureText(lines[1]).width);
@@ -178,7 +184,8 @@
     if (lines[1]) { ctx.font = f2; ctx.fillStyle = o.sub; ctx.fillText(lines[1], 24, o.size * 1.5); }
     const tex = new THREE.CanvasTexture(c); tex.minFilter = THREE.LinearFilter;
     const s = new THREE.Sprite(new THREE.SpriteMaterial({ map: tex, transparent: true, depthTest: false }));
-    s.scale.set(c.width * o.scale, c.height * o.scale, 1); s.userData.update = (nl, no) => { const n = textSprite(nl, Object.assign({}, o, no)); s.material.map.dispose(); s.material.map = n.material.map; s.scale.copy(n.scale); };
+    s.scale.set(c.width * o.scale, c.height * o.scale, 1); s.userData.lines = lines; s.userData.opts = o;
+    s.userData.update = (nl, no) => { const n = textSprite(nl, Object.assign({}, o, no, { bg: (no && no.bg) || cssVar(s.userData.chat ? '--chatbg' : '--bubble') })); s.material.map.dispose(); s.material.map = n.material.map; s.scale.copy(n.scale); s.userData.lines = nl; };
     return s;
   }
   function desk(x, z, rot, color) {
@@ -211,19 +218,20 @@
 
   // the Brain hub
   const hub = new THREE.Group();
-  const plat = new THREE.Mesh(new THREE.CylinderGeometry(7, 7.5, .6, 48), new THREE.MeshStandardMaterial({ color: 0x1b2233, roughness: .9 })); plat.position.y = .3; plat.receiveShadow = true; hub.add(plat);
+  const platMat = new THREE.MeshStandardMaterial({ color: 0x1b2233, roughness: .9 }); const plat = new THREE.Mesh(new THREE.CylinderGeometry(7, 7.5, .6, 48), platMat); plat.position.y = .3; plat.receiveShadow = true; hub.add(plat);
   for (const r of [3, 4.6, 6.2]) { const ring = new THREE.Mesh(new THREE.RingGeometry(r, r + .12, 64), new THREE.MeshBasicMaterial({ color: 0x5ee0ff, transparent: true, opacity: .5, side: THREE.DoubleSide })); ring.rotation.x = -Math.PI / 2; ring.position.y = .62; hub.add(ring); }
   const core = new THREE.Mesh(new THREE.SphereGeometry(.9, 24, 24), new THREE.MeshStandardMaterial({ color: 0xbfefff, emissive: 0x5ee0ff, emissiveIntensity: 1.2 })); core.position.y = 2.6; hub.add(core);
   const beam = new THREE.Mesh(new THREE.CylinderGeometry(.18, .18, 14, 12, 1, true), new THREE.MeshBasicMaterial({ color: 0x9df0ff, transparent: true, opacity: .35 })); beam.position.y = 9; hub.add(beam);
   const glow = new THREE.PointLight(0x5ee0ff, 2.2, 40); glow.position.y = 3; hub.add(glow);
-  const brainLabel = textSprite(['THE BRAIN', 'shared memory'], { size: 44, color: '#e8edf5', scale: .013 }); brainLabel.position.y = 5.2; hub.add(brainLabel);
+  const brainLabel = textSprite(['THE BRAIN', 'shared memory'], { size: 44, color: cssVar('--text'), themed: true, scale: .013 }); brainLabel.position.y = 5.2; hub.add(brainLabel);
   scene.add(hub);
 
+  const walkMat = new THREE.MeshStandardMaterial({ color: 0x1a2030, roughness: 1 });
   // walkways + rooms
   rooms.forEach((d, i) => {
     const ang = -Math.PI / 2 + i * (Math.PI * 2 / rooms.length);
     const cx = Math.cos(ang) * RING, cz = Math.sin(ang) * RING, color = COLORS[d.name] || 0x8a93a6;
-    const path = new THREE.Mesh(new THREE.BoxGeometry(RING - ROOM / 2 - 6, .15, 1.6), new THREE.MeshStandardMaterial({ color: 0x1a2030, roughness: 1 }));
+    const path = new THREE.Mesh(new THREE.BoxGeometry(RING - ROOM / 2 - 6, .15, 1.6), walkMat);
     path.position.set(Math.cos(ang) * (RING / 2 + 1), .08, Math.sin(ang) * (RING / 2 + 1)); path.rotation.y = -ang; path.receiveShadow = true; scene.add(path);
     const g = new THREE.Group(); g.position.set(cx, 0, cz); g.rotation.y = -ang - Math.PI / 2; // back wall faces away from the hub
     const floor = new THREE.Mesh(new THREE.BoxGeometry(ROOM, .5, ROOM), new THREE.MeshStandardMaterial({ color, roughness: .85 })); floor.position.y = .25; floor.receiveShadow = true; g.add(floor);
@@ -244,11 +252,11 @@
       const lx = -(inRow - 1) * 1.6 + c * 3.2, lz = -ROOM / 2 + 2.4 + r * 3.4;
       const dk = desk(lx, lz, 0, color); g.add(dk);
       const ch = character(color, a.role === 'head'); const home = world(lx, .5, lz + 1.0); ch.position.copy(home); ch.rotation.y = g.rotation.y + Math.PI; scene.add(ch);
-      const tag = textSprite([a.name], { size: 30, color: '#e8edf5', scale: .011 }); tag.position.y = 1.9; ch.add(tag);
+      const tag = textSprite([a.name], { size: 30, color: cssVar('--text'), themed: true, scale: .011 }); tag.position.y = 1.9; ch.add(tag);
       const rec = { ...a, team: d.name, color, mesh: ch, desk: dk, home, room: info, idleYaw: g.rotation.y + Math.PI, working: false, phase: Math.random() * 6, idleT: 3 + Math.random() * 12, path: [], state: 'desk' };
       ch.traverse(o => { o.userData.agent = rec; }); agents.push(rec); byName.set(a.name, rec);
     });
-    info.sign = textSprite([`${ICONS[d.name] || '●'} ${d.name}`, `${n} agents · 0 running`], { size: 40, color: '#e8edf5', scale: .013, stripe: hex(color) });
+    info.sign = textSprite([`${ICONS[d.name] || '●'} ${d.name}`, `${n} agents · 0 running`], { size: 40, color: cssVar('--text'), themed: true, scale: .013, stripe: hex(color) });
     info.sign.position.set(cx, 5.2, cz); scene.add(info.sign);
     roomInfo.push(info); floor.userData.room = info;
   });
@@ -256,7 +264,7 @@
   const HUB = { d: lobby, cx: 0, cz: 0, ang: 0, color: 0x5ee0ff, hub: true, door: new THREE.Vector3(0, .6, 6), lounge: () => { const a = Math.random() * Math.PI * 2; return new THREE.Vector3(Math.cos(a) * 4.5, .6, Math.sin(a) * 4.5); } };
   lobby.agents.forEach(a => {
     const ch = character(0x5ee0ff, true); ch.position.set(0, .6, 4.2); scene.add(ch);
-    const tag = textSprite([a.name], { size: 30, color: '#e8edf5', scale: .011 }); tag.position.y = 1.9; ch.add(tag);
+    const tag = textSprite([a.name], { size: 30, color: cssVar('--text'), themed: true, scale: .011 }); tag.position.y = 1.9; ch.add(tag);
     const rec = { ...a, team: lobby.name, color: 0x5ee0ff, mesh: ch, desk: { userData: { screen: { material: { emissiveIntensity: 0 } } } }, home: ch.position.clone(), room: HUB, idleYaw: 0, working: false, phase: 0, idleT: 6, path: [], state: 'desk' };
     ch.traverse(o => { o.userData.agent = rec; }); agents.push(rec); byName.set(a.name, rec);
   });
@@ -278,7 +286,7 @@
   }
   function sendTo(a, room, dest, state) { a.path = routeTo(a, room, dest); a.state = state; a.dest = dest; }
   function goHome(a) { sendTo(a, a.room, a.home.clone(), 'home'); }
-  const say = (a, text) => { if (!a.mesh.userData.say) { const s = textSprite([text], { size: 32, color: '#e8edf5', scale: .011, bg: 'rgba(30,38,58,0.95)' }); s.position.y = 2.5; a.mesh.add(s); a.mesh.userData.say = s; } else { a.mesh.userData.say.userData.update([text]); a.mesh.userData.say.visible = true; } a.sayT = 2.6 + text.length * .03; };
+  const say = (a, text) => { if (!a.mesh.userData.say) { const s = textSprite([text], { size: 32, color: cssVar('--text'), scale: .011, bg: cssVar('--chatbg') }); s.userData.chat = true; s.position.y = 2.5; a.mesh.add(s); a.mesh.userData.say = s; } else { a.mesh.userData.say.userData.update([text]); a.mesh.userData.say.visible = true; } a.sayT = 2.6 + text.length * .03; };
   const rnd = arr => arr[Math.floor(Math.random() * arr.length)];
   function lines(a, b) { // a short exchange built from real board items and brain rules
     const its = (typeof items !== 'undefined' ? items : []).filter(i => i.status !== 'done'); const it = rnd(its.length ? its : [{ title: 'the next drop', date: 'Friday', team: b.team }]);
@@ -319,6 +327,23 @@
       } else if (!a.path.length) goHome(a);
     }
   }
+
+  // ---------- theme: the viewer or the system picks, the button overrides ----------
+  const sprites = []; const _ts = textSprite; // re-skin every label when the theme flips
+  function applyTheme() {
+    const light = isLight();
+    scene.background.set(light ? 0xe9edf5 : 0x0b0f1a); scene.fog.color.set(light ? 0xe9edf5 : 0x0b0f1a);
+    starMat.color.set(light ? 0x6b7a99 : 0x9fb4ff); starMat.opacity = light ? .25 : .6;
+    walkMat.color.set(light ? 0xb9c2d2 : 0x1a2030); platMat.color.set(light ? 0xcfd6e3 : 0x1b2233);
+    core.material.color.set(light ? 0x5fc4f0 : 0xbfefff); core.material.emissive.set(light ? 0x0a7fa8 : 0x5ee0ff); beam.material.color.set(light ? 0x2aa6d8 : 0x9df0ff);
+    document.getElementById('theme').textContent = light ? '☀' : '☾';
+    scene.traverse(o => { if (o.isSprite && o.userData.lines) o.userData.update(o.userData.lines, { bg: cssVar(o.userData.chat ? '--chatbg' : '--bubble'), color: (o.userData.chat || o.userData.opts.themed) ? cssVar('--text') : o.userData.opts.color, sub: cssVar('--muted') }); });
+  }
+  document.getElementById('theme').onclick = () => { const next = isLight() ? 'dark' : 'light'; document.documentElement.setAttribute('data-theme', next); try { localStorage.setItem('agent-hq-theme', next); } catch (e) { } applyTheme(); };
+  try { const saved = localStorage.getItem('agent-hq-theme'); if (saved) document.documentElement.setAttribute('data-theme', saved); } catch (e) { }
+  new MutationObserver(applyTheme).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+  matchMedia('(prefers-color-scheme: light)').addEventListener('change', applyTheme);
+  applyTheme();
 
   // ---------- camera ----------
   const target = new THREE.Vector3(0, 0, 0); let yaw = 0.35, pitch = 0.95, dist = 78, FIT = 78;
