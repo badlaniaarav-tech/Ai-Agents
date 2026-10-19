@@ -13,7 +13,6 @@
   #nav { position:fixed; top:12px; left:12px; right:12px; height:52px; display:flex; align-items:center; gap:10px; padding:0 14px; background:var(--panel); border:1px solid var(--line); border-radius:14px; backdrop-filter:blur(8px) }
   #nav .logo { width:28px; height:28px; border-radius:8px; background:linear-gradient(135deg,#5ee0ff,#7c6cff); display:grid; place-items:center; font-weight:700; color:#0b0f1a; font-size:13px }
   #nav h1 { font-size:15px; margin:0 10px 0 0; font-weight:600 }
-  #nav .owner { color:var(--muted); font-size:12px; padding:3px 10px 3px 4px; border:1px solid var(--line); border-radius:999px; display:flex; align-items:center; gap:7px }
   .av { width:22px; height:22px; border-radius:50%; background:linear-gradient(135deg,#f7b267,#f4845f); color:#1a1020; font-size:11px; font-weight:700; display:grid; place-items:center; flex:none }
   #bell { position:relative; cursor:pointer; background:var(--well); color:var(--text); border:1px solid var(--line); border-radius:8px; width:34px; height:30px; font:inherit; font-size:14px; display:grid; place-items:center }
   #bell i { position:absolute; top:-5px; right:-5px; min-width:16px; height:16px; padding:0 4px; border-radius:8px; background:#e64a4a; color:#fff; font-size:10px; font-style:normal; font-weight:600; display:none; place-items:center }
@@ -83,6 +82,15 @@
   .addrow { display:grid; grid-template-columns:1fr auto; gap:6px; margin:8px 0 10px }
   .addrow input, .addrow select, .addrow button { background:var(--well); color:var(--text); border:1px solid var(--line); border-radius:7px; padding:6px 8px; font:inherit; font-size:12px; min-width:0 }
   .addrow .withmic { grid-column:1 / -1; display:flex; gap:6px } .addrow .withmic input { flex:1 }
+  .addrow button.primary { grid-column:1 / -1; background:var(--accent); color:#06121c; font-weight:600; border-color:transparent }
+  .card { background:var(--well); border:1px solid var(--line); border-radius:12px; padding:12px; margin-bottom:10px } .card h2 { margin-bottom:6px }
+  .card .task, .card pre, .card .addrow input, .card .addrow select, .card .addrow button, .card .resacts button { background:var(--bg) }
+  .col h3 { cursor:pointer; user-select:none } .col h3 .tog { color:var(--muted); font-weight:400; margin-right:6px } .col.closed .task, .col.closed .kv { display:none }
+  .clip { display:grid; grid-template-columns:72px 1fr auto; gap:10px; align-items:center; background:var(--bg); border:1px solid var(--line); border-radius:9px; padding:8px; margin-bottom:6px } .clip video { width:72px; height:72px; object-fit:cover; border-radius:6px; background:#000 } .clip .ti { font-size:13px } .clip .meta { font-size:11px; color:var(--muted) }
+  #menu { position:fixed; top:56px; right:12px; width:300px; background:var(--panel); border:1px solid var(--line); border-radius:12px; padding:12px; display:none; z-index:5; box-shadow:0 10px 30px rgba(0,0,0,.35) } #menu.on { display:block }
+  #menu .row { display:flex; align-items:center; gap:10px; padding:6px 0; border-bottom:1px solid var(--line); font-size:13px } #menu .row:last-child { border:0 } #menu .row .kv { flex:1 } #menu button { background:var(--well); color:var(--text); border:1px solid var(--line); border-radius:6px; padding:4px 9px; font:inherit; font-size:12px; cursor:pointer }
+  #menu input { background:var(--well); color:var(--text); border:1px solid var(--line); border-radius:6px; padding:4px 8px; font:inherit; font-size:12px; width:100% }
+  #nav .me { cursor:pointer }
   .mic { background:var(--well); color:var(--muted); border:1px solid var(--line); border-radius:7px; width:34px; cursor:pointer; font-size:14px } .mic.on { color:#fff; background:#e64a4a; border-color:#e64a4a; animation:pulse 1s infinite } @keyframes pulse { 50% { opacity:.6 } }
   #ask .mic { border:0; border-left:1px solid var(--line); border-radius:0; height:100%; width:32px }
   .addrow button { cursor:pointer; background:var(--well2) }
@@ -101,21 +109,31 @@
   #calgrid .day { min-height:56px; background:var(--well); border:1px solid var(--line); border-radius:7px; padding:3px 4px; cursor:pointer; font-size:11px; color:var(--muted); overflow:hidden }
   #calgrid .day.other { opacity:.4 } #calgrid .day.today { border-color:var(--accent) } #calgrid .day.sel { background:var(--well2) } #calgrid .day .n { color:var(--text); font-weight:500 }
   #calgrid .chip { display:block; font-size:10px; color:#fff; border-radius:3px; padding:0 3px; margin-top:2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis }
-  @media (max-width:860px) { #ask, #hint { display:none } #nav { height:auto; flex-wrap:wrap; padding:8px 10px; row-gap:6px } #tabs { margin:0; order:5; flex-basis:100% } #panel, #panel.wide { width:min(320px, calc(100% - 24px)) } #tabs button b, #nav .owner, #bell, #nav .me { display:none } #map, #pad { display:none } }
+  @media (max-width:860px) { #ask, #hint { display:none } #nav { height:auto; flex-wrap:wrap; padding:8px 10px; row-gap:6px } #tabs { margin:0; order:5; flex-basis:100% } #panel, #panel.wide { width:min(320px, calc(100% - 24px)) } #tabs button b, #bell { display:none } #map, #pad { display:none } }
 </style>
 </head>
 <body>
 <canvas id="scene"></canvas>
 
 <div id="nav">
-  <div class="logo">HQ</div><h1>Agent HQ</h1><span class="owner" id="owner"><span class="av">A</span>Aarav ▾</span>
+  <div class="logo" id="logo">HQ</div><h1 id="office-name">Agent HQ</h1>
   <div id="tabs"><button class="on" data-tab="office">Office</button><button data-tab="tasks">Tasks<b id="taskn">0</b></button><button data-tab="calendar">Calendar</button><button data-tab="competitors">Competitors</button><button data-tab="brain">Brain</button></div>
   <form id="ask" autocomplete="off"><select id="ask-agent" title="Which agent"></select><input id="ask-q" placeholder="Ask any agent…" aria-label="Ask any agent"><button type="button" id="ask-mic" class="mic" title="Say it">🎤</button><kbd>⌘K</kbd><button type="submit" title="Ask">↵</button></form>
   <span class="pill live" id="live"><b id="count">0</b> agents · <b id="running">0</b> running</span>
   <button id="overview" title="See the whole office (O)">Overview</button>
   <button id="demo">Demo</button>
   <button id="bell" title="Notifications">🔔<i id="bellc">0</i></button>
-  <div class="me" title="Aarav">A</div>
+  <div class="me" id="me" title="Account">A</div>
+</div>
+<div id="menu">
+  <div class="row"><div class="me" id="menu-av">A</div><div class="kv"><div id="menu-name" style="color:var(--text); font-weight:600">Aarav</div><div id="menu-email">signed in on claude.ai</div></div></div>
+  <div class="row"><div class="kv">Office name and logo</div></div>
+  <div class="row"><input id="menu-office" placeholder="Agent HQ" maxlength="32"><button id="menu-save">Save</button></div>
+  <div class="row"><div class="kv" id="menu-brand">Metricool: not read yet</div></div>
+  <div class="row"><div class="kv" id="menu-where">saving: …</div></div>
+  <div class="row"><div class="kv">Alerts on this device</div><button id="menu-alerts">Enable</button></div>
+  <div class="row"><div class="kv">Page permissions (Claude, Metricool, database)</div><button id="menu-perms">Manage</button></div>
+  <div class="row"><div class="kv">Backup of the board</div><button id="menu-export">Export</button></div>
 </div>
 <div id="hint">drag to orbit · right-drag or arrows to pan · wheel to zoom · click a room or agent · O overview · 1–8 rooms</div>
 <div id="toast"><div class="ic" id="toastic">▥</div><div><div id="toastt">Analytics</div><small id="toasts">Weekly report is ready</small></div><span class="hide">now</span></div>
@@ -130,11 +148,26 @@
     </div>
   </div>
   <div data-view="tasks" style="display:none">
-    <h2>Running now <span id="where" class="kv" style="text-transform:none; letter-spacing:0; float:right"></span></h2><ul id="runlist"><li style="color:var(--muted)">nobody</li></ul>
-    <form id="addtask" class="addrow"><div class="withmic"><input id="t-title" placeholder="New task… or press the mic and say it" required><button type="button" id="t-mic" class="mic" title="Dictate">🎤</button></div><select id="t-team"></select><input id="t-date" type="date"><select id="t-type"><option value="task">task</option><option value="post">post</option><option value="meeting">meeting</option></select><button type="submit">Add</button></form>
-    <div id="board"></div>
-    <div class="resacts"><button id="t-export" title="Save a copy of the board and results as a file">Export backup</button><label class="resacts" style="margin:0"><button type="button" onclick="this.nextElementSibling.click()">Import backup</button><input id="t-import" type="file" accept="application/json" hidden></label></div>
-    <h2 style="margin-top:14px">Log</h2><div id="log" style="font-size:12px; color:var(--muted)"></div>
+    <section class="card">
+      <h2>New task</h2>
+      <form id="addtask" class="addrow"><div class="withmic"><input id="t-title" placeholder="What should the office do? Type or press the mic" required><button type="button" id="t-mic" class="mic" title="Dictate">🎤</button></div><select id="t-team"></select><input id="t-date" type="date"><select id="t-type"><option value="task">task</option><option value="post">post</option><option value="meeting">meeting</option></select><button type="submit" class="primary">Add and run</button></form>
+    </section>
+    <section class="card">
+      <h2>Golf clips</h2>
+      <p class="kv">Upload a swing video. The Creative team looks at frames of it and writes the title, caption, hooks, tags and cover text. The cut and captioned video itself is made by <b>/edit-clips</b> in Claude Code (drop the file in inbox/).</p>
+      <div class="addrow" style="margin:8px 0 6px"><input id="clip-note" placeholder="What happens in it, what you want to say (optional)"><button type="button" id="clip-up" class="primary">Upload a video</button><input id="clip-file" type="file" accept="video/*" hidden></div>
+      <div id="clips"></div>
+    </section>
+    <section class="card">
+      <h2>Board <span id="where" class="kv" style="text-transform:none; letter-spacing:0; float:right"></span></h2>
+      <div class="kv" style="margin-bottom:6px">Running now</div><ul id="runlist"><li style="color:var(--muted)">nobody</li></ul>
+      <div id="board"></div>
+    </section>
+    <section class="card">
+      <h2>Log &amp; backup</h2>
+      <div class="resacts" style="margin:0 0 8px"><button id="t-export" title="Save a copy of the board and results as a file">Export backup</button><button type="button" id="t-import-btn">Import backup</button><input id="t-import" type="file" accept="application/json" hidden></div>
+      <div id="log" style="font-size:12px; color:var(--muted)"></div>
+    </section>
   </div>
   <div data-view="calendar" style="display:none">
     <div class="calhead"><button id="cprev">‹</button><h2 id="calmonth" style="margin:0"></h2><button id="cnext">›</button><button id="ctoday">today</button><button id="besttime" title="Best times to post, from Metricool">Best times</button></div>
@@ -455,6 +488,7 @@
   // ---------- tasks + calendar (office/tasks.json via /tasks) ----------
   let items = [], calMonth = new Date(); calMonth.setDate(1); let selDay = new Date().toISOString().slice(0, 10);
   const runs = new Map(); // task id -> AbortController while a team is running it
+  let closedCols = new Set(['done']); try { const c = JSON.parse(localStorage.getItem('agent-hq-cols') || 'null'); if (c) closedCols = new Set(c); } catch (e) { }
   const STATUSES = ['todo', 'doing', 'review', 'done'], SLABEL = { todo: 'To do', doing: 'Doing', review: 'Review', done: 'Done' };
   const teamColor = t => hex(COLORS[t] || 0x5ee0ff), esc = s => String(s || '').replace(/[<>&]/g, c => ({ '<': '&lt;', '>': '&gt;', '&': '&amp;' }[c]));
   // the board lives in office/tasks.json through serve.py; without the server (the published page) it lives in this browser
@@ -490,10 +524,11 @@
     saveLocal(); afterTasks(); return out;
   }
   function afterTasks() {
-    const open = items.filter(i => i.status !== 'done'); document.getElementById('taskn').textContent = open.length;
+    const open = items.filter(i => i.status !== 'done'); document.getElementById('taskn').textContent = open.length; if (tab === 'tasks') renderClips();
     const w = document.getElementById('where'); if (w) w.textContent = serverTasks ? 'saved to office/tasks.json' : db ? 'saved to your claude.ai account' : 'saved in this browser only';
     if (tab === 'tasks') renderBoard(); if (tab === 'calendar') renderCal(); refreshCounts();
   }
+  document.getElementById('t-import-btn').onclick = () => document.getElementById('t-import').click();
   const tTeam = document.getElementById('t-team'); { const o = document.createElement('option'); o.value = ''; o.textContent = 'Auto: pick the team for me'; tTeam.appendChild(o); } roomInfo.forEach(r => { const o = document.createElement('option'); o.value = r.d.name; o.textContent = r.d.name; tTeam.appendChild(o); });
   const HINTS = { Creative: /video|clip|edit|thumbnail|cover|reel|short|footage|swing/i, Scripts: /script|hook|title|caption|seo|description|idea/i, Social: /post|instagram|tiktok|social|comment|dm|newsletter|email|outreach|sponsor/i, 'TBX Shop': /shop|product|drop|hoodie|merch|price|ad |ads|listing|store/i, Dev: /code|bug|site|website|app|api|feature|deploy|fix/i, Research: /research|market|competitor|trend|why|compare|find out/i, Analytics: /report|numbers|views|followers|analytics|growth|metrics|weekly/i, Inbox: /inbox|reply|customer|quote|proposal|support|refund/i };
   async function pickTeam(title) { // the chief of staff routes it: Claude when available, keywords otherwise
@@ -532,8 +567,9 @@
   }
   function renderBoard() {
     const board = document.getElementById('board');
-    board.innerHTML = STATUSES.map(s => { const list = items.filter(i => i.status === s).sort((a, b) => (a.date || '').localeCompare(b.date || '')); return `<div class="col"><h3><span>${SLABEL[s]}</span><span>${list.length}</span></h3>${list.map(taskCard).join('') || '<div class="kv">—</div>'}</div>`; }).join('');
-    wireActs(board);
+    board.innerHTML = STATUSES.map(s => { const list = items.filter(i => i.status === s && i.type !== 'clip').sort((a, b) => (a.date || '').localeCompare(b.date || '')); return `<div class="col${closedCols.has(s) ? ' closed' : ''}" data-col="${s}"><h3><span><span class="tog">${closedCols.has(s) ? '▸' : '▾'}</span>${SLABEL[s]}</span><span>${list.length}</span></h3>${list.map(taskCard).join('') || '<div class="kv">—</div>'}</div>`; }).join('');
+    board.querySelectorAll('.col h3').forEach(h => h.onclick = () => { const s = h.parentElement.dataset.col; closedCols.has(s) ? closedCols.delete(s) : closedCols.add(s); try { localStorage.setItem('agent-hq-cols', JSON.stringify([...closedCols])); } catch (e) { } renderBoard(); });
+    wireActs(board); renderClips();
   }
   function renderCal() {
     const y = calMonth.getFullYear(), m = calMonth.getMonth(), today = new Date().toISOString().slice(0, 10);
@@ -645,6 +681,55 @@
   document.getElementById('ctoday').onclick = () => { calMonth = new Date(); calMonth.setDate(1); selDay = new Date().toISOString().slice(0, 10); renderCal(); };
   loadTasks(); setInterval(loadTasks, 5000);
   const dlPromise = (window.claude && window.claude.use) ? window.claude.use('downloads').catch(() => null) : Promise.resolve(null);
+  const assetsPromise = (window.claude && window.claude.use) ? window.claude.use('assets').catch(() => null) : Promise.resolve(null);
+  const localClips = new Map(); // object URLs for videos kept only in this browser session (no asset store)
+  document.getElementById('clip-up').onclick = () => document.getElementById('clip-file').click();
+  document.getElementById('clip-file').onchange = async e => {
+    const f = e.target.files[0]; e.target.value = ''; if (!f) return;
+    if (f.size > 20 * 1024 * 1024) { notify('Golf clips', 'Keep uploads under 20 MB here: trim the clip or export it smaller. Bigger files go in inbox/ for /edit-clips.', '#e64a4a'); return; }
+    const assets = await assetsPromise; let media = '', assetId = '';
+    if (assets) { try { notify('Golf clips', `Uploading ${f.name}…`); const up = await assets.upload(f); media = up.url; assetId = up.id; } catch (err) { notify('Golf clips', `Upload failed (${err?.code || 'error'}). Try a smaller file.`, '#e64a4a'); return; } }
+    const added = await postTask('add', { type: 'clip', title: `Clip: ${f.name.replace(/\.[^.]+$/, '')}`, team: 'Creative', agent: 'creative-director', date: new Date().toISOString().slice(0, 10), notes: document.getElementById('clip-note').value.trim(), media, assetId, fileName: f.name, size: f.size });
+    if (!added) return; if (!media) { localClips.set(added.id, URL.createObjectURL(f)); notify('Golf clips', 'Kept in this browser only (no asset store here). Run it now.'); }
+    document.getElementById('clip-note').value = ''; renderClips(); runTask(added);
+  };
+  const clipSrc = i => i.media || localClips.get(i.id) || '';
+  function renderClips() {
+    const el = document.getElementById('clips'); if (!el) return; const clips = items.filter(i => i.type === 'clip').sort((a, b) => (b.created || 0) - (a.created || 0));
+    el.innerHTML = clips.length ? clips.map(i => `<div class="clip"><video src="${esc(clipSrc(i))}" muted playsinline preload="metadata"></video><div><div class="ti">${esc(i.title)}${runs.has(i.id) ? '<span class="type live">running</span>' : ''}</div><div class="meta">${esc(i.status)}${i.result?.caption ? ' · caption ready' : ''}${i.notes ? ' · ' + esc(i.notes.slice(0, 60)) : ''}</div></div><div class="acts" style="display:flex; gap:4px">${!runs.has(i.id) ? `<button data-run="${i.id}" title="write caption, hooks, tags">▶</button>` : ''}${i.result ? `<button data-open="${i.id}" title="open">▤</button>` : ''}<button data-rm="${i.id}" title="remove">✕</button></div></div>`).join('') : '<div class="kv">No clips yet.</div>';
+    wireActs(el);
+  }
+  async function framesOf(url) { // three stills from the clip, for the team to look at
+    const v = document.createElement('video'); v.src = url; v.muted = true; v.playsInline = true; v.crossOrigin = 'anonymous';
+    await new Promise((res, rej) => { v.onloadedmetadata = res; v.onerror = rej; setTimeout(rej, 15000); });
+    const c = document.createElement('canvas'), out = []; const d = v.duration || 1;
+    for (const f of [.15, .5, .85]) { v.currentTime = d * f; await new Promise(r => { v.onseeked = r; setTimeout(r, 4000); }); c.width = Math.min(640, v.videoWidth || 640); c.height = Math.round(c.width * (v.videoHeight || 360) / (v.videoWidth || 640)); c.getContext('2d').drawImage(v, 0, 0, c.width, c.height); const b = await new Promise(r => c.toBlob(r, 'image/jpeg', .8)); if (b) out.push(b); }
+    return out;
+  }
+  async function runClip(item) {
+    const sample = await samplePromise; if (!sample) { notify('Golf clips', 'Captions need this page open on claude.ai. Locally: put the file in inbox/ and run /edit-clips.', '#e8902a'); return; }
+    if (runs.has(item.id)) { openResult(item); return; } const ctl = new AbortController(); runs.set(item.id, ctl);
+    const head = headOf('Creative'), writer = byName.get('script-writer') || head, checker = byName.get('brand-checker') || head;
+    item.result = { plan: '', outputs: [], review: '', reviewer: '', startedAt: Date.now() }; await postTask('update', { id: item.id, status: 'doing', result: item.result }); openResult(item);
+    const room = roomInfo.find(r => r.d.name === 'Creative'); if (room && !userMoved) flyTo(room);
+    try {
+      let imgs = []; try { const lim = await sample.limits(); if (lim.images && clipSrc(item)) imgs = (await framesOf(clipSrc(item))).slice(0, lim.images.maxCount); } catch (e) { }
+      setWorking(head.name, true, `looking at "${item.title}"`);
+      const ctx = `Golf swing clip "${item.fileName || item.title}". Owner's note: ${item.notes || 'none'}. ${imgs.length ? 'Three stills from the clip are attached (start, middle, end).' : 'No stills available; work from the note and the brand.'} Instagram handle: @${brandInfo?.handle || 'aarav_badlani_golf'}.`;
+      const plan = await sample.json(`${instructionsFor(head, 'work')}\n\n${ctx}\n\nDescribe what the clip shows and decide the angle. Reply with only JSON {"what": "<two sentences: what we see, what the swing does well or needs>", "angle": "<one sentence: the one idea this post should make>", "cut": "<one sentence: what to trim and the best 3-second moment for the hook>"}.`, { modelTier: 'default', cache: false, signal: ctl.signal, images: imgs.length ? imgs : undefined });
+      setWorking(head.name, false); item.result.plan = `${plan.what}\nAngle: ${plan.angle}\nCut: ${plan.cut}`; await postTask('update', { id: item.id, result: item.result }); openResult(item);
+      setWorking(writer.name, true, `writing for "${item.title}"`);
+      const copy = await sample.json(`${instructionsFor(writer, 'work')}\n\n${ctx}\nCreative director's read: ${item.result.plan}\n\nWrite the post. Reply with only JSON {"title": "<max 60 characters>", "hooks": ["<3 spoken opening lines under 12 words>"], "caption": "<Instagram caption, 60-120 words, plain and friendly, ends with one question or call to action>", "tags": ["<15 hashtags without #, most specific first>"], "cover": "<cover text, max 3 words, ALL CAPS>", "altText": "<one sentence>"}.`, { modelTier: 'default', cache: false, signal: ctl.signal });
+      setWorking(writer.name, false);
+      const text = `TITLE\n${copy.title}\n\nHOOKS\n${(copy.hooks || []).map((h, i) => `${i + 1}. ${h}`).join('\n')}\n\nCAPTION\n${copy.caption}\n\nTAGS\n${(copy.tags || []).map(x => '#' + String(x).replace(/^#/, '')).join(' ')}\n\nCOVER TEXT\n${copy.cover}\n\nALT TEXT\n${copy.altText || ''}`;
+      item.result.outputs = [{ agent: writer.name, brief: 'title, hooks, caption, tags, cover', text }]; item.result.caption = copy.caption; item.result.tags = copy.tags; item.result.title = copy.title; await postTask('update', { id: item.id, result: item.result }); openResult(item);
+      item.result.reviewer = checker.name; setWorking(checker.name, true, `checking "${item.title}"`);
+      try { const { text: rv } = await sample(`${instructionsFor(checker, 'work')}\n\nReview this Instagram copy against the brand rules (caption length, no clickbait, cover text 3 words, voice). Answer PASS or FIX: <exactly what>, then one line for the owner.\n\n${text}`, { modelTier: 'quick', cache: false, signal: ctl.signal }); item.result.review = rv; } finally { setWorking(checker.name, false); }
+      item.result.finishedAt = Date.now(); runs.delete(item.id); await postTask('update', { id: item.id, status: 'review', result: item.result });
+      notify('Creative', `"${item.title}" caption and tags are ready for your review`, teamColor('Creative')); log(`<span style="color:var(--text)">Creative</span> finished "${esc(item.title)}"`);
+    } catch (err) { runs.delete(item.id); [head, writer, checker].forEach(a => setWorking(a.name, false)); item.result.error = err?.code === 'cancelled' ? 'Stopped.' : (errCopy[err?.code] || `Something went wrong (${err?.code || err?.message || err}). Run again.`); await postTask('update', { id: item.id, result: item.result }); }
+    openResult(item); renderClips();
+  }
   document.getElementById('t-export').onclick = async () => {
     const data = JSON.stringify({ exportedAt: new Date().toISOString(), items }, null, 2), name = `agent-hq-backup-${new Date().toISOString().slice(0, 10)}.json`;
     const dl = await dlPromise; if (dl) { try { await dl.save({ filename: name, data }); notify('Backup', 'Saved. Keep it or email it to yourself.'); } catch (e) { if (e.code !== 'cancelled') notify('Backup', 'Could not save the file here.', '#e64a4a'); } return; }
@@ -691,16 +776,16 @@
     const cur = items.find(x => x.id === i.id) || i, r = i.result || cur.result || {}, head = headOf(i.team);
     document.getElementById('res-title').textContent = i.title; document.getElementById('res-meta').textContent = `${i.team} · ${cur.status}${r.finishedAt ? ' · finished ' + new Date(r.finishedAt).toLocaleString() : runs.has(i.id) ? ' · running' : ''}`; document.getElementById('res-sw').style.background = teamColor(i.team);
     const sec = (title, text, who) => `<div class="res"><h3>${who ? `<span class="sw" style="background:${teamColor(byName.get(who)?.team || i.team)}"></span>` : ''}${esc(title)}</h3><pre${text ? '' : ' class="wait"'}>${esc(text || 'working…')}</pre></div>`;
-    document.getElementById('res-body').innerHTML = sec(`${head.name} · plan`, r.plan, head.name) + (r.outputs || []).map(o => sec(`${o.agent} · ${o.brief ? o.brief.slice(0, 60) + (o.brief.length > 60 ? '…' : '') : 'deliverable'}`, o.text, o.agent)).join('') + (r.reviewer ? sec(`${r.reviewer} · review`, r.review, r.reviewer) : '') + (r.error ? `<p class="kv">${esc(r.error)}</p>` : '') +
-      `<div class="resacts">${!runs.has(i.id) ? `<button data-run2="${i.id}">Run again</button>` : `<button data-stop2="${i.id}">Stop</button>`}${cur.status !== 'done' ? `<button data-done2="${i.id}">Mark done</button>` : ''}${i.type === 'post' && !runs.has(i.id) ? `<button data-review2="${i.id}">Send to Metricool for my approval</button>` : ''}</div>${i.type === 'post' ? `<div id="review-box" class="kv" style="margin-top:8px">${esc(r.metricool || '')}</div>` : ''}`;
+    document.getElementById('res-body').innerHTML = (i.type === 'clip' && clipSrc(i) ? `<video src="${esc(clipSrc(i))}" controls playsinline style="width:100%; max-height:260px; border-radius:9px; background:#000; margin-bottom:10px"></video>` : '') + sec(`${head.name} · ${i.type === 'clip' ? 'what the clip shows' : 'plan'}`, r.plan, head.name) + (r.outputs || []).map(o => sec(`${o.agent} · ${o.brief ? o.brief.slice(0, 60) + (o.brief.length > 60 ? '…' : '') : 'deliverable'}`, o.text, o.agent)).join('') + (r.reviewer ? sec(`${r.reviewer} · review`, r.review, r.reviewer) : '') + (r.error ? `<p class="kv">${esc(r.error)}</p>` : '') +
+      `<div class="resacts">${!runs.has(i.id) ? `<button data-run2="${i.id}">Run again</button>` : `<button data-stop2="${i.id}">Stop</button>`}${cur.status !== 'done' ? `<button data-done2="${i.id}">Mark done</button>` : ''}${(i.type === 'post' || i.type === 'clip') && !runs.has(i.id) ? `<button data-review2="${i.id}">Send to Metricool for my approval</button>` : ''}</div>${(i.type === 'post' || i.type === 'clip') ? `<div id="review-box" class="kv" style="margin-top:8px">${esc(r.metricool || '')}</div>` : ''}`;
     const body = document.getElementById('res-body');
     body.querySelector('[data-run2]')?.addEventListener('click', () => runTask(i)); body.querySelector('[data-review2]')?.addEventListener('click', () => sendForApproval(i)); body.querySelector('[data-stop2]')?.addEventListener('click', () => runs.get(i.id)?.abort()); body.querySelector('[data-done2]')?.addEventListener('click', () => { postTask('update', { id: i.id, status: 'done' }); showTab('tasks'); });
     if (tab !== 'task') showTab('task'); document.getElementById('res-back').onclick = () => showTab('tasks');
   }
   async function sendForApproval(i) { // Metricool holds the post until you approve it; it emails you (and the Metricool app notifies you)
     const box = document.getElementById('review-box'); const mcp = await mcpPromise; if (!mcp) { box.textContent = 'Needs this page open on claude.ai with the Metricool connector.'; return; }
-    const r = i.result || {}; const text = (r.outputs || []).map(o => o.text).filter(Boolean).join('\n\n') || i.notes || i.title;
-    box.innerHTML = `<p>Instagram needs an image or video. Paste a public link to the media (a Google Drive or Dropbox share link works if Metricool has Drive linked):</p><div class="addrow" style="margin:6px 0"><input id="rv-media" placeholder="https://… .mp4 or .jpg"><select id="rv-type"><option>REEL</option><option>POST</option><option>STORY</option></select><input id="rv-when" type="datetime-local"><button id="rv-go">Send for approval</button></div><p>Caption to send (edit the task result to change it):</p><pre style="white-space:pre-wrap">${esc(text.slice(0, 1200))}</pre><div id="rv-out"></div>`;
+    const r = i.result || {}; const text = r.caption ? `${r.caption}\n\n${(r.tags || []).map(x => '#' + String(x).replace(/^#/, '')).join(' ')}` : ((r.outputs || []).map(o => o.text).filter(Boolean).join('\n\n') || i.notes || i.title);
+    box.innerHTML = `<p>Instagram needs an image or video. Paste a public link to the media (a Google Drive or Dropbox share link works if Metricool has Drive linked).${i.type === 'clip' ? ' The clip uploaded here is private to this page, so Metricool cannot fetch it: share the file from Drive and paste that link.' : ''}</p><div class="addrow" style="margin:6px 0"><input id="rv-media" placeholder="https://… .mp4 or .jpg"><select id="rv-type"><option>REEL</option><option>POST</option><option>STORY</option></select><input id="rv-when" type="datetime-local"><button id="rv-go">Send for approval</button></div><p>Caption to send (edit the task result to change it):</p><pre style="white-space:pre-wrap">${esc(text.slice(0, 1200))}</pre><div id="rv-out"></div>`;
     const when = document.getElementById('rv-when'); const d = new Date(Date.now() + 36e5); when.value = (i.date && i.date > new Date().toISOString().slice(0, 10) ? i.date + 'T10:00' : d.toISOString().slice(0, 16));
     document.getElementById('rv-go').onclick = async () => {
       const out = document.getElementById('rv-out'); const media = document.getElementById('rv-media').value.trim(); if (!media) { out.textContent = 'Add the media link first.'; return; }
@@ -716,6 +801,7 @@
     };
   }
   async function runTask(item) {
+    if (item.type === 'clip') return runClip(item);
     const sample = await samplePromise;
     if (!sample) { notify('Run it in Claude Code', `In the repo: claude, then /brief ${item.title}. The agents light up here as they work.`, '#e8902a'); return; }
     if (runs.has(item.id)) { openResult(item); return; }
@@ -785,8 +871,28 @@
   const toast = document.getElementById('toast'); let toastT = null;
   const notes = []; let unread = 0;
   function notify(title, sub, color) { document.getElementById('toastt').textContent = title; document.getElementById('toasts').textContent = sub; const ic = document.getElementById('toastic'); ic.style.background = color || '#2bbfa8'; toast.classList.add('on'); clearTimeout(toastT); toastT = setTimeout(() => toast.classList.remove('on'), 4500);
-    notes.unshift({ title, sub, color, at: Date.now() }); if (notes.length > 30) notes.pop(); unread++; const b = document.getElementById('bellc'); b.textContent = unread; b.classList.add('on'); }
+    notes.unshift({ title, sub, color, at: Date.now() }); if (notes.length > 30) notes.pop(); unread++; const b = document.getElementById('bellc'); b.textContent = unread; b.classList.add('on');
+    try { if ('Notification' in window && Notification.permission === 'granted' && /ready|approval|waiting/i.test(sub)) new Notification(`${officeName} · ${title}`, { body: sub }); } catch (e) { } }
   document.getElementById('bell').onclick = () => { unread = 0; document.getElementById('bellc').classList.remove('on'); if (tab !== 'tasks') showTab('tasks'); };
+  // account menu: who you are, the office name and logo, where things save, alerts, permissions
+  const menu = document.getElementById('menu'); document.getElementById('me').onclick = e => { e.stopPropagation(); menu.classList.toggle('on'); fillMenu(); }; document.addEventListener('click', e => { if (!menu.contains(e.target)) menu.classList.remove('on'); });
+  const userPromise = (window.claude && window.claude.use) ? window.claude.use('user').catch(() => null) : Promise.resolve(null);
+  async function fillMenu() {
+    const u = await userPromise; if (u) { try { const me = await u.me(); const name = me?.name || ''; const email = me?.email || ''; if (name) { document.getElementById('menu-name').textContent = name; document.getElementById('menu-av').textContent = document.getElementById('me').textContent = name.trim()[0].toUpperCase(); } if (email) document.getElementById('menu-email').textContent = email; } catch (e) { } }
+    document.getElementById('menu-where').textContent = 'saving: ' + (document.getElementById('where')?.textContent || '…');
+    document.getElementById('menu-brand').textContent = brandInfo ? `Metricool: @${brandInfo.handle || '?'} · ${brandInfo.tz}` : 'Metricool: connect on the Calendar or Competitors tab';
+    document.getElementById('menu-office').value = officeName; document.getElementById('menu-alerts').textContent = ('Notification' in window && Notification.permission === 'granted') ? 'On' : 'Enable';
+  }
+  let officeName = 'Agent HQ'; try { officeName = localStorage.getItem('agent-hq-name') || officeName; } catch (e) { }
+  function applyOffice() { document.title = officeName; document.getElementById('office-name').textContent = officeName; document.getElementById('logo').textContent = officeName.split(/\s+/).map(w => w[0]).join('').slice(0, 2).toUpperCase() || 'HQ'; }
+  applyOffice(); dbPromise.then(async d => { if (!d) return; try { const s = await d.doc('settings/office').get(); if (s.exists && s.data().name) { officeName = s.data().name; applyOffice(); } } catch (e) { } });
+  document.getElementById('menu-save').onclick = async () => { officeName = document.getElementById('menu-office').value.trim() || 'Agent HQ'; applyOffice(); try { localStorage.setItem('agent-hq-name', officeName); } catch (e) { } const d = await dbPromise; if (d) { try { await d.doc('settings/office').set({ name: officeName }); } catch (e) { } } notify('Office', `Renamed to ${officeName}`); };
+  document.getElementById('menu-export').onclick = () => document.getElementById('t-export').click();
+  document.getElementById('menu-perms').onclick = async () => { try { const perms = await window.claude.use('permissions'); await perms.manage(); } catch (e) { notify('Permissions', 'Open the artifact menu on claude.ai → Permissions.', '#e8902a'); } };
+  document.getElementById('menu-alerts').onclick = async function () {
+    if (!('Notification' in window)) { notify('Alerts', 'This browser cannot show notifications. Phone alerts come from the Claude app check-in and Metricool.', '#e8902a'); return; }
+    try { const p = await Notification.requestPermission(); this.textContent = p === 'granted' ? 'On' : 'Enable'; notify('Alerts', p === 'granted' ? 'On: you get a system notification when work is ready for your OK.' : 'Not allowed here. Phone alerts still come from the Claude app check-in and Metricool.', p === 'granted' ? '#3fd27f' : '#e8902a'); } catch (e) { notify('Alerts', 'Not available in this view.', '#e8902a'); }
+  };
   const logEl = document.getElementById('log'), runlist = document.getElementById('runlist');
   function log(msg) { const d = document.createElement('div'); d.innerHTML = msg; logEl.prepend(d); while (logEl.children.length > 60) logEl.lastChild.remove(); document.getElementById('taskn').textContent = logEl.children.length; }
   function refreshCounts() {
