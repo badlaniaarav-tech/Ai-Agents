@@ -143,7 +143,7 @@
     <div id="w-create">
       <label>Your name<input id="w-name" placeholder="Name" autocomplete="name"></label>
       <label>Email (your login)<input id="w-email" type="email" placeholder="you@example.com" autocomplete="email"></label>
-      <label>Phone number (for text notifications and approvals)<input id="w-phone" type="tel" placeholder="+1 555 123 4567" autocomplete="tel"></label>
+      <p class="kv" style="margin:6px 0 0">Notifications and approvals reach your iPhone through the Claude app (and Metricool's app for posts). Keep the Claude app installed with notifications on.</p>
       <div class="two"><label>Password<input id="w-pass2" type="password" autocomplete="new-password"></label><label>Again<input id="w-pass3" type="password" autocomplete="new-password"></label></div>
       <label>Name your office<input id="w-office" placeholder="Agent HQ" maxlength="32"></label>
       <div class="kv" style="margin:10px 0 4px">Connect your social media through Metricool, so the office can schedule posts for your approval and read your numbers?</div>
@@ -158,11 +158,9 @@
   <div class="row"><div class="me" id="menu-av">A</div><div class="kv"><div id="menu-name" style="color:var(--text); font-weight:600">Aarav</div><div id="menu-email">signed in on claude.ai</div></div></div>
   <div class="row"><div class="kv">Office name and logo</div></div>
   <div class="row"><input id="menu-office" placeholder="Agent HQ" maxlength="32"><button id="menu-save">Save</button></div>
-  <div class="row"><div class="kv">Phone for texts</div></div>
-  <div class="row"><input id="menu-phone" type="tel" placeholder="+1 555 123 4567"><button id="menu-phone-save">Save</button></div>
   <div class="row"><div class="kv" id="menu-brand">Metricool: not read yet</div></div>
   <div class="row"><div class="kv" id="menu-where">saving: …</div></div>
-  <div class="row"><div class="kv">Alerts on this device</div><button id="menu-alerts">Enable</button></div>
+  <div class="row"><div class="kv">iPhone alerts: the Claude app check-in (4× a day) and Metricool for posts. Browser alerts below, where the browser allows them.</div><button id="menu-alerts">Enable</button></div>
   <div class="row"><div class="kv">Page permissions (Claude, Metricool, database)</div><button id="menu-perms">Manage</button></div>
   <div class="row"><div class="kv">Backup of the board</div><button id="menu-export">Export</button></div>
   <div class="row"><div class="kv">Change password</div></div>
@@ -917,14 +915,13 @@
     const u = await userPromise; { try { const me = u ? await u.me() : {}; const name = profile?.name || me?.name || ''; const email = profile?.email || me?.email || ''; if (name) { document.getElementById('menu-name').textContent = name; document.getElementById('menu-av').textContent = document.getElementById('me').textContent = name.trim()[0].toUpperCase(); } if (email) document.getElementById('menu-email').textContent = email; } catch (e) { } }
     document.getElementById('menu-where').textContent = 'saving: ' + (document.getElementById('where')?.textContent || '…');
     document.getElementById('menu-brand').textContent = brandInfo ? `Metricool: @${brandInfo.handle || '?'} · ${brandInfo.tz}` : 'Metricool: connect on the Calendar or Competitors tab';
-    document.getElementById('menu-email').textContent = profile?.email || document.getElementById('menu-email').textContent; document.getElementById('menu-phone').value = profile?.phone || ''; document.getElementById('menu-office').value = officeName; document.getElementById('menu-alerts').textContent = ('Notification' in window && Notification.permission === 'granted') ? 'On' : 'Enable';
+    document.getElementById('menu-email').textContent = profile?.email || document.getElementById('menu-email').textContent; document.getElementById('menu-office').value = officeName; document.getElementById('menu-alerts').textContent = ('Notification' in window && Notification.permission === 'granted') ? 'On' : 'Enable';
   }
   let officeName = 'Agent HQ'; try { officeName = localStorage.getItem('agent-hq-name') || officeName; } catch (e) { }
   function applyOffice() { document.title = officeName; document.getElementById('office-name').textContent = officeName; document.getElementById('logo').textContent = officeName.split(/\s+/).map(w => w[0]).join('').slice(0, 2).toUpperCase() || 'HQ'; }
   applyOffice();
   document.getElementById('menu-save').onclick = async () => { officeName = document.getElementById('menu-office').value.trim() || 'Agent HQ'; applyOffice(); try { localStorage.setItem('agent-hq-name', officeName); } catch (e) { } await saveProfile({ office: officeName }); notify('Office', `Renamed to ${officeName}`); };
   document.getElementById('menu-export').onclick = () => document.getElementById('t-export').click();
-  document.getElementById('menu-phone-save').onclick = async () => { await saveProfile({ phone: document.getElementById('menu-phone').value.trim() }); notify('Phone', 'Saved. Texts start once an SMS service is connected to the office.'); };
   async function saveProfile(patch) { profile = { ...(profile || {}), ...patch }; if (profileDoc) { try { await profileDoc.update(JSON.parse(JSON.stringify(patch))); } catch (e) { try { await profileDoc.set(profile); } catch (e2) { notify('Workspace', dbErr[e2?.code] || 'Could not save your profile. You need Contributor access to this page.', '#e64a4a'); } } } else { saveLocalMembers(); } }
   // ---- members: sign-in inside the page, because a family can share one claude.ai login
   const MEMBERS_LS = 'agent-hq-members', STAY_LS = 'agent-hq-stay';
@@ -954,7 +951,7 @@
   function showLogin(members) {
     const w = document.getElementById('welcome'); w.classList.add('on'); const pick = document.getElementById('w-pick'), create = document.getElementById('w-create');
     pick.innerHTML = members.length ? `<div class="kv">Who is this?</div><div class="people">${members.map(m => `<button class="person" data-mid="${m.id}"><span class="me">${esc((m.name || '?')[0].toUpperCase())}</span><span>${esc(m.name)}</span><small>${esc(m.email || '')}</small></button>`).join('')}</div><div id="w-unlock" hidden><label>Password<input id="w-pass" type="password" autocomplete="current-password"></label><label class="chk"><input id="w-stay" type="checkbox" checked> Stay signed in on this device</label><button id="w-enter" class="primary">Enter</button><p class="kv" id="w-err"></p></div><p class="kv"><a href="#" id="w-new">Add another person</a></p>` : '';
-    create.hidden = members.length > 0; pick.hidden = !members.length; let chosen = null; ['w-name', 'w-email', 'w-phone', 'w-pass2', 'w-pass3', 'w-office'].forEach(id => { document.getElementById(id).value = ''; }); document.getElementById('w-err2').textContent = '';
+    create.hidden = members.length > 0; pick.hidden = !members.length; let chosen = null; ['w-name', 'w-email', 'w-pass2', 'w-pass3', 'w-office'].forEach(id => { document.getElementById(id).value = ''; }); document.getElementById('w-err2').textContent = '';
     pick.querySelectorAll('.person').forEach(b => b.onclick = () => { chosen = members.find(m => m.id === b.dataset.mid); pick.querySelectorAll('.person').forEach(x => x.classList.toggle('on', x === b)); document.getElementById('w-unlock').hidden = false; document.getElementById('w-pass').focus(); });
     const tryEnter = async () => { if (!chosen) return; const h = await sha(chosen.salt + document.getElementById('w-pass').value); if (h !== chosen.hash) { document.getElementById('w-err').textContent = 'That password does not match.'; return; } await openMember(chosen, document.getElementById('w-stay').checked); };
     pick.querySelector('#w-enter') && (pick.querySelector('#w-enter').onclick = tryEnter); pick.querySelector('#w-pass') && pick.querySelector('#w-pass').addEventListener('keydown', e => { if (e.key === 'Enter') tryEnter(); });
@@ -963,7 +960,7 @@
       const name = document.getElementById('w-name').value.trim(), email = document.getElementById('w-email').value.trim().toLowerCase(), pass = document.getElementById('w-pass2').value, pass2 = document.getElementById('w-pass3').value;
       const err = document.getElementById('w-err2'); if (!name || !email || !pass) { err.textContent = 'Name, email and a password are needed.'; return; } if (pass !== pass2) { err.textContent = 'The two passwords differ.'; return; } if (pass.length < 4) { err.textContent = 'Use at least 4 characters.'; return; }
       const id = await memberId(email); if (members.some(m => m.id === id)) { err.textContent = 'That email already has a profile. Pick it from the list.'; return; }
-      const salt = Math.random().toString(36).slice(2, 12); const m = { id, name, email, phone: document.getElementById('w-phone').value.trim(), salt, hash: await sha(salt + pass), office: document.getElementById('w-office').value.trim() || 'Agent HQ', social: document.querySelector('input[name=w-social]:checked')?.value || 'later', onboarded: true, joined: Date.now(), metricoolOwner: members.length === 0 };
+      const salt = Math.random().toString(36).slice(2, 12); const m = { id, name, email, salt, hash: await sha(salt + pass), office: document.getElementById('w-office').value.trim() || 'Agent HQ', social: document.querySelector('input[name=w-social]:checked')?.value || 'later', onboarded: true, joined: Date.now(), metricoolOwner: members.length === 0 };
       if (membersCol) { try { await membersCol.doc(id).set(m); } catch (e2) { err.textContent = dbErr[e2?.code] || 'Could not save this profile. You need Contributor access to this page.'; return; } } else { localMembers.push(m); try { localStorage.setItem(MEMBERS_LS, JSON.stringify(localMembers)); } catch (e) { } }
       await openMember(m, document.getElementById('w-stay2').checked);
       if (m.social === 'yes') { notify('Metricool', metricoolAllowed() ? 'Add the Metricool connector in claude.ai Settings → Connectors, then connect your networks in Metricool. The Calendar and Competitors tabs use it.' : `Metricool here belongs to ${brandInfo?.email || 'the owner'}. Only that profile can post with it.`, '#e8902a'); }
