@@ -92,6 +92,11 @@
   #menu .row { display:flex; align-items:center; gap:10px; padding:6px 0; border-bottom:1px solid var(--line); font-size:13px } #menu .row:last-child { border:0 } #menu .row .kv { flex:1 } #menu button { background:var(--well); color:var(--text); border:1px solid var(--line); border-radius:6px; padding:4px 9px; font:inherit; font-size:12px; cursor:pointer }
   #menu input { background:var(--well); color:var(--text); border:1px solid var(--line); border-radius:6px; padding:4px 8px; font:inherit; font-size:12px; width:100% }
   #nav .me { cursor:pointer }
+  #welcome { position:fixed; inset:0; background:rgba(6,9,16,.72); backdrop-filter:blur(6px); display:none; align-items:center; justify-content:center; z-index:20; padding:16px } #welcome.on { display:flex }
+  .wcard { width:min(420px, 100%); background:var(--panel); border:1px solid var(--line); border-radius:16px; padding:20px; box-shadow:0 20px 60px rgba(0,0,0,.5) }
+  .wcard label { display:block; font-size:12px; color:var(--muted); margin:10px 0 0 } .wcard label input[type=text], .wcard label input:not([type=radio]) { display:block; width:100%; margin-top:4px; background:var(--well); color:var(--text); border:1px solid var(--line); border-radius:8px; padding:8px 10px; font:inherit; font-size:13px }
+  .wopts { display:flex; gap:14px; font-size:13px } .wopts label { display:flex; align-items:center; gap:6px; margin:0; color:var(--text) }
+  .wcard button.primary { width:100%; margin-top:14px; background:var(--accent); color:#06121c; font-weight:600; border:0; border-radius:9px; padding:10px; font:inherit; font-size:14px; cursor:pointer }
   .mic { background:var(--well); color:var(--muted); border:1px solid var(--line); border-radius:7px; width:34px; cursor:pointer; font-size:14px } .mic.on { color:#fff; background:#e64a4a; border-color:#e64a4a; animation:pulse 1s infinite } @keyframes pulse { 50% { opacity:.6 } }
   #ask .mic { border:0; border-left:1px solid var(--line); border-radius:0; height:100%; width:32px }
   .addrow button { cursor:pointer; background:var(--well2) }
@@ -125,6 +130,19 @@
   <button id="demo">Demo</button>
   <button id="bell" title="Notifications">🔔<i id="bellc">0</i></button>
   <div class="me" id="me" title="Account">A</div>
+</div>
+<div id="welcome">
+  <div class="wcard">
+    <div class="logo" style="width:40px; height:40px; font-size:16px; margin-bottom:10px">HQ</div>
+    <h2 style="margin:0 0 4px; font-size:18px">Welcome to your office</h2>
+    <p class="kv" id="w-account">Your work here is saved to your claude.ai account and only you can see it.</p>
+    <label>Your name<input id="w-name" placeholder="Name" autocomplete="name"></label>
+    <label>Email for notifications and approvals<input id="w-email" type="email" placeholder="you@example.com" autocomplete="email"></label>
+    <label>Name your office<input id="w-office" placeholder="Agent HQ" maxlength="32"></label>
+    <div class="kv" style="margin:10px 0 4px">Would you like to connect your social media through Metricool, so the office can schedule posts for your approval and read your numbers?</div>
+    <div class="wopts"><label><input type="radio" name="w-social" value="yes"> Yes, show me how</label><label><input type="radio" name="w-social" value="later" checked> Not now</label></div>
+    <button id="w-go" class="primary">Enter the office</button>
+  </div>
 </div>
 <div id="menu">
   <div class="row"><div class="me" id="menu-av">A</div><div class="kv"><div id="menu-name" style="color:var(--text); font-weight:600">Aarav</div><div id="menu-email">signed in on claude.ai</div></div></div>
@@ -493,16 +511,25 @@
   const STATUSES = ['todo', 'doing', 'review', 'done'], SLABEL = { todo: 'To do', doing: 'Doing', review: 'Review', done: 'Done' };
   const teamColor = t => hex(COLORS[t] || 0x5ee0ff), esc = s => String(s || '').replace(/[<>&]/g, c => ({ '<': '&lt;', '>': '&gt;', '&': '&amp;' }[c]));
   // the board lives in office/tasks.json through serve.py; without the server (the published page) it lives in this browser
-  let serverTasks = null, db = null, dbUnsub = null; const LS = 'agent-hq-tasks';
+  let serverTasks = null, db = null, dbUnsub = null, uid = null, boardCol = null, profileDoc = null, profile = null; const LS = 'agent-hq-tasks';
   const dbPromise = (window.claude && window.claude.use) ? window.claude.use('db').catch(() => null) : Promise.resolve(null);
+  const userPromise = (window.claude && window.claude.use) ? window.claude.use('user').catch(() => null) : Promise.resolve(null);
   function saveLocal() { try { localStorage.setItem(LS, JSON.stringify({ items })); } catch (e) { } }
   async function loadTasks() {
     try { const j = await fetch('/tasks', { cache: 'no-store' }).then(r => r.ok ? r.json() : Promise.reject()); items = j.items || []; serverTasks = true; }
-    catch (e) { if (serverTasks === null) { serverTasks = false; db = await dbPromise;
-      if (db) { // the artifact's own database: everything saves to the owner's claude.ai account and follows them across devices
-        dbUnsub = db.collection('tasks').onSnapshot(snap => { items = snap.docs.filter(d => d.exists).map(d => ({ id: d.id, ...d.data() })); afterTasks(); }, err => { if (err.code === 'revoked' || err.code === 'not_granted') { db = null; } });
-        return;
+    catch (e) { if (serverTasks === null) { serverTasks = false; db = await dbPromise; const u = await userPromise; try { uid = u ? await u.id() : null; } catch (e2) { uid = null; }
+      if (db && uid) { // each person's own workspace in the artifact's database, private to their claude.ai account
+        boardCol = db.doc(`data/users/${uid}/board`).collection('tasks'); profileDoc = db.doc(`data/users/${uid}/profile`);
+        try { const ps = await profileDoc.get(); profile = ps.exists ? ps.data() : null; } catch (e3) { profile = null; }
+        if (profile && profile.office) { officeName = profile.office; applyOffice(); }
+        try { // the owner's earlier shared board moves into their private workspace once
+          const mine = await boardCol.limit(1).get(); let isOwner = false; try { isOwner = !!(await u.isOwner()); } catch (e4) { }
+          if (mine.empty && isOwner) { const shared = await db.collection('tasks').get(); for (const d of shared.docs) if (d.exists) await boardCol.doc(d.id).set(d.data()); }
+        } catch (e5) { }
+        dbUnsub = boardCol.onSnapshot(snap => { items = snap.docs.filter(d => d.exists).map(d => ({ id: d.id, ...d.data() })); afterTasks(); }, err => { if (err.code === 'revoked' || err.code === 'not_granted') { db = null; boardCol = null; } });
+        onboard(); return;
       }
+      if (db && !uid) notify('Workspace', 'Sign in to claude.ai to keep your work. Until then it stays in this browser.', '#e8902a');
       let local = null; try { local = JSON.parse(localStorage.getItem(LS) || 'null'); } catch (e2) { }
       if (local && local.items) items = local.items; else { try { const j = await fetch('tasks.json', { cache: 'no-store' }).then(r => r.json()); items = j.items || []; } catch (e3) { } } } }
     afterTasks();
@@ -511,13 +538,13 @@
   async function postTask(op, item) {
     if (serverTasks) { try { const j = await fetch('/tasks', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ op, item }) }).then(r => r.json()); if (!j.ok) throw 0; await loadTasks(); return j.item; } catch (e) { notify('Tasks', 'The office server did not save that. Is python3 office/serve.py still running?', '#e64a4a'); return null; } }
     let out = item;
-    if (db) {
+    if (boardCol) {
       try {
-        if (op === 'add') { out = { type: 'task', status: 'todo', agent: '', notes: '', ...item, created: Date.now() }; const ref = await db.collection('tasks').add(out); out = { id: ref.id, ...out }; }
-        else if (op === 'update') { const { id, ...rest } = item; await db.doc('tasks/' + id).update(JSON.parse(JSON.stringify(rest))); out = { ...(items.find(x => x.id === id) || {}), ...item }; }
-        else if (op === 'remove') await db.doc('tasks/' + item.id).delete();
+        if (op === 'add') { out = { type: 'task', status: 'todo', agent: '', notes: '', ...item, created: Date.now() }; const ref = await boardCol.add(out); out = { id: ref.id, ...out }; }
+        else if (op === 'update') { const { id, ...rest } = item; await boardCol.doc(id).update(JSON.parse(JSON.stringify(rest))); out = { ...(items.find(x => x.id === id) || {}), ...item }; }
+        else if (op === 'remove') await boardCol.doc(item.id).delete();
         return out; // the snapshot delivers the new state
-      } catch (e) { notify('Board', dbErr[e?.code] || `Could not save (${e?.code || 'error'}).`, '#e64a4a'); return null; }
+      } catch (e) { notify('Board', dbErr[e?.code] || `Could not save (${e?.code || 'error'}). You need Contributor access to this page to save work.`, '#e64a4a'); return null; }
     }
     if (op === 'add') { out = { id: Math.random().toString(36).slice(2, 10), type: 'task', status: 'todo', agent: '', notes: '', ...item }; items.push(out); }
     else if (op === 'update') { const i = items.find(x => x.id === item.id); if (i) { Object.assign(i, item); out = i; } }
@@ -526,7 +553,7 @@
   }
   function afterTasks() {
     const open = items.filter(i => i.status !== 'done'); document.getElementById('taskn').textContent = open.length; if (tab === 'tasks') renderClips();
-    const w = document.getElementById('where'); if (w) w.textContent = serverTasks ? 'saved to office/tasks.json' : db ? 'saved to your claude.ai account' : 'saved in this browser only';
+    const w = document.getElementById('where'); if (w) w.textContent = serverTasks ? 'saved to office/tasks.json' : boardCol ? `saved to your claude.ai account${profile?.email ? ' (' + profile.email + ')' : ''}` : 'saved in this browser only';
     if (tab === 'tasks') renderBoard(); if (tab === 'calendar') renderCal(); refreshCounts();
   }
   document.getElementById('t-import-btn').onclick = () => document.getElementById('t-import').click();
@@ -679,7 +706,7 @@
   document.getElementById('cprev').onclick = () => { calMonth.setMonth(calMonth.getMonth() - 1); renderCal(); };
   document.getElementById('cnext').onclick = () => { calMonth.setMonth(calMonth.getMonth() + 1); renderCal(); };
   document.getElementById('ctoday').onclick = () => { calMonth = new Date(); calMonth.setDate(1); selDay = new Date().toISOString().slice(0, 10); renderCal(); };
-  loadTasks(); setInterval(loadTasks, 5000);
+  loadTasks().then(() => { if (!boardCol) onboard(); }); setInterval(loadTasks, 5000);
   const dlPromise = (window.claude && window.claude.use) ? window.claude.use('downloads').catch(() => null) : Promise.resolve(null);
   const assetsPromise = (window.claude && window.claude.use) ? window.claude.use('assets').catch(() => null) : Promise.resolve(null);
   const localClips = new Map(); // object URLs for videos kept only in this browser session (no asset store)
@@ -876,18 +903,32 @@
   document.getElementById('bell').onclick = () => { unread = 0; document.getElementById('bellc').classList.remove('on'); if (tab !== 'tasks') showTab('tasks'); };
   // account menu: who you are, the office name and logo, where things save, alerts, permissions
   const menu = document.getElementById('menu'); document.getElementById('me').onclick = e => { e.stopPropagation(); menu.classList.toggle('on'); fillMenu(); }; document.addEventListener('click', e => { if (!menu.contains(e.target)) menu.classList.remove('on'); });
-  const userPromise = (window.claude && window.claude.use) ? window.claude.use('user').catch(() => null) : Promise.resolve(null);
   async function fillMenu() {
-    const u = await userPromise; if (u) { try { const me = await u.me(); const name = me?.name || ''; const email = me?.email || ''; if (name) { document.getElementById('menu-name').textContent = name; document.getElementById('menu-av').textContent = document.getElementById('me').textContent = name.trim()[0].toUpperCase(); } if (email) document.getElementById('menu-email').textContent = email; } catch (e) { } }
+    const u = await userPromise; if (u) { try { const me = await u.me(); const name = profile?.name || me?.name || ''; const email = profile?.email || me?.email || ''; if (name) { document.getElementById('menu-name').textContent = name; document.getElementById('menu-av').textContent = document.getElementById('me').textContent = name.trim()[0].toUpperCase(); } if (email) document.getElementById('menu-email').textContent = email; } catch (e) { } }
     document.getElementById('menu-where').textContent = 'saving: ' + (document.getElementById('where')?.textContent || '…');
     document.getElementById('menu-brand').textContent = brandInfo ? `Metricool: @${brandInfo.handle || '?'} · ${brandInfo.tz}` : 'Metricool: connect on the Calendar or Competitors tab';
-    document.getElementById('menu-office').value = officeName; document.getElementById('menu-alerts').textContent = ('Notification' in window && Notification.permission === 'granted') ? 'On' : 'Enable';
+    document.getElementById('menu-email').textContent = profile?.email || document.getElementById('menu-email').textContent; document.getElementById('menu-office').value = officeName; document.getElementById('menu-alerts').textContent = ('Notification' in window && Notification.permission === 'granted') ? 'On' : 'Enable';
   }
   let officeName = 'Agent HQ'; try { officeName = localStorage.getItem('agent-hq-name') || officeName; } catch (e) { }
   function applyOffice() { document.title = officeName; document.getElementById('office-name').textContent = officeName; document.getElementById('logo').textContent = officeName.split(/\s+/).map(w => w[0]).join('').slice(0, 2).toUpperCase() || 'HQ'; }
-  applyOffice(); dbPromise.then(async d => { if (!d) return; try { const s = await d.doc('settings/office').get(); if (s.exists && s.data().name) { officeName = s.data().name; applyOffice(); } } catch (e) { } });
-  document.getElementById('menu-save').onclick = async () => { officeName = document.getElementById('menu-office').value.trim() || 'Agent HQ'; applyOffice(); try { localStorage.setItem('agent-hq-name', officeName); } catch (e) { } const d = await dbPromise; if (d) { try { await d.doc('settings/office').set({ name: officeName }); } catch (e) { } } notify('Office', `Renamed to ${officeName}`); };
+  applyOffice();
+  document.getElementById('menu-save').onclick = async () => { officeName = document.getElementById('menu-office').value.trim() || 'Agent HQ'; applyOffice(); try { localStorage.setItem('agent-hq-name', officeName); } catch (e) { } await saveProfile({ office: officeName }); notify('Office', `Renamed to ${officeName}`); };
   document.getElementById('menu-export').onclick = () => document.getElementById('t-export').click();
+  async function saveProfile(patch) { profile = { ...(profile || {}), ...patch }; if (profileDoc) { try { await profileDoc.set(profile); } catch (e) { notify('Workspace', dbErr[e?.code] || 'Could not save your profile. You need Contributor access to this page.', '#e64a4a'); } } else { try { localStorage.setItem('agent-hq-profile', JSON.stringify(profile)); } catch (e) { } } }
+  async function onboard() {
+    if (profile && profile.onboarded) return; const u = await userPromise; let me = {}; try { me = u ? (await u.me()) || {} : {}; } catch (e) { }
+    const w = document.getElementById('welcome'); w.classList.add('on');
+    document.getElementById('w-name').value = profile?.name || me.name || ''; document.getElementById('w-email').value = profile?.email || me.email || ''; document.getElementById('w-office').value = profile?.office || officeName;
+    document.getElementById('w-account').textContent = me.email ? `Signed in to claude.ai as ${me.email}. Your work here is saved to that account and only you can see it.` : 'Your work here is saved to your claude.ai account and only you can see it.';
+    document.getElementById('w-go').onclick = async () => {
+      const name = document.getElementById('w-name').value.trim(), email = document.getElementById('w-email').value.trim(); if (!name) { document.getElementById('w-name').focus(); return; }
+      const social = document.querySelector('input[name=w-social]:checked')?.value || 'later'; officeName = document.getElementById('w-office').value.trim() || 'Agent HQ'; applyOffice();
+      await saveProfile({ name, email, office: officeName, social, onboarded: true, joined: Date.now() }); w.classList.remove('on'); fillMenu();
+      if (social === 'yes') { notify('Metricool', 'Add the Metricool connector in claude.ai Settings → Connectors, then connect your networks in Metricool. The Calendar and Competitors tabs use it.', '#e8902a'); showTab('calendar'); }
+      else notify(officeName, `Welcome, ${name}. Add a task or ask any agent.`);
+    };
+  }
+  if (!(window.claude && window.claude.use)) { try { profile = JSON.parse(localStorage.getItem('agent-hq-profile') || 'null'); } catch (e) { } }
   document.getElementById('menu-perms').onclick = async () => { try { const perms = await window.claude.use('permissions'); await perms.manage(); } catch (e) { notify('Permissions', 'Open the artifact menu on claude.ai → Permissions.', '#e8902a'); } };
   document.getElementById('menu-alerts').onclick = async function () {
     if (!('Notification' in window)) { notify('Alerts', 'This browser cannot show notifications. Phone alerts come from the Claude app check-in and Metricool.', '#e8902a'); return; }
