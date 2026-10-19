@@ -110,6 +110,7 @@
   #t-opts { display:grid; grid-template-columns:1fr 1fr 1fr; gap:6px; margin-top:6px } #t-opts label { font-size:11px; color:var(--muted); display:flex; flex-direction:column; gap:3px } #t-opts select, #t-opts input { background:var(--bg); color:var(--text); border:1px solid var(--line); border-radius:7px; padding:6px 8px; font:inherit; font-size:12px; min-width:0 }
   .drop { display:flex; flex-direction:column; align-items:center; gap:4px; width:100%; padding:22px 12px; background:var(--bg); color:var(--text); border:2px dashed var(--line); border-radius:12px; font:inherit; cursor:pointer; transition:border-color .15s, background .15s } .drop:hover, .drop.over { border-color:var(--accent); background:var(--well2) } .drop.busy { opacity:.6; cursor:progress }
   .drop .ic { font-size:26px; line-height:1; color:var(--accent) } .drop .big { font-size:15px; font-weight:600 } .drop .sub { font-size:12px; color:var(--muted) }
+  .clip .acts button.send { background:var(--accent); color:#06121c; font-weight:600; border-color:transparent; padding:0 10px }
   .card .note { width:100%; margin-top:8px; background:var(--bg); color:var(--text); border:1px solid var(--line); border-radius:9px; padding:9px 11px; font:inherit; font-size:13px }
   #t-opts[hidden] { display:none } .card .addrow button.primary { background:var(--accent); color:#06121c }
   #runbox:not(.on) { display:none }
@@ -204,9 +205,9 @@
     </section>
     <section class="card">
       <h2>Golf clips</h2>
-      <button type="button" id="clip-up" class="drop"><span class="ic">⬆</span><span class="big">Upload a swing video</span><span class="sub">or drop it here · mp4 or mov, under 20 MB</span></button><input id="clip-file" type="file" accept="video/*" hidden>
+      <button type="button" id="clip-up" class="drop"><span class="ic">⬆</span><span class="big">Choose from camera roll</span><span class="sub">pick one or more swing videos · big clips get shrunk here first</span></button><input id="clip-file" type="file" accept="video/*" multiple hidden>
       <input id="clip-note" class="note" placeholder="Description for the caption, e.g. “new driver, first round back”">
-      <p class="kv hintline">The office writes the caption and hashtags and makes the thumbnail, in about a minute. The edited video with spoken captions and music comes from <b>/edit-clips</b> in Claude Code.</p>
+      <p class="kv hintline">The office writes the caption and hashtags and makes the thumbnail, in about a minute. Then press <b>Send</b> on the clip and Metricool holds it until you approve. The edited video with spoken captions and music comes from <b>/edit-clips</b> in Claude Code.</p>
       <div id="clips"></div>
     </section>
     <section class="card">
@@ -616,6 +617,7 @@
     el.querySelectorAll('[data-rm]').forEach(b => b.onclick = () => postTask('remove', { id: b.dataset.rm }));
     el.querySelectorAll('[data-run]').forEach(b => b.onclick = () => { const i = items.find(x => x.id === b.dataset.run); if (i) runTask(i); });
     el.querySelectorAll('[data-open]').forEach(b => b.onclick = () => { const i = items.find(x => x.id === b.dataset.open); if (i) openResult(i); });
+    el.querySelectorAll('[data-send]').forEach(b => b.onclick = () => { const i = items.find(x => x.id === b.dataset.send); if (i) sendForApproval(i); });
   }
   function renderBoard() {
     const board = document.getElementById('board');
@@ -740,22 +742,40 @@
   const dropBtn = document.getElementById('clip-up');
   dropBtn.onclick = () => document.getElementById('clip-file').click();
   dropBtn.ondragover = e => { e.preventDefault(); dropBtn.classList.add('over'); }; dropBtn.ondragleave = () => dropBtn.classList.remove('over');
-  dropBtn.ondrop = e => { e.preventDefault(); dropBtn.classList.remove('over'); const f = e.dataTransfer.files[0]; if (f) addClip(f); };
-  document.getElementById('clip-file').onchange = e => { const f = e.target.files[0]; e.target.value = ''; if (f) addClip(f); };
+  async function addClips(list) { for (const f of [...list]) await addClip(f); }
+  dropBtn.ondrop = e => { e.preventDefault(); dropBtn.classList.remove('over'); addClips(e.dataTransfer.files); };
+  document.getElementById('clip-file').onchange = e => { const files = [...e.target.files]; e.target.value = ''; addClips(files); };
+  const CAP = 20 * 1024 * 1024; // the asset store's limit per file
+  async function shrink(file, onProgress) { // re-encode a big camera-roll clip in the browser: short side 720, ~3.5 Mbit/s, no audio (the stills are what the team needs; the original stays on your phone for /edit-clips)
+    if (!('MediaRecorder' in window) || !HTMLCanvasElement.prototype.captureStream) throw new Error('no recorder');
+    const v = document.createElement('video'); v.src = URL.createObjectURL(file); v.muted = true; v.playsInline = true; v.preload = 'auto';
+    await new Promise((res, rej) => { v.onloadedmetadata = res; v.onerror = () => rej(new Error('cannot read')); setTimeout(() => rej(new Error('timeout')), 20000); });
+    const sc = Math.min(1, 720 / Math.min(v.videoWidth, v.videoHeight)); const c = document.createElement('canvas'); c.width = Math.round(v.videoWidth * sc / 2) * 2; c.height = Math.round(v.videoHeight * sc / 2) * 2; const g = c.getContext('2d');
+    const mime = ['video/mp4;codecs=avc1', 'video/mp4', 'video/webm;codecs=vp9', 'video/webm'].find(m => MediaRecorder.isTypeSupported(m)); if (!mime) throw new Error('no codec');
+    const rec = new MediaRecorder(c.captureStream(30), { mimeType: mime, videoBitsPerSecond: 3500000 }); const chunks = []; rec.ondataavailable = e => { if (e.data.size) chunks.push(e.data); };
+    const done = new Promise(res => { rec.onstop = res; }); let raf;
+    const draw = () => { g.drawImage(v, 0, 0, c.width, c.height); onProgress && onProgress(v.duration ? v.currentTime / v.duration : 0); if (!v.ended) raf = requestAnimationFrame(draw); };
+    await v.play(); rec.start(500); draw(); await new Promise(res => { v.onended = res; }); cancelAnimationFrame(raf); g.drawImage(v, 0, 0, c.width, c.height); rec.stop(); await done; URL.revokeObjectURL(v.src);
+    const ext = mime.startsWith('video/mp4') ? '.mp4' : '.webm'; return new File(chunks, file.name.replace(/\.[^.]+$/, '') + '-small' + ext, { type: mime.split(';')[0] });
+  }
   async function addClip(f) {
     if (!f.type.startsWith('video/')) { notify('Golf clips', 'That is not a video. Use an mp4 or mov.', '#e64a4a'); return; }
-    if (f.size > 20 * 1024 * 1024) { notify('Golf clips', 'Keep uploads under 20 MB here: trim the clip or export it smaller. Bigger files go in inbox/ for /edit-clips.', '#e64a4a'); return; }
-    const assets = await assetsPromise; let media = '', assetId = '';
-    const label = dropBtn.querySelector('.big'), was = label.textContent; dropBtn.classList.add('busy'); label.textContent = `Uploading ${f.name}…`;
-    try { if (assets) { const up = await assets.upload(f); media = up.url; assetId = up.id; } } catch (err) { notify('Golf clips', `Upload failed (${err?.code || 'error'}). Try a smaller file.`, '#e64a4a'); return; } finally { dropBtn.classList.remove('busy'); label.textContent = was; }
-    const added = await postTask('add', { type: 'clip', title: `Clip: ${f.name.replace(/\.[^.]+$/, '')}`, team: 'Creative', agent: 'creative-director', date: new Date().toISOString().slice(0, 10), notes: document.getElementById('clip-note').value.trim(), media, assetId, fileName: f.name, size: f.size });
+    const assets = await assetsPromise; let media = '', assetId = ''; const original = f;
+    const label = dropBtn.querySelector('.big'), was = label.textContent; dropBtn.classList.add('busy');
+    try {
+      if (f.size > CAP && assets) { label.textContent = `Shrinking ${f.name}… 0%`; try { f = await shrink(f, p => { label.textContent = `Shrinking ${original.name}… ${Math.round(p * 100)}%`; }); } catch (e) { notify('Golf clips', `Could not shrink ${original.name} here (${e.message}). Trim it in Photos to under 20 MB, or put it in inbox/ for /edit-clips.`, '#e64a4a'); return; }
+        if (f.size > CAP) { notify('Golf clips', `${original.name} is still over 20 MB after shrinking. Trim it in Photos and try again.`, '#e64a4a'); return; } }
+      label.textContent = `Uploading ${f.name}…`;
+      if (assets) { const up = await assets.upload(f); media = up.url; assetId = up.id; }
+    } catch (err) { notify('Golf clips', `Upload failed (${err?.code || 'error'}). Try a smaller file.`, '#e64a4a'); return; } finally { dropBtn.classList.remove('busy'); label.textContent = was; }
+    const added = await postTask('add', { type: 'clip', title: `Clip: ${f.name.replace(/\.[^.]+$/, '')}`, team: 'Creative', agent: 'creative-director', date: new Date().toISOString().slice(0, 10), notes: document.getElementById('clip-note').value.trim(), media, assetId, fileName: original.name, size: original.size, shrunk: f !== original });
     if (!added) return; if (!media) { localClips.set(added.id, URL.createObjectURL(f)); notify('Golf clips', 'Kept in this browser only (no asset store here). Run it now.'); }
     document.getElementById('clip-note').value = ''; renderClips(); runTask(added); notify('Golf clips', `${f.name} is in. The Creative team is on it.`, teamColor('Creative'));
   }
   const clipSrc = i => i.media || localClips.get(i.id) || '';
   function renderClips() {
     const el = document.getElementById('clips'); if (!el) return; const clips = items.filter(i => i.type === 'clip').sort((a, b) => (b.created || 0) - (a.created || 0));
-    el.innerHTML = clips.length ? clips.map(i => `<div class="clip">${coverOf(i) ? `<img src="${esc(coverOf(i))}" alt="">` : `<video src="${esc(clipSrc(i))}" muted playsinline preload="metadata"></video>`}<div><div class="ti">${esc(i.title)}${runs.has(i.id) ? '<span class="type live">running</span>' : ''}</div><div class="meta">${esc(i.status)}${i.result?.caption ? (coverOf(i) ? ' · caption and thumbnail ready' : ' · caption ready') : ''}${i.notes ? ' · ' + esc(i.notes.slice(0, 60)) : ''}</div></div><div class="acts" style="display:flex; gap:4px">${!runs.has(i.id) ? `<button data-run="${i.id}" title="write caption, hooks, tags">▶</button>` : ''}${i.result ? `<button data-open="${i.id}" title="open">▤</button>` : ''}<button data-rm="${i.id}" title="remove">✕</button></div></div>`).join('') : '<div class="kv">No clips yet.</div>';
+    el.innerHTML = clips.length ? clips.map(i => `<div class="clip">${coverOf(i) ? `<img src="${esc(coverOf(i))}" alt="">` : `<video src="${esc(clipSrc(i))}" muted playsinline preload="metadata"></video>`}<div><div class="ti">${esc(i.title)}${runs.has(i.id) ? '<span class="type live">running</span>' : ''}</div><div class="meta">${esc(i.status)}${i.result?.caption ? (coverOf(i) ? ' · caption and thumbnail ready' : ' · caption ready') : ''}${i.notes ? ' · ' + esc(i.notes.slice(0, 60)) : ''}</div></div><div class="acts" style="display:flex; gap:4px">${!runs.has(i.id) ? `<button data-run="${i.id}" title="write caption, hooks, tags">▶</button>` : ''}${i.result ? `<button data-open="${i.id}" title="open">▤</button>` : ''}${i.result?.caption && !runs.has(i.id) ? `<button data-send="${i.id}" class="send" title="Send to Metricool for my approval">Send</button>` : ''}<button data-rm="${i.id}" title="remove">✕</button></div></div>`).join('') : '<div class="kv">No clips yet.</div>';
     wireActs(el);
   }
   async function framesOf(url) { // three stills from the clip, for the team to look at
