@@ -19,6 +19,7 @@ ap.add_argument("--style", choices=["smooth", "punch"], default="smooth", help="
 ap.add_argument("--label", default="last swing before dark", help="smooth style: small white label at the top; empty for none");
 ap.add_argument("--stats", default="", help="launch-monitor card that pops up on the strike: \"Ball speed|156 mph;Carry|265 yds;Launch|12.7°;Spin|2989 rpm;Club speed|108 mph;Smash|1.45\" (up to 6)"); ap.add_argument("--stats-title", default="", help="small title on the card, like 'driver'"); ap.add_argument("--stats-y", type=float, default=0.58, help="card position as a fraction of the height"); ap.add_argument("--stagger", type=float, default=0.12, help="seconds between the card's numbers popping in; 0 shows them at once"); ap.add_argument("--stats-scale", type=float, default=1.0, help="card size, 0.55 is small like the Trackman reels"); ap.add_argument("--stats-x", type=float, default=0.5, help="card centre as a fraction of the width"); ap.add_argument("--stats-layout", choices=["grid", "row"], default="grid", help="grid: two columns; row: one strip of numbers");
 ap.add_argument("--hero", default="", help="human style instead of tiles: \"265|yds carry\" = a big yellow number that counts up after the strike, with its label"); ap.add_argument("--sub", default="", help="small line under the hero number, like \"156 mph ball · 1.45 smash · 12.7° launch\""); ap.add_argument("--outro", default="", help="casual line that fades in on the finish, like \"not bad for a tuesday\""); ap.add_argument("--pulse", type=float, default=0.0, help="quick zoom pulse on the strike, like 0.06");
+ap.add_argument("--inset", default="", help="a photo (like the launch monitor screen) that pops in after the strike as a small tilted print with a white border"); ap.add_argument("--inset-w", type=int, default=560); ap.add_argument("--inset-x", type=float, default=0.68); ap.add_argument("--inset-y", type=float, default=0.80); ap.add_argument("--inset-rot", type=float, default=-3.0); ap.add_argument("--inset-crop", default="", help="crop the photo first: fractions \"x0,y0,x1,y1\"");
 ap.add_argument("--strike-punch", type=float, default=1.0, help="smooth style: tighter crop from the strike on, like 1.12 (1 = off)"); ap.add_argument("--push", default="", help="smooth style: slow smooth push-in over the whole clip, \"1.2:1.35\" = from 1.2x to 1.35x (no cut)"); ap.add_argument("--from", dest="start", type=float, help="use the clip from this second instead of the takeaway"); ap.add_argument("--to", dest="stop", type=float, help="…to this second instead of the finish hold"); ap.add_argument("--grade", choices=["none", "pop", "moody"], default="none"); ap.add_argument("--impact", type=float); ap.add_argument("--hook", default="LAST SWING BEFORE DARK", help="one short line on the first second; | for a second line if you must"); ap.add_argument("--end", default="", help="text on the finish; off by default (one line per reel)")
 ap.add_argument("--mood", default="hype"); ap.add_argument("--track"); ap.add_argument("--music-volume", type=float, default=0.55)
 ap.add_argument("--focus", default="0.53,0.52", help="where the golfer is, as fractions of width,height"); ap.add_argument("--zoom", type=float, default=1.35); ap.add_argument("--punch", type=float, default=1.45)
@@ -127,6 +128,19 @@ if a.style == "smooth":
     if a.outro.strip():
         T2 = max(0.0, total - 1.5)
         human += f",drawtext=fontfile={FONT}:text='{e(a.outro.strip()) if a.hero.strip() else a.outro.strip()}':fontsize=54:fontcolor=#16181f:box=1:boxcolor=white@0.96:boxborderw=22:x=(w-text_w)/2:y=h*0.1:enable='gte(t,{T2:.3f})'"
+    inset = None
+    if a.inset.strip():
+        from PIL import Image, ImageOps, ImageFilter
+        im = ImageOps.exif_transpose(Image.open(a.inset.strip())).convert("RGB")
+        if a.inset_crop.strip():
+            x0, y0, x1, y1 = [float(v) for v in a.inset_crop.split(",")]; im = im.crop((int(im.width * x0), int(im.height * y0), int(im.width * x1), int(im.height * y1)))
+        im = im.resize((a.inset_w, int(im.height * a.inset_w / im.width)), Image.LANCZOS); b = 16
+        card = Image.new("RGBA", (im.width + 2 * b, im.height + 2 * b), (255, 255, 255, 255)); card.paste(im, (b, b))
+        card = card.rotate(a.inset_rot, expand=True, resample=Image.BICUBIC)
+        pad = 40; out_im = Image.new("RGBA", (card.width + 2 * pad, card.height + 2 * pad), (0, 0, 0, 0))
+        shadow = Image.new("RGBA", out_im.size, (0, 0, 0, 0)); shadow.paste(Image.new("RGBA", card.size, (0, 0, 0, 150)), (pad + 10, pad + 16), card); shadow = shadow.filter(ImageFilter.GaussianBlur(14))
+        out_im = Image.alpha_composite(out_im, shadow); out_im.paste(card, (pad, pad), card)
+        os.makedirs(os.path.dirname(os.path.abspath(a.out)) or ".", exist_ok=True); inset = a.out + ".inset.png"; out_im.save(inset); inset_at = impact_at + 0.25
     grade = {"pop": ",eq=contrast=1.06:saturation=1.18:brightness=0.01", "moody": ",eq=contrast=1.08:saturation=0.8:brightness=-0.02,curves=preset=darker", "none": ""}[a.grade]
     base_crop = f"crop={cw}:{ch}:{cx}:{cy},scale=1080:1920:flags=lanczos"
     if a.push:  # one smooth push-in across the clip: no cut, no jiggle (linear zoom, per frame)
@@ -144,6 +158,10 @@ if a.style == "smooth":
     for k, cpath in enumerate(cards):
         t0 = card_at + k * a.stagger; t1 = card_at + (k + 1) * a.stagger if k < len(cards) - 1 else total + 2
         vf += f";[{k + 1}:v]format=rgba{',fade=t=in:st=' + format(t0, '.3f') + ':d=0.15:alpha=1' if k == 0 else ''},setpts=PTS-STARTPTS[c{k}];[{prev}][c{k}]overlay=x=W*{a.stats_x}-w/2:y=H*{a.stats_y}-h/2:enable='between(t,{t0:.3f},{t1:.3f})':format=auto[o{k}]"; prev = f"o{k}"
+    if inset:
+        k = len(cards) + 1
+        vf += (f";[{k}:v]format=rgba,fade=t=in:st={inset_at:.3f}:d=0.25:alpha=1,setpts=PTS-STARTPTS[ins];"
+               f"[{prev}][ins]overlay=x=W*{a.inset_x}-w/2:y=H*{a.inset_y}-h/2+60*max(0\,1-(t-{inset_at:.3f})/0.35):enable='gte(t,{inset_at:.3f})':format=auto[oi]"); prev = "oi"
     vf += f";[{prev}]format=yuv420p[v]"
     # sound: the real audio (slowed if the picture is) kept low, the crack at full speed on the contact frame, music from the downswing
     c0, c1 = max(0.0, impact - 0.04), min(dur, impact + 0.3)
@@ -161,11 +179,11 @@ if a.style == "smooth":
         af += ";[clip]anull[a]"
     os.makedirs(os.path.dirname(os.path.abspath(a.out)) or ".", exist_ok=True); tmpv, tmpa = a.out + ".video.mp4", a.out + ".audio.m4a"
     vin = ["-i", a.src]
-    for cpath in cards: vin += ["-loop", "1", "-t", f"{total:.3f}", "-i", cpath]
+    for cpath in cards + ([inset] if inset else []): vin += ["-loop", "1", "-t", f"{total:.3f}", "-i", cpath]
     run([*vin, "-filter_complex", vf, "-map", "[v]", "-c:v", "libx264", "-preset", "medium", "-crf", "20", "-profile:v", "high", "-level", "4.0", "-an", tmpv])
     run([*inputs, "-filter_complex", af, "-map", "[a]", "-vn", "-c:a", "aac", "-b:a", "160k", tmpa])
     run(["-i", tmpv, "-i", tmpa, "-map", "0:v", "-map", "1:a", "-c", "copy", "-movflags", "+faststart", a.out])
-    for f in [tmpv, tmpa] + cards:
+    for f in [tmpv, tmpa] + cards + ([inset] if inset else []):
         try: os.remove(f)
         except OSError: pass
     report(tool="reel", style="smooth", stats=a.stats.strip(), out=a.out, seconds=round(total, 2), impact_in_source=round(impact, 2), impact_in_edit=round(impact_at, 2), slow=a.slow, zoom=a.zoom, label=a.label.strip(),
