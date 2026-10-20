@@ -17,7 +17,7 @@ ap = argparse.ArgumentParser()
 ap.add_argument("src"); ap.add_argument("out")
 ap.add_argument("--style", choices=["smooth", "punch"], default="smooth", help="smooth: the whole swing in slow motion, full body, small label (the normal golf edit). punch: hook text, slow only at the strike");
 ap.add_argument("--label", default="last swing before dark", help="smooth style: small white label at the top; empty for none");
-ap.add_argument("--stats", default="", help="launch-monitor card that pops up on the strike: \"Ball speed|156 mph;Carry|265 yds;Launch|12.7°;Spin|2989 rpm;Club speed|108 mph;Smash|1.45\" (up to 6)"); ap.add_argument("--stats-title", default="", help="small title on the card, like 'driver'"); ap.add_argument("--stats-y", type=float, default=0.58, help="card position as a fraction of the height"); ap.add_argument("--stagger", type=float, default=0.12, help="seconds between the card's numbers popping in; 0 shows them at once");
+ap.add_argument("--stats", default="", help="launch-monitor card that pops up on the strike: \"Ball speed|156 mph;Carry|265 yds;Launch|12.7°;Spin|2989 rpm;Club speed|108 mph;Smash|1.45\" (up to 6)"); ap.add_argument("--stats-title", default="", help="small title on the card, like 'driver'"); ap.add_argument("--stats-y", type=float, default=0.58, help="card position as a fraction of the height"); ap.add_argument("--stagger", type=float, default=0.12, help="seconds between the card's numbers popping in; 0 shows them at once"); ap.add_argument("--stats-scale", type=float, default=1.0, help="card size, 0.55 is small like the Trackman reels"); ap.add_argument("--stats-x", type=float, default=0.5, help="card centre as a fraction of the width"); ap.add_argument("--stats-layout", choices=["grid", "row"], default="grid", help="grid: two columns; row: one strip of numbers");
 ap.add_argument("--strike-punch", type=float, default=1.0, help="smooth style: tighter crop from the strike on, like 1.12 (1 = off)"); ap.add_argument("--push", default="", help="smooth style: slow smooth push-in over the whole clip, \"1.2:1.35\" = from 1.2x to 1.35x (no cut)"); ap.add_argument("--from", dest="start", type=float, help="use the clip from this second instead of the takeaway"); ap.add_argument("--to", dest="stop", type=float, help="…to this second instead of the finish hold"); ap.add_argument("--grade", choices=["none", "pop", "moody"], default="none"); ap.add_argument("--impact", type=float); ap.add_argument("--hook", default="LAST SWING BEFORE DARK", help="one short line on the first second; | for a second line if you must"); ap.add_argument("--end", default="", help="text on the finish; off by default (one line per reel)")
 ap.add_argument("--mood", default="hype"); ap.add_argument("--track"); ap.add_argument("--music-volume", type=float, default=0.55)
 ap.add_argument("--focus", default="0.53,0.52", help="where the golfer is, as fractions of width,height"); ap.add_argument("--zoom", type=float, default=1.35); ap.add_argument("--punch", type=float, default=1.45)
@@ -82,7 +82,7 @@ if a.style == "smooth":
     cards = []
     if a.stats.strip():
         from PIL import Image, ImageDraw, ImageFont
-        items = [[p.strip() for p in x.split("|", 1)] for x in a.stats.split(";") if x.strip()][:6]; cols = 2 if len(items) > 1 else 1; rows = (len(items) + cols - 1) // cols
+        items = [[p.strip() for p in x.split("|", 1)] for x in a.stats.split(";") if x.strip()][:6]; cols = (len(items) if a.stats_layout == "row" else 2) if len(items) > 1 else 1; rows = (len(items) + cols - 1) // cols
         tw, th, gap, pad = 440, 170, 18, 24; W_ = cols * tw + (cols - 1) * gap + pad * 2; title_h = 70 if a.stats_title.strip() else 0; H_ = rows * th + (rows - 1) * gap + pad * 2 + title_h
         def font(size, weight=700):
             f = ImageFont.truetype(FONT, size)
@@ -97,6 +97,7 @@ if a.style == "smooth":
             for i, it in enumerate(items[: (k + 1) if steps > 1 else len(items)]):
                 lab, val = (it + [""])[:2]; x = pad + (i % cols) * (tw + gap); y = pad + title_h + (i // cols) * (th + gap)
                 d.rounded_rectangle((x, y, x + tw, y + th), 22, fill=(255, 255, 255, 245)); d.text((x + tw / 2, y + 62), val, font=font(74, 800), fill=(22, 24, 31), anchor="mm"); d.text((x + tw / 2, y + 132), lab.lower(), font=font(28, 500), fill=(90, 96, 110), anchor="mm")
+            if a.stats_scale != 1.0: im = im.resize((max(2, int(im.width * a.stats_scale)), max(2, int(im.height * a.stats_scale))), Image.LANCZOS)
             path = f"{a.out}.card{k}.png"; im.save(path); cards.append(path)
         card_at = impact_at + 0.1
     grade = {"pop": ",eq=contrast=1.06:saturation=1.18:brightness=0.01", "moody": ",eq=contrast=1.08:saturation=0.8:brightness=-0.02,curves=preset=darker", "none": ""}[a.grade]
@@ -114,7 +115,7 @@ if a.style == "smooth":
     prev = "base"
     for k, cpath in enumerate(cards):
         t0 = card_at + k * a.stagger; t1 = card_at + (k + 1) * a.stagger if k < len(cards) - 1 else total + 2
-        vf += f";[{k + 1}:v]format=rgba{',fade=t=in:st=' + format(t0, '.3f') + ':d=0.15:alpha=1' if k == 0 else ''},setpts=PTS-STARTPTS[c{k}];[{prev}][c{k}]overlay=x=(W-w)/2:y=H*{a.stats_y}-h/2:enable='between(t,{t0:.3f},{t1:.3f})':format=auto[o{k}]"; prev = f"o{k}"
+        vf += f";[{k + 1}:v]format=rgba{',fade=t=in:st=' + format(t0, '.3f') + ':d=0.15:alpha=1' if k == 0 else ''},setpts=PTS-STARTPTS[c{k}];[{prev}][c{k}]overlay=x=W*{a.stats_x}-w/2:y=H*{a.stats_y}-h/2:enable='between(t,{t0:.3f},{t1:.3f})':format=auto[o{k}]"; prev = f"o{k}"
     vf += f";[{prev}]format=yuv420p[v]"
     # sound: the real audio (slowed if the picture is) kept low, the crack at full speed on the contact frame, music from the downswing
     c0, c1 = max(0.0, impact - 0.04), min(dur, impact + 0.3)
