@@ -1100,6 +1100,30 @@
       "needs": [],
       "evidence": "owner's format; no view data yet",
       "buildable": true
+    },
+    {
+      "id": "play-a-hole",
+      "name": "Play a hole with me",
+      "looks_like": "Every shot on one hole in order at real speed with hard cuts. The tee shot carries the hole card in big white caps (\"512 YARDS / PAR 5\"), each shot after carries a two-line label with yards and club (\"170 YARDS / 9 IRON\", \"22 YARDS / 60 WEDGE\"), the ball flight stays in, the real sound is kept, music low, the result at the end. Ten to twenty seconds.",
+      "seen_on": [
+        "owner's example (owenmeeds, 'Play a hole with me', Instagram), 2026-10-20"
+      ],
+      "fits": [
+        "all the shots of one hole, filmed in order",
+        "a par 3 with two clips",
+        "a scoring hole"
+      ],
+      "length_s": [
+        10,
+        20
+      ],
+      "recipe": "python3 tools/hole.py out/hole-<date>/hole.mp4 \"<tee>|512 yards|par 5\" \"<second>|170 yards|9 iron\" \"<third>|22 yards|60 wedge\" --result \"par\" --mood chill --music-volume 0.3",
+      "needs": [
+        "A ball tracer line like the example's is not built (the flight is only what the phone sees)"
+      ],
+      "evidence": "owner's pick; one Instagram example, no view count readable",
+      "buildable": true,
+      "make_first_rank": 3
     }
   ],
   "unreachable_sources": {
