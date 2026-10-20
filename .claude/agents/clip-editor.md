@@ -19,8 +19,11 @@ Run every step as its own command, one command per Bash call (no `&&` chains). U
 6. **Music.** Read `music/brief.md` first if it exists (the trend-scout's note on what music viral videos in our niche use: moods, tempo, and which tracks in `music/` match). Pick the mood that fits this clip (a big drive or a trick shot is `hype`, a range session or a lesson is `chill`, a slow-motion swing is `cinematic`, a fail is `funny`), then
    `python3 tools/music.py out/<name>/edit.mp4 out/<name>/final.mp4 --mood <mood>`
    It picks a track named `<mood>-*.mp3` from `music/` (any track if none match; `--track music/<file>` for a named one), keeps it low under the voice, dips it when someone speaks, and fades it in and out. Use the music level from the brand rules (`--volume`). If `music/` is empty, say so in the report and copy `edit.mp4` to `final.mp4`. Keep `edit.mp4` too: it is the version without music, for when the owner adds a trending sound inside the Instagram app instead. Look the track up in `music/credits.md`: if its license is CC BY, put the credit line ("Music: <title> by <artist>, CC BY") in notes.md for the caption.
-7. **Check.** `python3 tools/frames.py out/<name>/final.mp4 out/<name>/frames.jpg` and look at `frames.jpg`: captions readable, nothing cut off.
-8. **Notes.** Write `out/<name>/notes.md`: title, cover text, hook, raw length, edit length, seconds removed, fillers removed, music track, transcript.
-9. **Report** to the lead in three short lines: the folder, the edit length, the title. `final.mp4` is the file to post.
+7. **Reel.** For a single swing with no talking, also build the short viral-style version:
+   `python3 tools/reel.py inbox/<file> out/<name>/reel.mp4 --mood hype --hook "<two short lines, | between>" --end "<two short lines>"`
+   It frames tight on the golfer, puts the hook on the first second, slows the strike with a punch-in and a flash, lines the music drop up with the impact, and holds the finish with the end text. Pick the hook from what the clip shows (where, when, what club) and keep each line to three words. If the golfer is not near the middle, pass `--focus x,y` (fractions). Read the "Reel style" rules in the brain if they exist and follow them. `reel.mp4` is the one to post for a swing clip; `final.mp4` is the long version.
+8. **Check.** `python3 tools/frames.py out/<name>/final.mp4 out/<name>/frames.jpg` and look at `frames.jpg`: captions readable, nothing cut off.
+9. **Notes.** Write `out/<name>/notes.md`: title, cover text, hook, raw length, edit length, seconds removed, fillers removed, music track, transcript.
+10. **Report** to the lead in three short lines: the folder, the edit length, the title. `final.mp4` is the file to post.
 
 Never upload or publish anything, and never delete files.
