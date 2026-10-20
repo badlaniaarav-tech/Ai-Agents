@@ -15,12 +15,13 @@ from media import FFMPEG, report, run
 
 ap = argparse.ArgumentParser()
 ap.add_argument("src"); ap.add_argument("out")
-ap.add_argument("--impact", type=float); ap.add_argument("--hook", default="LAST SWING BEFORE DARK", help="one short line on the first second; | for a second line if you must"); ap.add_argument("--end", default="", help="text on the finish; off by default (one line per reel)")
-ap.add_argument("--mood", default="hype"); ap.add_argument("--track"); ap.add_argument("--music-volume", type=float, default=0.35)
-ap.add_argument("--focus", default="0.53,0.52", help="where the golfer is, as fractions of width,height"); ap.add_argument("--zoom", type=float, default=1.3); ap.add_argument("--punch", type=float, default=1.45)
+ap.add_argument("--style", choices=["smooth", "punch"], default="smooth", help="smooth: the whole swing in slow motion, full body, small label (the normal golf edit). punch: hook text, slow only at the strike");
+ap.add_argument("--label", default="last swing before dark", help="smooth style: small white label at the top; empty for none"); ap.add_argument("--impact", type=float); ap.add_argument("--hook", default="LAST SWING BEFORE DARK", help="one short line on the first second; | for a second line if you must"); ap.add_argument("--end", default="", help="text on the finish; off by default (one line per reel)")
+ap.add_argument("--mood", default="hype"); ap.add_argument("--track"); ap.add_argument("--music-volume", type=float, default=0.55)
+ap.add_argument("--focus", default="0.53,0.52", help="where the golfer is, as fractions of width,height"); ap.add_argument("--zoom", type=float, default=1.35); ap.add_argument("--punch", type=float, default=1.45)
 ap.add_argument("--slow", type=float, default=2.0, help="slow-motion factor at impact (2x on a 60 fps phone clip stays smooth; no frame interpolation, it warps the body)"); ap.add_argument("--lead", type=float, default=0.4, help="seconds of address before the takeaway (keep it short: no standing around)")
 ap.add_argument("--pre", type=float, default=1.3, help="seconds before impact at normal speed (the backswing)"); ap.add_argument("--post", type=float, default=0.3, help="seconds after impact in slow motion")
-ap.add_argument("--hold", type=float, default=2.2, help="seconds of finish after the slow motion"); ap.add_argument("--color", default="#FFD400")
+ap.add_argument("--hold", type=float, default=1.6, help="seconds of finish after impact (real time)"); ap.add_argument("--color", default="#FFD400")
 a = ap.parse_args()
 ROOT = os.path.dirname(HERE); FONT = os.path.join(HERE, "fonts", "Geist.ttf")
 
@@ -64,6 +65,40 @@ if track:
 music_offset = max(0.0, drop - impact_at)
 
 fx, fy = [float(x) for x in a.focus.split(",")]
+if a.style == "smooth":
+    S0, S1 = max(0.0, impact - a.pre - a.lead), min(dur, impact + a.hold)  # takeaway to finish, one piece
+    total = (S1 - S0) * a.slow; impact_at = (impact - S0) * a.slow
+    music_offset = max(0.0, drop - impact_at)
+    cw, ch = int(W / a.zoom) // 2 * 2, int(H / a.zoom) // 2 * 2
+    cx = min(max(0, int(W * fx - cw / 2)), W - cw); cy = min(max(0, int(H * fy - ch / 2)), H - ch)
+    label = ""
+    if a.label.strip():
+        esc = a.label.strip().replace("'", r"\'").replace(":", r"\:")
+        label = f",drawtext=fontfile={FONT}:text='{esc}':fontsize=46:fontcolor=#16181f:box=1:boxcolor=white@0.96:boxborderw=22:x=(w-text_w)/2:y=330"
+    vf = f"[0:v]trim={S0:.3f}:{S1:.3f},setpts=(PTS-STARTPTS)*{a.slow},crop={cw}:{ch}:{cx}:{cy},scale=1080:1920:flags=lanczos{label},fps=30,format=yuv420p[v]"
+    # sound: the real audio slowed and low, the crack at full speed on the contact frame, music from the downswing
+    c0, c1 = max(0.0, impact - 0.04), min(dur, impact + 0.3)
+    af = (f"[0:a:0]atrim={S0:.3f}:{S1:.3f},asetpts=PTS-STARTPTS,atempo={max(0.5, 1 / a.slow):.3f}{',atempo=' + format(1 / a.slow / 0.5, '.3f') if a.slow > 2 else ''},volume=0.35[amb];"
+          f"[0:a:0]atrim={c0:.3f}:{c1:.3f},asetpts=PTS-STARTPTS,volume=1.5,adelay={int((impact_at - 0.04 * a.slow) * 1000)}|{int((impact_at - 0.04 * a.slow) * 1000)}[crack];"
+          f"[amb][crack]amix=inputs=2:duration=first:dropout_transition=0:normalize=0,alimiter=limit=0.95[clip]")
+    inputs = ["-i", a.src]
+    if track:
+        start_at = max(0.0, impact_at - 0.9)  # music comes in at the downswing, drop on the strike
+        inputs += ["-ss", f"{music_offset:.3f}", "-i", track]
+        af += (f";[1:a]atrim=0:{total:.3f},asetpts=PTS-STARTPTS,volume={a.music_volume},volume=enable='lt(t,{start_at:.3f})':volume=0,afade=t=in:st={start_at:.3f}:d=0.35,afade=t=out:st={max(0, total - 1.2):.3f}:d=1.2[m];"
+               f"[clip][m]amix=inputs=2:duration=first:dropout_transition=0:normalize=0[a]")
+    else:
+        af += ";[clip]anull[a]"
+    os.makedirs(os.path.dirname(os.path.abspath(a.out)) or ".", exist_ok=True)
+    tmpv, tmpa = a.out + ".video.mp4", a.out + ".audio.m4a"
+    run(["-i", a.src, "-filter_complex", vf, "-map", "[v]", "-c:v", "libx264", "-preset", "medium", "-crf", "20", "-profile:v", "high", "-level", "4.0", "-an", tmpv])
+    run([*inputs, "-filter_complex", af, "-map", "[a]", "-vn", "-c:a", "aac", "-b:a", "160k", tmpa])
+    run(["-i", tmpv, "-i", tmpa, "-map", "0:v", "-map", "1:a", "-c", "copy", "-movflags", "+faststart", a.out])
+    for f in (tmpv, tmpa):
+        try: os.remove(f)
+        except OSError: pass
+    report(tool="reel", style="smooth", out=a.out, seconds=round(total, 2), impact_in_source=round(impact, 2), impact_in_edit=round(impact_at, 2), slow=a.slow, zoom=a.zoom, label=a.label.strip(),
+           track=os.path.basename(track) if track else "", drop_at=round(drop, 2), music_offset=round(music_offset, 2), music_volume=a.music_volume); sys.exit(0)
 def crop(z):
     cw, ch = int(W / z) // 2 * 2, int(H / z) // 2 * 2
     x = min(max(0, int(W * fx - cw / 2)), W - cw); y = min(max(0, int(H * fy - ch / 2)), H - ch)
