@@ -4,7 +4,7 @@ a music drop on the strike, and the finish held with cover-style text.
 usage: python3 tools/reel.py <in.mov> <out.mp4> [--impact 6.64] [--hook "LAST SWING|BEFORE DARK"] [--end "HOLD THE|FINISH"]
        [--mood hype | --track music/x.mp3] [--music-volume 0.5] [--focus 0.53,0.52] [--zoom 1.3] [--punch 1.6] [--slow 2.0]
        [--lead 1.6] [--pre 1.2] [--post 0.3] [--hold 2.8]
---impact defaults to the loudest 20 ms in the clip (the ball strike). The music drop is found automatically (biggest jump
+--impact is the key moment the edit builds around (the strike, the top of a lift, a landing); it defaults to the loudest 20 ms in the clip. The music drop is found automatically (biggest jump
 in loudness in the first 45 s) and lined up with the impact. Text uses the brand style: all caps, last line yellow.
 Prints one JSON line.
 """

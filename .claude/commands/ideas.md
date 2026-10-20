@@ -1,7 +1,7 @@
 ---
 description: Refresh ideas/formats.json with golf video formats that are getting views on YouTube and Instagram, each with how to build it
 ---
-Refresh the video ideas. Topic: $ARGUMENTS (default: golf swing reels and shorts, the owner's niche).
+Refresh the video ideas. Topic: $ARGUMENTS (default: the owner's niche from the brain; say `/ideas workout reels` or `/ideas running` for another kind of clip).
 
 1. Put it on the board: `python3 office/tasks.py add "Video ideas refresh" --team Creative --agent creative-director`, move it to doing.
 2. Start the **idea-scout** sub-agent with the topic. It updates `ideas/formats.json`.

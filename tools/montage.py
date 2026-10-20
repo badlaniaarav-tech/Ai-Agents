@@ -4,7 +4,7 @@ motion, then the other swings cut fast on the strike, the real crack of the ball
 usage: python3 tools/montage.py <out.mp4> <clip1> <clip2> ... [--label "one line" | --label "line one|line two|…" per clip] [--label-style box|bold]
        [--counter] [--end-card "3 of 5"] [--mood hype | --track x.mp3]
        [--music-volume 0.25] [--slow 2.0] [--pre-first 1.4] [--post-first 0.5] [--pre 0.9] [--post 0.35] [--zoom 1.3] [--focus 0.5,0.52] [--label-y 0.24]
-The strike in each clip is found from its loudest moment. Prints one JSON line.
+The key moment in each clip (the strike, the top of a lift, a landing) is found from its loudest moment; pass --impacts to set them. Prints one JSON line.
 """
 import argparse, json, os, random, subprocess, sys
 import numpy as np
@@ -16,7 +16,7 @@ ap.add_argument("out"); ap.add_argument("clips", nargs="+")
 ap.add_argument("--label", default="Addicted to this sound", help="one line held the whole way; or several separated by | to change per clip"); ap.add_argument("--label-style", choices=["box", "bold"], default="box", help="box: small white rounded box with dark lowercase text (brand rule). bold: large white outlined text");
 ap.add_argument("--counter", action="store_true", help="running count on screen per clip, 1/5, 2/5 … (for challenges)"); ap.add_argument("--end-card", default="", help="text held for a second at the end, like '3 of 5'"); ap.add_argument("--mood", default="hype"); ap.add_argument("--track"); ap.add_argument("--music-volume", type=float, default=0.25)
 ap.add_argument("--slow", type=float, default=2.0); ap.add_argument("--pre-first", type=float, default=1.4); ap.add_argument("--post-first", type=float, default=0.5)
-ap.add_argument("--pre", type=float, default=0.9); ap.add_argument("--post", type=float, default=0.35); ap.add_argument("--zoom", type=float, default=1.3); ap.add_argument("--focus", default="0.5,0.52"); ap.add_argument("--label-y", type=float, default=0.24, help="label height as a fraction of the frame; keep it above the golfer")
+ap.add_argument("--pre", type=float, default=0.9); ap.add_argument("--post", type=float, default=0.35); ap.add_argument("--zoom", type=float, default=1.3); ap.add_argument("--impacts", default="", help="key moment per clip in seconds, comma separated, when the loudest sound is not it"); ap.add_argument("--focus", default="0.5,0.52"); ap.add_argument("--label-y", type=float, default=0.24, help="label height as a fraction of the frame; keep it above the golfer")
 a = ap.parse_args()
 ROOT = os.path.dirname(HERE); FONT = os.path.join(HERE, "fonts", "Geist.ttf")
 fx, fy = [float(x) for x in a.focus.split(",")]
@@ -36,8 +36,10 @@ def crop(W, H):
     return f"crop={cw}:{ch}:{x}:{y},scale=1080:1920:flags=lanczos"
 
 segs, vparts, aparts, inputs, t = [], [], [], [], 0.0
+IMPS = [float(x) for x in a.impacts.split(",") if x.strip()]
 for n, clip in enumerate(a.clips):
     W, H, dur, imp = info(clip); inputs += ["-i", clip]
+    if n < len(IMPS): imp = IMPS[n]
     first = n == 0; pre, post = (a.pre_first, a.post_first) if first else (a.pre, a.post); slow = a.slow if first else 1.0
     s0, s1 = max(0.0, imp - pre), min(dur, imp + post); length = (s1 - s0) * slow; imp_at = t + (imp - s0) * slow
     vparts.append(f"[{n}:v]trim={s0:.3f}:{s1:.3f},setpts=(PTS-STARTPTS)*{slow},{crop(W, H)},fps=30[v{n}]")
