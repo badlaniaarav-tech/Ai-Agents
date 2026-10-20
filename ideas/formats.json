@@ -1117,7 +1117,7 @@
         10,
         20
       ],
-      "recipe": "python3 tools/hole.py out/hole-<date>/hole.mp4 \"<tee>|512 yards|par 5\" \"<second>|170 yards|9 iron\" \"<third>|22 yards|60 wedge\" --result \"par\" --mood chill --music-volume 0.3  &&  python3 tools/track.py out/hole-<date>/hole.mp4 out/hole-<date>/hole-ball.mp4 --trail",
+      "recipe": "python3 tools/hole.py out/hole-<date>/hole.mp4 \"<tee>|512 yards|par 5\" \"<second>|170 yards|9 iron\" \"<third>|22 yards|60 wedge\" --result \"par\" --intro \"come play|1 hole with me\" --pre 2.2 --mood chill --music-volume 0.3  &&  python3 tools/track.py out/hole-<date>/hole.mp4 out/hole-<date>/hole-ball.mp4 --trail",
       "needs": [],
       "evidence": "owner's pick; one Instagram example, no view count readable",
       "buildable": true,
