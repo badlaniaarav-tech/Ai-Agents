@@ -216,7 +216,7 @@
         <div id="t-opts" hidden><label>Team <select id="t-team"></select></label><label>Date <input id="t-date" type="date" title="Optional: a due date or post date"></label><label>Kind <select id="t-type"><option value="task">task</option><option value="post">post</option><option value="meeting">meeting</option></select></label></div>
       </form>
       <button type="button" id="clip-up" class="drop small"><span class="ic">⬆</span><span><span class="big">Add swing videos</span><span class="sub">camera roll · up to 45 MB each</span></span></button><input id="clip-file" type="file" accept="video/*" multiple hidden>
-      <div class="uprow"><input id="clip-note" class="note" placeholder="Description for the caption (optional)"><select id="clip-style" title="Style"><option value="">Style: office picks</option></select></div>
+      <div class="uprow"><input id="clip-note" class="note" placeholder="What is in the clip and what you want done with it"><select id="clip-style" title="Style"><option value="">Style: the office decides from your video and your note</option></select></div>
       <p id="clip-style-help" class="kv hintline"></p>
     </section>
     <section class="card">
@@ -624,7 +624,7 @@
   document.getElementById('t-import-btn').onclick = () => document.getElementById('t-import').click();
   const tTeam = document.getElementById('t-team'); { const o = document.createElement('option'); o.value = ''; o.textContent = 'Auto: pick the team for me'; tTeam.appendChild(o); } roomInfo.forEach(r => { const o = document.createElement('option'); o.value = r.d.name; o.textContent = r.d.name; tTeam.appendChild(o); });
   { const sel = document.getElementById('clip-style'), help = document.getElementById('clip-style-help'); (data.formats || []).forEach(f => { const o = document.createElement('option'); o.value = f.id; o.textContent = f.name; sel.appendChild(o); });
-    const show = () => { const f = (data.formats || []).find(x => x.id === sel.value); help.textContent = f ? `${f.looks_like} Fits: ${(f.fits || []).join(', ')}. About ${(f.length_s || []).join(' to ')} s.` : `${(data.formats || []).length} formats from ideas/formats.json, refreshed weekly from YouTube and Instagram. The team picks the best fit, or choose one.`; }; sel.onchange = show; show(); }
+    const show = () => { const f = (data.formats || []).find(x => x.id === sel.value); help.textContent = f ? `${f.looks_like} Fits: ${(f.fits || []).join(', ')}. About ${(f.length_s || []).join(' to ')} s.` : `Leave it on the first option and the creative director looks at your video and your note and picks the edit. The other ${(data.formats || []).length} are formats from YouTube and Instagram, refreshed weekly, if you want a specific one.`; }; sel.onchange = show; show(); }
   const HINTS = { Creative: /video|clip|edit|thumbnail|cover|reel|short|footage|swing/i, Scripts: /script|hook|title|caption|seo|description|idea/i, Social: /post|instagram|tiktok|social|comment|dm|newsletter|email|outreach|sponsor/i, 'TBX Shop': /shop|product|drop|hoodie|merch|price|ad |ads|listing|store/i, Dev: /code|bug|site|website|app|api|feature|deploy|fix/i, Research: /research|market|competitor|trend|why|compare|find out/i, Analytics: /report|numbers|views|followers|analytics|growth|metrics|weekly/i, Inbox: /inbox|reply|customer|quote|proposal|support|refund/i };
   async function pickTeam(title) { // the chief of staff routes it: Claude when available, keywords otherwise
     const sample = await samplePromise;
