@@ -18,7 +18,7 @@ ap.add_argument("src"); ap.add_argument("out")
 ap.add_argument("--style", choices=["smooth", "punch"], default="smooth", help="smooth: the whole swing in slow motion, full body, small label (the normal golf edit). punch: hook text, slow only at the strike");
 ap.add_argument("--label", default="last swing before dark", help="smooth style: small white label at the top; empty for none");
 ap.add_argument("--stats", default="", help="launch-monitor card that pops up on the strike: \"Ball speed|156 mph;Carry|265 yds;Launch|12.7°;Spin|2989 rpm;Club speed|108 mph;Smash|1.45\" (up to 6)"); ap.add_argument("--stats-title", default="", help="small title on the card, like 'driver'"); ap.add_argument("--stats-y", type=float, default=0.58, help="card position as a fraction of the height"); ap.add_argument("--stagger", type=float, default=0.12, help="seconds between the card's numbers popping in; 0 shows them at once");
-ap.add_argument("--strike-punch", type=float, default=1.0, help="smooth style: tighter crop from the strike on, like 1.12 (1 = off)"); ap.add_argument("--grade", choices=["none", "pop", "moody"], default="none"); ap.add_argument("--impact", type=float); ap.add_argument("--hook", default="LAST SWING BEFORE DARK", help="one short line on the first second; | for a second line if you must"); ap.add_argument("--end", default="", help="text on the finish; off by default (one line per reel)")
+ap.add_argument("--strike-punch", type=float, default=1.0, help="smooth style: tighter crop from the strike on, like 1.12 (1 = off)"); ap.add_argument("--push", default="", help="smooth style: slow smooth push-in over the whole clip, \"1.2:1.35\" = from 1.2x to 1.35x (no cut)"); ap.add_argument("--from", dest="start", type=float, help="use the clip from this second instead of the takeaway"); ap.add_argument("--to", dest="stop", type=float, help="…to this second instead of the finish hold"); ap.add_argument("--grade", choices=["none", "pop", "moody"], default="none"); ap.add_argument("--impact", type=float); ap.add_argument("--hook", default="LAST SWING BEFORE DARK", help="one short line on the first second; | for a second line if you must"); ap.add_argument("--end", default="", help="text on the finish; off by default (one line per reel)")
 ap.add_argument("--mood", default="hype"); ap.add_argument("--track"); ap.add_argument("--music-volume", type=float, default=0.55)
 ap.add_argument("--focus", default="0.53,0.52", help="where the golfer is, as fractions of width,height"); ap.add_argument("--zoom", type=float, default=1.35); ap.add_argument("--punch", type=float, default=1.45)
 ap.add_argument("--slow", type=float, default=2.0, help="slow-motion factor at impact (2x on a 60 fps phone clip stays smooth; no frame interpolation, it warps the body)"); ap.add_argument("--lead", type=float, default=0.4, help="seconds of address before the takeaway (keep it short: no standing around)")
@@ -69,6 +69,8 @@ music_offset = max(0.0, drop - impact_at)
 fx, fy = [float(x) for x in a.focus.split(",")]
 if a.style == "smooth":
     S0, S1 = max(0.0, impact - a.pre - a.lead), min(dur, impact + a.hold)  # takeaway to finish, one piece
+    if a.start is not None: S0 = max(0.0, min(a.start, impact))
+    if a.stop is not None: S1 = min(dur, max(a.stop, impact + 0.3))
     total = (S1 - S0) * a.slow; impact_at = (impact - S0) * a.slow
     music_offset = max(0.0, drop - impact_at)
     cw, ch = int(W / a.zoom) // 2 * 2, int(H / a.zoom) // 2 * 2
@@ -99,7 +101,11 @@ if a.style == "smooth":
         card_at = impact_at + 0.1
     grade = {"pop": ",eq=contrast=1.06:saturation=1.18:brightness=0.01", "moody": ",eq=contrast=1.08:saturation=0.8:brightness=-0.02,curves=preset=darker", "none": ""}[a.grade]
     base_crop = f"crop={cw}:{ch}:{cx}:{cy},scale=1080:1920:flags=lanczos"
-    if a.strike_punch > 1.0:  # a cut to a tighter frame from the strike on
+    if a.push:  # one smooth push-in across the clip: no cut, no jiggle (linear zoom, per frame)
+        z0, z1 = [float(x) for x in a.push.split(":")]; nframes = int((S1 - S0) * a.slow * 30) + 1
+        vf = (f"[0:v]trim={S0:.3f}:{S1:.3f},setpts=(PTS-STARTPTS)*{a.slow},scale=1080:1920:flags=lanczos,fps=30,"
+              f"zoompan=z='{z0}+({z1}-{z0})*on/{nframes}':x='iw*{fx}-iw/zoom/2':y='ih*{fy}-ih/zoom/2':d=1:s=1080x1920:fps=30{grade}{label},format=yuv420p[base]")
+    elif a.strike_punch > 1.0:  # a cut to a tighter frame from the strike on
         z2 = a.zoom * a.strike_punch; cw2, ch2 = int(W / z2) // 2 * 2, int(H / z2) // 2 * 2; cx2 = min(max(0, int(W * fx - cw2 / 2)), W - cw2); cy2 = min(max(0, int(H * fy - ch2 / 2)), H - ch2)
         vf = (f"[0:v]trim={S0:.3f}:{impact - 0.02:.3f},setpts=(PTS-STARTPTS)*{a.slow},{base_crop}[p1];[0:v]trim={impact - 0.02:.3f}:{S1:.3f},setpts=(PTS-STARTPTS)*{a.slow},crop={cw2}:{ch2}:{cx2}:{cy2},scale=1080:1920:flags=lanczos[p2];"
               f"[p1][p2]concat=n=2:v=1:a=0{grade}{label},fps=30,format=yuv420p[base]")
