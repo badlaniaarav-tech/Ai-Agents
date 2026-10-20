@@ -2,7 +2,7 @@
 a music drop on the strike, and the finish held with cover-style text.
 
 usage: python3 tools/reel.py <in.mov> <out.mp4> [--impact 6.64] [--hook "LAST SWING|BEFORE DARK"] [--end "HOLD THE|FINISH"]
-       [--mood hype | --track music/x.mp3] [--music-volume 0.5] [--focus 0.53,0.52] [--zoom 1.3] [--punch 1.6] [--slow 3.3]
+       [--mood hype | --track music/x.mp3] [--music-volume 0.5] [--focus 0.53,0.52] [--zoom 1.3] [--punch 1.6] [--slow 2.0]
        [--lead 1.6] [--pre 1.2] [--post 0.3] [--hold 2.8]
 --impact defaults to the loudest 20 ms in the clip (the ball strike). The music drop is found automatically (biggest jump
 in loudness in the first 45 s) and lined up with the impact. Text uses the brand style: all caps, last line yellow.
@@ -15,12 +15,12 @@ from media import FFMPEG, report, run
 
 ap = argparse.ArgumentParser()
 ap.add_argument("src"); ap.add_argument("out")
-ap.add_argument("--impact", type=float); ap.add_argument("--hook", default="LAST SWING|BEFORE DARK"); ap.add_argument("--end", default="HOLD THE|FINISH")
-ap.add_argument("--mood", default="hype"); ap.add_argument("--track"); ap.add_argument("--music-volume", type=float, default=0.5)
-ap.add_argument("--focus", default="0.53,0.52", help="where the golfer is, as fractions of width,height"); ap.add_argument("--zoom", type=float, default=1.3); ap.add_argument("--punch", type=float, default=1.6)
-ap.add_argument("--slow", type=float, default=3.3, help="slow-motion factor at impact"); ap.add_argument("--lead", type=float, default=1.6, help="seconds of address shown first (the hook)")
-ap.add_argument("--pre", type=float, default=1.2, help="seconds before impact at normal speed"); ap.add_argument("--post", type=float, default=0.3, help="seconds after impact in slow motion")
-ap.add_argument("--hold", type=float, default=2.8, help="seconds of finish after the slow motion"); ap.add_argument("--color", default="#FFD400")
+ap.add_argument("--impact", type=float); ap.add_argument("--hook", default="LAST SWING BEFORE DARK", help="one short line on the first second; | for a second line if you must"); ap.add_argument("--end", default="", help="text on the finish; off by default (one line per reel)")
+ap.add_argument("--mood", default="hype"); ap.add_argument("--track"); ap.add_argument("--music-volume", type=float, default=0.35)
+ap.add_argument("--focus", default="0.53,0.52", help="where the golfer is, as fractions of width,height"); ap.add_argument("--zoom", type=float, default=1.3); ap.add_argument("--punch", type=float, default=1.45)
+ap.add_argument("--slow", type=float, default=2.0, help="slow-motion factor at impact (2x on a 60 fps phone clip stays smooth; no frame interpolation, it warps the body)"); ap.add_argument("--lead", type=float, default=0.4, help="seconds of address before the takeaway (keep it short: no standing around)")
+ap.add_argument("--pre", type=float, default=1.3, help="seconds before impact at normal speed (the backswing)"); ap.add_argument("--post", type=float, default=0.3, help="seconds after impact in slow motion")
+ap.add_argument("--hold", type=float, default=2.2, help="seconds of finish after the slow motion"); ap.add_argument("--color", default="#FFD400")
 a = ap.parse_args()
 ROOT = os.path.dirname(HERE); FONT = os.path.join(HERE, "fonts", "Geist.ttf")
 
@@ -40,8 +40,8 @@ env = np.array([np.abs(clip[i:i + w]).max() for i in range(0, len(clip) - w, w)]
 impact = a.impact if a.impact is not None else float(np.argmax(env) * w / 16000)
 
 # segments in the source
-A0, A1 = 0.0, min(a.lead, max(0.3, impact - a.pre - 0.2))
-B0, B1 = max(A1, impact - a.pre), impact - 0.12
+A0, A1 = max(0.0, impact - a.pre - a.lead), max(0.0, impact - a.pre)
+B0, B1 = A1, impact - 0.12
 C0, C1 = B1, impact + a.post
 D0, D1 = C1, min(dur, C1 + a.hold)
 tA, tB, tC, tD = A1 - A0, B1 - B0, (C1 - C0) * a.slow, D1 - D0
@@ -68,25 +68,43 @@ def crop(z):
     cw, ch = int(W / z) // 2 * 2, int(H / z) // 2 * 2
     x = min(max(0, int(W * fx - cw / 2)), W - cw); y = min(max(0, int(H * fy - ch / 2)), H - ch)
     return f"crop={cw}:{ch}:{x}:{y},scale=1080:1920:flags=lanczos"
+def fit(line, size):  # shrink the size until the line fits 86% of the width (drawtext has no auto-fit)
+    try:
+        from PIL import ImageFont
+        while size > 48 and ImageFont.truetype(FONT, size).getlength(line) + 14 > 1080 * 0.86: size -= 4
+    except Exception: pass
+    return size
 def text(lines, y0, size=150, start=0.0, end=None):
-    out = []; y = y0
+    """Stacked lines, brand style: white, the last line (or the last word of a single line) yellow, soft shadow."""
+    out = []; y = y0; size = min([fit(l, size) for l in lines] or [size]); bw = max(2, size // 16)
+    en = f":enable='between(t,{start},{end})'" if end else f":enable='gte(t,{start})'"
+    def dt(txt, col, x, yy):
+        esc = txt.replace("'", r"\'").replace(":", r"\:")
+        return [f"drawtext=fontfile={FONT}:text='{esc}':fontsize={size}:fontcolor=black@0.7:borderw={bw}:bordercolor=black@0.7:x={x}+{bw}:y={yy + bw}{en}",
+                f"drawtext=fontfile={FONT}:text='{esc}':fontsize={size}:fontcolor={col}:borderw={bw}:bordercolor={col}:x={x}:y={yy}{en}"]
+    def width(txt):
+        try:
+            from PIL import ImageFont; return ImageFont.truetype(FONT, size).getlength(txt)
+        except Exception: return len(txt) * size * 0.6
     for i, line in enumerate(lines):
-        col = a.color if i == len(lines) - 1 else "white"; en = f":enable='between(t,{start},{end})'" if end else f":enable='gte(t,{start})'"
-        esc = line.replace("'", r"\'").replace(":", r"\:")
-        out.append(f"drawtext=fontfile={FONT}:text='{esc}':fontsize={size}:fontcolor=black@0.75:borderw=7:bordercolor=black@0.75:x=(w-text_w)/2+7:y={y + 9}{en}")
-        out.append(f"drawtext=fontfile={FONT}:text='{esc}':fontsize={size}:fontcolor={col}:borderw=7:bordercolor={col}:x=(w-text_w)/2:y={y}{en}")
+        last = i == len(lines) - 1; words = line.split()
+        if last and len(lines) == 1 and len(words) > 1:  # one line: last word yellow
+            head, tail = " ".join(words[:-1]) + " ", words[-1]; wh, wt = width(head), width(tail); x0 = (1080 - wh - wt) / 2
+            out += dt(head, "white", f"{x0:.0f}", y) + dt(tail, a.color, f"{x0 + wh:.0f}", y)
+        else:
+            out += dt(line, a.color if last else "white", "(w-text_w)/2", y)
         y += int(size * 1.05)
     return "," + ",".join(out) if out else ""
 hook = [s.strip().upper() for s in a.hook.split("|") if s.strip()]; endt = [s.strip().upper() for s in a.end.split("|") if s.strip()]
-vf = (f"[0:v]trim={A0}:{A1},setpts=PTS-STARTPTS,{crop(a.zoom)}{text(hook, 180, start=0.15)}[va];"
-      f"[0:v]trim={B0}:{B1},setpts=PTS-STARTPTS,{crop(a.zoom)}[vb];"
-      f"[0:v]trim={C0}:{C1},setpts=(PTS-STARTPTS)*{a.slow},{crop(a.punch)},minterpolate=fps=30:mi_mode=mci:mc_mode=aobmc:vsbmc=1,fade=t=in:st=0:d=0.12:color=white[vc];"
-      f"[0:v]trim={D0}:{D1},setpts=PTS-STARTPTS,{crop(a.zoom)}{text(endt, 180, start=0.5)}[vd];"
+vf = (f"[0:v]trim={A0}:{A1},setpts=PTS-STARTPTS,{crop(a.zoom)}{text(hook, 300, size=120, start=0.0)}[va];"
+      f"[0:v]trim={B0}:{B1},setpts=PTS-STARTPTS,{crop(a.zoom)}{text(hook, 300, size=120, start=0.0, end=max(0.0, 1.1 - tA))}[vb];"
+      f"[0:v]trim={C0}:{C1},setpts=(PTS-STARTPTS)*{a.slow},{crop(a.punch)}[vc];"
+      f"[0:v]trim={D0}:{D1},setpts=PTS-STARTPTS,{crop(a.zoom)}{text(endt, 300, size=120, start=0.5)}[vd];"
       f"[va][vb][vc][vd]concat=n=4:v=1:a=0,fps=30,format=yuv420p[v]")
 # clip sound: normal for A, B, D; the strike stretched for C
 af = (f"[0:a:0]atrim={A0}:{A1},asetpts=PTS-STARTPTS[aa];[0:a:0]atrim={B0}:{B1},asetpts=PTS-STARTPTS[ab];"
-      f"[0:a:0]atrim={C0}:{C1},asetpts=PTS-STARTPTS,atempo=0.5,atempo={max(0.5, 1 / (a.slow / 2)):.3f}[ac];[0:a:0]atrim={D0}:{D1},asetpts=PTS-STARTPTS[ad];"
-      f"[aa][ab][ac][ad]concat=n=4:v=0:a=1,volume=1.2[clip]")
+      f"[0:a:0]atrim={C0}:{C1},asetpts=PTS-STARTPTS,volume=1.6,apad=whole_dur={tC:.3f}[ac];[0:a:0]atrim={D0}:{D1},asetpts=PTS-STARTPTS[ad];"
+      f"[aa][ab][ac][ad]concat=n=4:v=0:a=1,volume=1.2,alimiter=limit=0.95[clip]")
 inputs = ["-i", a.src]
 if track:
     inputs += ["-ss", f"{music_offset:.3f}", "-i", track]
