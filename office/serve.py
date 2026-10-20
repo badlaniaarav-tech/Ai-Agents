@@ -108,6 +108,16 @@ class Handler(SimpleHTTPRequestHandler):
             self.end_headers()
             self.wfile.write(body)
             return
+        if u.path == "/music/catalog.json":
+            cred = os.path.join(os.path.dirname(HERE), "music", "credits.json"); tracks = []
+            if os.path.exists(cred):
+                for f, c in json.load(open(cred, encoding="utf-8")).items():
+                    tracks.append({"file": f, "mood": c.get("mood"), "title": c.get("title"), "artist": c.get("artist"), "license": c.get("license"), "url": "/music/" + f})
+            self.send_json({"tracks": tracks}); return
+        if u.path.startswith("/music/"):
+            f = os.path.join(os.path.dirname(HERE), "music", os.path.basename(u.path))
+            if os.path.isfile(f):
+                data = open(f, "rb").read(); self.send_response(200); self.send_header("Content-Type", "audio/mpeg"); self.send_header("Content-Length", str(len(data))); self.end_headers(); self.wfile.write(data); return
         if u.path == "/":
             self.path = "/index.html"
         super().do_GET()
