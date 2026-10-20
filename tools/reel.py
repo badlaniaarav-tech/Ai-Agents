@@ -17,7 +17,7 @@ ap = argparse.ArgumentParser()
 ap.add_argument("src"); ap.add_argument("out")
 ap.add_argument("--style", choices=["smooth", "punch"], default="smooth", help="smooth: the whole swing in slow motion, full body, small label (the normal golf edit). punch: hook text, slow only at the strike");
 ap.add_argument("--label", default="last swing before dark", help="smooth style: small white label at the top; empty for none");
-ap.add_argument("--stats", default="", help="launch-monitor card that pops up on the strike: \"Ball speed|156 mph;Carry|265 yds;Launch|12.7°;Spin|2989 rpm;Club speed|108 mph;Smash|1.45\" (up to 6)"); ap.add_argument("--stats-title", default="", help="small title on the card, like 'driver'"); ap.add_argument("--stats-y", type=float, default=0.58, help="card position as a fraction of the height"); ap.add_argument("--stagger", type=float, default=0.12, help="seconds between the card's numbers popping in; 0 shows them at once"); ap.add_argument("--stats-scale", type=float, default=1.0, help="card size, 0.55 is small like the Trackman reels"); ap.add_argument("--stats-x", type=float, default=0.5, help="card centre as a fraction of the width"); ap.add_argument("--stats-layout", choices=["grid", "row"], default="grid", help="grid: two columns; row: one strip of numbers");
+ap.add_argument("--stats", default="", help="launch-monitor card that pops up on the strike: \"Ball speed|156 mph;Carry|265 yds;Launch|12.7°;Spin|2989 rpm;Club speed|108 mph;Smash|1.45\" (up to 6)"); ap.add_argument("--stats-title", default="", help="small title on the card, like 'driver'"); ap.add_argument("--stats-y", type=float, default=0.58, help="card position as a fraction of the height"); ap.add_argument("--stagger", type=float, default=0.12, help="seconds between the card's numbers popping in; 0 shows them at once"); ap.add_argument("--stats-scale", type=float, default=1.0, help="card size, 0.55 is small like the Trackman reels"); ap.add_argument("--stats-x", type=float, default=0.5, help="card centre as a fraction of the width"); ap.add_argument("--stats-layout", choices=["grid", "row"], default="grid", help="grid: two columns; row: one strip of numbers"); ap.add_argument("--stats-style", choices=["white", "dark"], default="dark", help="dark: translucent dark tiles, small caps label, big white number, italic unit (the owner's pick); white: white tiles"); ap.add_argument("--stats-cols", type=int, default=3);
 ap.add_argument("--hero", default="", help="human style instead of tiles: \"265|yds carry\" = a big yellow number that counts up after the strike, with its label"); ap.add_argument("--sub", default="", help="small line under the hero number, like \"156 mph ball · 1.45 smash · 12.7° launch\""); ap.add_argument("--outro", default="", help="casual line that fades in on the finish, like \"not bad for a tuesday\""); ap.add_argument("--pulse", type=float, default=0.0, help="quick zoom pulse on the strike, like 0.06");
 ap.add_argument("--inset", default="", help="a photo (like the launch monitor screen) that pops in after the strike as a small tilted print with a white border"); ap.add_argument("--inset-w", type=int, default=520); ap.add_argument("--inset-x", type=float, default=0.3); ap.add_argument("--inset-y", type=float, default=0.17); ap.add_argument("--inset-rot", type=float, default=-3.0); ap.add_argument("--inset-crop", default="", help="crop the photo first: fractions \"x0,y0,x1,y1\"");
 ap.add_argument("--strike-punch", type=float, default=1.0, help="smooth style: tighter crop from the strike on, like 1.12 (1 = off)"); ap.add_argument("--push", default="", help="smooth style: slow smooth push-in over the whole clip, \"1.2:1.35\" = from 1.2x to 1.35x (no cut)"); ap.add_argument("--from", dest="start", type=float, help="use the clip from this second instead of the takeaway"); ap.add_argument("--to", dest="stop", type=float, help="…to this second instead of the finish hold"); ap.add_argument("--grade", choices=["none", "pop", "moody"], default="none"); ap.add_argument("--impact", type=float); ap.add_argument("--hook", default="LAST SWING BEFORE DARK", help="one short line on the first second; | for a second line if you must"); ap.add_argument("--end", default="", help="text on the finish; off by default (one line per reel)")
@@ -84,21 +84,31 @@ if a.style == "smooth":
     cards = []
     if a.stats.strip():
         from PIL import Image, ImageDraw, ImageFont
-        items = [[p.strip() for p in x.split("|", 1)] for x in a.stats.split(";") if x.strip()][:6]; cols = (len(items) if a.stats_layout == "row" else 2) if len(items) > 1 else 1; rows = (len(items) + cols - 1) // cols
-        tw, th, gap, pad = 440, 170, 18, 24; W_ = cols * tw + (cols - 1) * gap + pad * 2; title_h = 70 if a.stats_title.strip() else 0; H_ = rows * th + (rows - 1) * gap + pad * 2 + title_h
+        items = [[p.strip() for p in x.split("|")] for x in a.stats.split(";") if x.strip()][:6]
+        cols = (len(items) if a.stats_layout == "row" else a.stats_cols) if len(items) > 1 else 1; cols = max(1, min(cols, len(items))); rows = (len(items) + cols - 1) // cols
+        dark = a.stats_style == "dark"
+        tw, th, gap, pad = (300, 250, 26, 30) if dark else (440, 170, 18, 24); W_ = cols * tw + (cols - 1) * gap + pad * 2; title_h = 70 if a.stats_title.strip() else 0; H_ = rows * th + (rows - 1) * gap + pad * 2 + title_h
         def font(size, weight=700):
             f = ImageFont.truetype(FONT, size)
             try: f.set_variation_by_axes([weight])
             except Exception: pass
             return f
+        def italic(txt, size, fill):  # Geist has no italic: shear a small text image
+            f = font(size, 400); w = int(f.getlength(txt)) + size; layer = Image.new("RGBA", (w, int(size * 1.4)), (0, 0, 0, 0)); ImageDraw.Draw(layer).text((size // 2, size * 0.2), txt, font=f, fill=fill)
+            return layer.transform(layer.size, Image.AFFINE, (1, 0.22, -0.22 * layer.height * 0.5, 0, 1, 0), resample=Image.BICUBIC)
         os.makedirs(os.path.dirname(os.path.abspath(a.out)) or ".", exist_ok=True)
         steps = len(items) if a.stagger > 0 else 1
         for k in range(steps):  # cumulative cards: one more number each step
             im = Image.new("RGBA", (W_, H_), (0, 0, 0, 0)); d = ImageDraw.Draw(im)
             if title_h: d.rounded_rectangle((pad, pad, pad + 260, pad + 50), 14, fill=(255, 255, 255, 245)); d.text((pad + 130, pad + 25), a.stats_title.strip(), font=font(30, 600), fill=(22, 24, 31), anchor="mm")
             for i, it in enumerate(items[: (k + 1) if steps > 1 else len(items)]):
-                lab, val = (it + [""])[:2]; x = pad + (i % cols) * (tw + gap); y = pad + title_h + (i // cols) * (th + gap)
-                d.rounded_rectangle((x, y, x + tw, y + th), 22, fill=(255, 255, 255, 245)); d.text((x + tw / 2, y + 62), val, font=font(74, 800), fill=(22, 24, 31), anchor="mm"); d.text((x + tw / 2, y + 132), lab.lower(), font=font(28, 500), fill=(90, 96, 110), anchor="mm")
+                lab, val, unit = (it + ["", ""])[:3]; x = pad + (i % cols) * (tw + gap); y = pad + title_h + (i // cols) * (th + gap)
+                if dark:
+                    d.rounded_rectangle((x, y, x + tw, y + th), 30, fill=(18, 20, 24, 215)); d.text((x + tw / 2, y + th * 0.26), lab.upper(), font=font(26, 700), fill=(240, 240, 240), anchor="mm")
+                    d.text((x + tw / 2, y + th * 0.54), val, font=font(84, 800), fill=(255, 255, 255), anchor="mm")
+                    if unit: u = italic(unit, 30, (215, 215, 220)); im.alpha_composite(u, (int(x + tw / 2 - u.width / 2), int(y + th * 0.72)))
+                else:
+                    d.rounded_rectangle((x, y, x + tw, y + th), 22, fill=(255, 255, 255, 245)); d.text((x + tw / 2, y + 62), (val + " " + unit).strip(), font=font(74, 800), fill=(22, 24, 31), anchor="mm"); d.text((x + tw / 2, y + 132), lab.lower(), font=font(28, 500), fill=(90, 96, 110), anchor="mm")
             if a.stats_scale != 1.0: im = im.resize((max(2, int(im.width * a.stats_scale)), max(2, int(im.height * a.stats_scale))), Image.LANCZOS)
             path = f"{a.out}.card{k}.png"; im.save(path); cards.append(path)
         card_at = impact_at + 0.1

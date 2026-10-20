@@ -890,7 +890,7 @@
     {
       "id": "stats-card",
       "name": "Swing with a launch-monitor stats card",
-      "looks_like": "Normal speed, the whole clip from address to the end of the finish, one slow push-in with a quick pulse on the strike. Right after the strike the real launch-monitor screen, cropped from the owner's photo, slides in top-left, in the sky, clear of the golfer and the launch monitor, as a small tilted print with a white border. No drawn numbers, no outro line.",
+      "looks_like": "Normal speed, the whole clip from address to the end of the finish, one slow push-in with a quick pulse on the strike. Right after the strike six dark translucent tiles fade in up in the sky, three across and two down: small caps label, big white number, italic unit (ball speed, carry, spin, club speed, club path, pull). Never over the golfer or the launch monitor.",
       "seen_on": [
         "Owner's example: trackmangolf, Instagram (Trackman numbers over a range swing); YouTube Shorts with one speed or yardage in the caption (yt.py, all-time views, no dates)",
         "owner's Foresight GC3 numbers, 2026-10-20"
@@ -933,7 +933,7 @@
         6,
         10
       ],
-      "recipe": "python3 tools/reel.py <clip> out/<name>/reel.mp4 --slow 1 --from <address second> --to <end of finish> --push 1.15:1.36 --pulse 0.06 --grade pop --label \"\" --inset <photo of the launch monitor> --inset-crop \"<x0,y0,x1,y1 fractions around the display>\" --inset-w 520 --inset-x 0.3 --inset-y 0.17 --inset-rot -3 --mood hype --music-volume 0.6",
+      "recipe": "python3 tools/reel.py <clip> out/<name>/reel.mp4 --slow 1 --from <address second> --to <end of finish> --push 1.15:1.36 --pulse 0.06 --grade pop --label \"\" --stats \"Ball speed|156|mph;Carry|265|yds;Spin|2989|rpm;Club speed|108|mph;Club path|0.1°|out to in;Pull|0.2°|left\" --stats-style dark --stats-cols 3 --stats-scale 0.92 --stats-x 0.5 --stats-y 0.155 --stagger 0 --mood hype --music-volume 0.6",
       "needs": [
         "Stats card tool: a grid of up to 6 numbers typed by the owner, shown from the strike frame (tools/stats.py)",
         "The owner has to supply the numbers; nothing reads a launch monitor"
