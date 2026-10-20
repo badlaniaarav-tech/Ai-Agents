@@ -41,7 +41,7 @@ def bright_small(gray, hsv, mask_region=None):
     out = []
     for i in range(1, n):
         x, y, w, h, area = stats[i]
-        if a.min_area <= area <= a.max_area and 0.4 <= w / max(1, h) <= 2.5: out.append((cent[i][0], cent[i][1], area))
+        if a.min_area <= area <= a.max_area and 0.6 <= w / max(1, h) <= 1.6: out.append((cent[i][0], cent[i][1], area))
     return out
 
 pos = None; vel = np.zeros(2); path = []; prev_gray = None; frame_i = 0; tracked = 0; lost = 0; start_pos = None
@@ -55,17 +55,21 @@ while True:
     if frame_i == max(0, f_imp - 3) and start_pos is None:  # find the ball at rest: lower middle, small and round
         region = np.zeros((H, W), np.uint8); region[int(H * 0.5):int(H * 0.88), int(W * 0.3):int(W * 0.7)] = 1
         cands = bright_small(gray, hsv, region)
-        cands = [c for c in cands if 8 <= c[2] <= 400]
-        if cands: c = max(cands, key=lambda c: c[1]); start_pos = np.array([c[0], c[1]])  # the lowest small white thing: the ball on the tee, not a shirt or a glove
+        cands = [c for c in cands if 8 <= c[2] <= 1500]
+        if cands: c = max(cands, key=lambda c: c[1]); start_pos = np.array([c[0], c[1]])  # the lowest round white thing: the ball on the tee, not a shirt or a glove
     if frame_i >= f_imp and t <= T + a.max and lost < 4 and (start_pos is not None):
         if pos is None: pos = start_pos.copy(); vel = np.zeros(2)
         pred = pos + vel
         if prev_gray is not None:
             motion = (cv2.absdiff(gray, prev_gray) > 18).astype(np.uint8)
+            nb, lb, st, _ = cv2.connectedComponentsWithStats(motion, 8); big = np.zeros((H, W), np.uint8)
+            for j in range(1, nb):
+                if st[j][4] > 1500: big[lb == j] = 1
+            near_body = cv2.dilate(big, np.ones((121, 121), np.uint8))  # anything within 60 px of a big moving thing (the golfer, the club) is not the ball
             x0, y0 = int(max(0, pred[0] - a.search)), int(max(0, pred[1] - a.search)); x1, y1 = int(min(W, pred[0] + a.search)), int(min(H, pred[1] + a.search))
             region = np.zeros((H, W), np.uint8); region[y0:y1, x0:x1] = 1
-            cands = [c for c in bright_small(gray, hsv, region & motion) if np.hypot(c[0] - pred[0], c[1] - pred[1]) <= a.search and c[2] <= 400]
-            if not cands and frame_i == f_imp: cands = bright_small(gray, hsv, region)
+            cands = [c for c in bright_small(gray, hsv, region & motion) if np.hypot(c[0] - pred[0], c[1] - pred[1]) <= a.search and c[2] <= 600 and not near_body[int(c[1]), int(c[0])]]
+            if not cands and frame_i == f_imp: cands = [c for c in bright_small(gray, hsv, region) if c[2] <= 1500]
             if cands:
                 c = min(cands, key=lambda c: np.hypot(c[0] - pred[0], c[1] - pred[1])); new = np.array([c[0], c[1]])
                 if frame_i > f_imp: vel = 0.6 * vel + 0.4 * (new - pos)
