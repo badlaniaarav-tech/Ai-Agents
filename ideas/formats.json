@@ -1,6 +1,6 @@
 {
   "updated": "2026-10-20",
-  "note": "Video formats the office can build. The idea-scout adds and refreshes these from YouTube and Instagram; the clip-editor offers them as options and builds the one the owner picks. 'recipe' is the exact tool call. 'needs' lists anything our tools cannot do yet. \"buildable\" is true when the recipe works with the tools as they are; the page lists only those as styles.",
+  "note": "Video formats the office can build. The idea-scout adds and refreshes these from YouTube and Instagram; the clip-editor offers them as options and builds the one the owner picks. 'recipe' is the exact tool call. 'needs' lists anything our tools cannot do yet. \"buildable\" is true when the recipe works with the tools as they are; the page lists only those as styles. Second run (deep): numbers come from tools/yt.py, saved in work/research/ideas/results.jsonl. top_examples are the three best-viewed matches; 'views' are all-time views, Shorts shelf items give no date or channel. make_first_rank (1 = first) is set on the ten formats Aarav should make first, see work/research/ideas/summary.md.",
   "formats": [
     {
       "id": "smooth-slow",
@@ -19,8 +19,42 @@
         9
       ],
       "recipe": "python3 tools/reel.py <clip> out/<name>/reel.mp4 --label \"<a few lowercase words>\" --mood hype",
-      "needs": [],
-      "buildable": true
+      "needs": [
+        "Optional: a second, smaller name line under the label (for example 'aarav | 7 iron'); reel.py --label shows one line (confirm)"
+      ],
+      "buildable": true,
+      "evidence": "strong: yt.py views. Slow motion in the title: median 339K (73 Shorts) against 63.5K for all 442 Shorts. Face-on titles median 338K (21). Pro footage, so the numbers show the format, not what Aarav's account would get.",
+      "top_examples": [
+        {
+          "title": "Rory McIlroy Iron Swing Slow Motion",
+          "channel": null,
+          "views": 5900000,
+          "views_text": "5.9M",
+          "length": null,
+          "published": null,
+          "url": "https://www.youtube.com/watch?v=A0ty-e8e5cc"
+        },
+        {
+          "title": "Linn Grant's transition in slow motion.",
+          "channel": null,
+          "views": 4200000,
+          "views_text": "4.2M",
+          "length": null,
+          "published": null,
+          "url": "https://www.youtube.com/watch?v=LgpzGVSrRuA"
+        },
+        {
+          "title": "Tiger Woods Iron Swing Slow Motion 2025 | Face On",
+          "channel": null,
+          "views": 2600000,
+          "views_text": "2.6M",
+          "length": null,
+          "published": null,
+          "url": "https://www.youtube.com/watch?v=7YE6Yxs7SpY"
+        }
+      ],
+      "framing_note": "Face-on beat down-the-line in this data (titles with 'face on' median 338K, 21 Shorts; 'down the line' median 90K, 19). Plain frame, no text, golfer centered was the most common look among the 60 Shorts over 1M. Test both angles on Aarav's own Insights.",
+      "make_first_rank": 1
     },
     {
       "id": "montage-on-the-strike",
@@ -40,7 +74,37 @@
       ],
       "recipe": "python3 tools/montage.py out/montage-<date>/montage.mp4 <clip1> <clip2> ... --label \"<one line>\" --mood hype",
       "needs": [],
-      "buildable": true
+      "buildable": true,
+      "evidence": "strong for reach of swing compilations: yt.py views on pro footage; the owner's fairwayfilm Instagram example could not be searched (Instagram is unreachable), so the exact Instagram format has no number.",
+      "top_examples": [
+        {
+          "title": "Jack Nicklaus’ swing through the years 😮",
+          "channel": null,
+          "views": 1300000,
+          "views_text": "1.3M",
+          "length": null,
+          "published": null,
+          "url": "https://www.youtube.com/watch?v=Kja639hY5Zc"
+        },
+        {
+          "title": "Fred Couples Slow Motion Downswing Compilation ❤️❤️❤️ #golf #shorts",
+          "channel": null,
+          "views": 1100000,
+          "views_text": "1.1M",
+          "length": null,
+          "published": null,
+          "url": "https://www.youtube.com/watch?v=GLcoMc9FNkA"
+        },
+        {
+          "title": "Top 5 best golf swings #golf #golfing #golfer #golfers #golfswing",
+          "channel": null,
+          "views": 154000,
+          "views_text": "154K",
+          "length": null,
+          "published": null,
+          "url": "https://www.youtube.com/watch?v=EHEMbJwCZoM"
+        }
+      ]
     },
     {
       "id": "hook-punch",
@@ -60,7 +124,19 @@
       ],
       "recipe": "python3 tools/reel.py <clip> out/<name>/reel.mp4 --style punch --hook \"<under five words>\" --mood hype",
       "needs": [],
-      "buildable": true
+      "buildable": true,
+      "evidence": "weak: no Short with this punch-in look found in the 16 searches; the owner found the first version too busy. Closest numbers: caps hook over a range clip, 'The Furthest Ball Ever Hit At Top Golf' 1.4M.",
+      "top_examples": [
+        {
+          "title": "The Furthest Ball Ever Hit At Top Golf🚀 #golf",
+          "channel": null,
+          "views": 1400000,
+          "views_text": "1.4M",
+          "length": null,
+          "published": null,
+          "url": "https://www.youtube.com/watch?v=wLEg6K18NGg"
+        }
+      ]
     },
     {
       "id": "signature-move-slow",
@@ -71,7 +147,7 @@
         "Titleist video 'Cameron Young shares his driver secrets', September 2026 (titleist.com; views not shown)",
         "'Ultra slow motion' swing uploads by Justin Thomas and Nelly Korda seen in YouTube search results for 'golf swing slow motion' (2026 in the titles, views and dates not readable)"
       ],
-      "evidence": "weak: topic is clearly active, no view counts found for this exact format",
+      "evidence": "strong: yt.py views. Naming one move works at scale on pro footage ('transition' 4.2M). Small-number example of the same idea: 'Stop Turning at the Top' 28K.",
       "fits": [
         "one swing",
         "a swing with something visible to point at (pause, big hip turn, late release)",
@@ -83,7 +159,37 @@
       ],
       "recipe": "python3 tools/reel.py <clip> out/<name>/reel.mp4 --label \"the pause at the top\" --mood hype",
       "needs": [],
-      "buildable": true
+      "buildable": true,
+      "top_examples": [
+        {
+          "title": "Linn Grant's transition in slow motion.",
+          "channel": null,
+          "views": 4200000,
+          "views_text": "4.2M",
+          "length": null,
+          "published": null,
+          "url": "https://www.youtube.com/watch?v=LgpzGVSrRuA"
+        },
+        {
+          "title": "Watch how perfect Ernie Els’ tempo is! #golf",
+          "channel": null,
+          "views": 577000,
+          "views_text": "577K",
+          "length": null,
+          "published": null,
+          "url": "https://www.youtube.com/watch?v=2kZe5MOpGow"
+        },
+        {
+          "title": "Tiger’s Mid-Swing Stop Proves the #1 Downswing Secret 🎯 #tiger #golf #golftips",
+          "channel": null,
+          "views": 28000,
+          "views_text": "28K",
+          "length": null,
+          "published": null,
+          "url": "https://www.youtube.com/watch?v=2l0_CXkeDZE"
+        }
+      ],
+      "make_first_rank": 3
     },
     {
       "id": "long-drive-bomb",
@@ -93,7 +199,7 @@
         "Bryson DeChambeau, YouTube Short 'WORLDS LONGEST DRIVE EVER': 603K views in the week Sep 13-20 2026, 5.7M all time (GolfScout weekly Shorts chart; page now returns HTTP 410, numbers from a search snippet)",
         "Bryson DeChambeau, 'Kobe!' clip: 110K views that week, 6.3M all time (same source)"
       ],
-      "evidence": "medium: one in-window number from a tracker snippet, not confirmed on YouTube",
+      "evidence": "strong: yt.py views for the format (a yardage or 'furthest' hook over a big hit).",
       "fits": [
         "a huge drive",
         "a clip that shows the ball in the air",
@@ -106,9 +212,39 @@
       "recipe": "python3 tools/reel.py <clip> out/<name>/reel.mp4 --style punch --hook \"longest drive today\" --end \"287 YARDS\" --mood hype",
       "needs": [
         "Ball-flight tracer overlay: nothing in tools/ can draw the ball path, so the flight is only what the phone sees",
-        "The number on the end card is typed by hand; the owner has to give the yardage (no launch monitor data is read)"
+        "The number on the end card is typed by hand; the owner has to give the yardage (no launch monitor data is read)",
+        "Stats card with ball speed, carry and club speed shown after the strike (see stats-card)"
       ],
-      "buildable": false
+      "buildable": false,
+      "top_examples": [
+        {
+          "title": "Just Tiger Woods things 🐅",
+          "channel": null,
+          "views": 3100000,
+          "views_text": "3.1M",
+          "length": null,
+          "published": null,
+          "url": "https://www.youtube.com/watch?v=Erb8Bt2K9tQ"
+        },
+        {
+          "title": "Rory McIlroy Stuns Tiger Woods on The Range... | TaylorMade Golf",
+          "channel": null,
+          "views": 1500000,
+          "views_text": "1.5M",
+          "length": null,
+          "published": null,
+          "url": "https://www.youtube.com/watch?v=AZt1cYqLqPo"
+        },
+        {
+          "title": "The Furthest Ball Ever Hit At Top Golf🚀 #golf",
+          "channel": null,
+          "views": 1400000,
+          "views_text": "1.4M",
+          "length": null,
+          "published": null,
+          "url": "https://www.youtube.com/watch?v=wLEg6K18NGg"
+        }
+      ]
     },
     {
       "id": "pure-strike-sound",
@@ -118,7 +254,7 @@
         "PGA Tour video of Tiger Woods hitting range shots at Torrey Pines, edited to only the moments of impact, covered by Golf.com as 'mesmerizing' (golf.com, date not confirmed, views not shown)",
         "Substack essay 'the sounds of golf' (treyton.substack.com) by a creator who makes short ASMR-style range videos with announcers and dead time removed (date and views not shown)"
       ],
-      "evidence": "weak: the format and the sound-first idea are documented, no view counts found",
+      "evidence": "strong for reach but a lottery: yt.py shows sound titles with median 36.5K (34 Shorts) and mean 6.2M, because two clips are 120M and 48M. Do not plan on it; treat it as a free variant of any range montage.",
       "fits": [
         "a range session with 5 to 10 swings",
         "good strike sound on the phone mic",
@@ -130,7 +266,36 @@
       ],
       "recipe": "python3 tools/montage.py out/<name>/montage.mp4 <swing1> <swing2> ... --label \"\" --music-volume 0",
       "needs": [],
-      "buildable": true
+      "buildable": true,
+      "top_examples": [
+        {
+          "title": "Best sounds in #golf",
+          "channel": null,
+          "views": 120000000,
+          "views_text": "120M",
+          "length": null,
+          "published": null,
+          "url": "https://www.youtube.com/watch?v=Cij0r1In490"
+        },
+        {
+          "title": "They Sound Like Gunshots🤯(@teemandur)",
+          "channel": null,
+          "views": 37000000,
+          "views_text": "37M",
+          "length": null,
+          "published": null,
+          "url": "https://www.youtube.com/watch?v=Mv_iAqctzrY"
+        },
+        {
+          "title": "ASMR golf driving range session in South Korea 🇰🇷",
+          "channel": "Taco Golf",
+          "views": 2022888,
+          "views_text": "2,022,888",
+          "length": "8:43",
+          "published": "2 years ago",
+          "url": "https://www.youtube.com/watch?v=pKJHrFywv54"
+        }
+      ]
     },
     {
       "id": "rate-my-swing",
@@ -139,7 +304,7 @@
       "seen_on": [
         "TikTok slow-mo swing clips with short captions such as 'Rate my swing' and #slowmo (TikTok discover page for 'Big Justice golf swing slow mo', reported by search as 2.3M posts; not a reliable view measure, date not shown)"
       ],
-      "evidence": "weak: a pattern from a discovery page, no single video verified",
+      "evidence": "weak: no matching title found on YouTube in 16 searches (question titles had median 28K against 66K for the rest).",
       "fits": [
         "one clean swing",
         "no talking",
@@ -151,7 +316,8 @@
       ],
       "recipe": "python3 tools/reel.py <clip> out/<name>/reel.mp4 --label \"rate my swing 1 to 10\" --mood hype",
       "needs": [],
-      "buildable": true
+      "buildable": true,
+      "top_examples": []
     },
     {
       "id": "drill-in-one-line",
@@ -161,7 +327,7 @@
         "TikTok drill and tip captions from @priscillia_karol (power and using the ground, 8.0K and 5.0K as listed on hooked.so, labels of the figures not shown, no date)",
         "Golf TikTok ranking by Favikon (Jan 2026, outside 90 days): Bryce Cope instructional swing and technique content, Grant Lee short TPI drills"
       ],
-      "evidence": "weak: instruction posts have smaller numbers than entertainment on the pages I could read",
+      "evidence": "strong for reach: yt.py views. Drill titles with a promise word (only, simple, perfect, instantly, best) median 502K (18 Shorts) against 75K for all 51 drill Shorts. Most are instructors talking; with no talking Aarav needs the label to carry the promise.",
       "fits": [
         "a practice drill",
         "a range session",
@@ -172,8 +338,40 @@
         14
       ],
       "recipe": "python3 tools/montage.py out/<name>/montage.mp4 <rep-real-speed> <rep-again> --label \"<what it fixes>|<what to feel>\" --pre 1.5 --post 1.0 --music-volume 0.2",
-      "needs": [],
-      "buildable": true
+      "needs": [
+        "Arrow or circle overlay to point at the move (the top drill Shorts draw arrows); the page editor draws lines only"
+      ],
+      "buildable": true,
+      "top_examples": [
+        {
+          "title": "The only drill you need for better ball striking! #golftips #golflesson #golfswing #golf",
+          "channel": null,
+          "views": 3100000,
+          "views_text": "3.1M",
+          "length": null,
+          "published": null,
+          "url": "https://www.youtube.com/watch?v=gAqhLB6qsw4"
+        },
+        {
+          "title": "Pure Your Irons INSTANTLY With This Drill!",
+          "channel": null,
+          "views": 3100000,
+          "views_text": "3.1M",
+          "length": null,
+          "published": null,
+          "url": "https://www.youtube.com/watch?v=PmuBVTzcmpc"
+        },
+        {
+          "title": "Perfect your backswing with this simple drill! ✅ A common complaint I hear from amateur golfers is",
+          "channel": null,
+          "views": 2900000,
+          "views_text": "2.9M",
+          "length": null,
+          "published": null,
+          "url": "https://www.youtube.com/watch?v=GC_1AdftZoU"
+        }
+      ],
+      "make_first_rank": 9
     },
     {
       "id": "before-after-swing",
@@ -184,7 +382,7 @@
         "V1 Sports side-by-side swing comparison feature, synced at any frame (swing-analysis.v1sports.com)",
         "A disc golf amateur vs professional throw comparison on Snapchat described as about 2.2M views, date not confirmed, not golf"
       ],
-      "evidence": "weak: no verified 2026 golf example with views",
+      "evidence": "strong numbers, low ceiling: yt.py views. Before/after and transformation titles median 48K (10 Shorts), none over 1.3M. Low priority.",
       "fits": [
         "two clips of the same swing weeks apart",
         "a swing change the owner is working on"
@@ -197,7 +395,36 @@
       "needs": [
         "Side-by-side split screen with both swings synced on the strike (a tools/compare.py)"
       ],
-      "buildable": false
+      "buildable": false,
+      "top_examples": [
+        {
+          "title": "10 years of swing transformation. Loving the journey!",
+          "channel": null,
+          "views": 132000,
+          "views_text": "132K",
+          "length": null,
+          "published": null,
+          "url": "https://www.youtube.com/watch?v=2vAftl5G5KY"
+        },
+        {
+          "title": "Charles Barkley's Swing Evolution!  #golf #golfswing #charlesbarkley #golfer #golflife",
+          "channel": null,
+          "views": 119000,
+          "views_text": "119K",
+          "length": null,
+          "published": null,
+          "url": "https://www.youtube.com/watch?v=PJxcocA6uKY"
+        },
+        {
+          "title": "Comparison: Charles Barkley's old golf swing vs his new one",
+          "channel": "AL.com",
+          "views": 446849,
+          "views_text": "446,849",
+          "length": "0:46",
+          "published": "5 years ago",
+          "url": "https://www.youtube.com/watch?v=OI9Pw3xcHIY"
+        }
+      ]
     },
     {
       "id": "challenge-score",
@@ -208,7 +435,7 @@
         "Bryson DeChambeau, 'Can I Break 50 with Bob Does Sports? (Explosive)': 403.8K and 17.9K as listed on hooked.so (labels of the two figures not shown, no date)",
         "Jennifer Friday, short head-to-head golf stunts on TikTok and Instagram (search summary of a creator profile page, no views)"
       ],
-      "evidence": "medium for the format on creator pages, weak for our size of account",
+      "evidence": "medium: yt.py views for counter-style and escalating-target titles; first two are Shorts, the third is a 3:22 video from 5 years ago.",
       "fits": [
         "a target game on the range",
         "3 to 8 shots",
@@ -220,7 +447,36 @@
       ],
       "recipe": "python3 tools/montage.py out/<name>/montage.mp4 <shot1> <shot2> ... --label \"<the challenge in a few words>\" --counter --end-card \"<made> of <tries>\" --music-volume 0.25",
       "needs": [],
-      "buildable": true
+      "buildable": true,
+      "top_examples": [
+        {
+          "title": "How satisfying is this vid from 1-7,000",
+          "channel": null,
+          "views": 1300000,
+          "views_text": "1.3M",
+          "length": null,
+          "published": null,
+          "url": "https://www.youtube.com/watch?v=MKpD50lg6Qg"
+        },
+        {
+          "title": "RANGE SESSION WITH ONLY 9 BALLS!!",
+          "channel": null,
+          "views": 40000,
+          "views_text": "40K",
+          "length": null,
+          "published": null,
+          "url": "https://www.youtube.com/watch?v=thcm43HN1NA"
+        },
+        {
+          "title": "TRICK SHOTS, But the Targets Get Smaller",
+          "channel": "That's Amazing",
+          "views": 30857951,
+          "views_text": "30,857,951",
+          "length": "3:22",
+          "published": "5 years ago",
+          "url": "https://www.youtube.com/watch?v=yEMGT9DMEQg"
+        }
+      ]
     },
     {
       "id": "turns-out-explainer",
@@ -232,7 +488,7 @@
         "@ladangcuan, 'Ternyata Merawat Lapangan Golf Serumit Ini': 1.9M and 151.6K (same page)",
         "@fwz, 'Kenapa Pemain Golf Selalu Memperbaiki Rumput Setelah Memukul?': 180.4K and 30.4K (same page)"
       ],
-      "evidence": "medium for reach (largest numbers I found) but undated and from a third-party page; low fit for a swing account",
+      "evidence": "medium for reach (largest numbers I found) but undated and from a third-party page; low fit for a swing account (not re-checked in the second run)",
       "fits": [
         "range footage with a topic (divots, etiquette, ball flight)",
         "a short fact the owner knows"
@@ -255,7 +511,7 @@
       "seen_on": [
         "High school golf teams in Central Massachusetts, Instagram team accounts, filmed Sep 16 to Oct 13 2026, 'latest rage' per Golfweek/USA TODAY article published 2026-10-15 via Yahoo Sports; one example is 51 seconds; no views given"
       ],
-      "evidence": "in window and on Instagram, but no view counts; needs talking and a second person, so it does not fit a silent solo account",
+      "evidence": "in window and on Instagram, but no view counts; needs talking and a second person, so it does not fit a silent solo account (not re-checked in the second run)",
       "fits": [
         "only if Aarav decides to talk on camera with a friend",
         "not for a silent swing clip"
@@ -267,6 +523,541 @@
       "recipe": "python3 tools/cut.py <clip> out/<name>/cut.mp4 --max 45 && python3 tools/captions.py out/<name>/cut.mp4 out/<name>/edit.mp4 && python3 tools/music.py out/<name>/edit.mp4 out/<name>/final.mp4 --mood funny",
       "needs": [],
       "buildable": true
+    },
+    {
+      "id": "lines-on-swing",
+      "name": "Slow-motion swing with lines drawn on it (swing plane, shaft angle, spine)",
+      "looks_like": "One full swing in slow motion, framed face-on or down the line, one or two thin coloured lines drawn on the swing (shaft plane, spine angle, hand path), a short label that says what the lines show ('shaft plane', 'hand path'). Real strike sound, music low. On YouTube the title says 'slow motion' and 'analysis'; several of the top clips also add a big caps callout, which our brand rule does not allow, so keep the one small label.",
+      "seen_on": [
+        "Pro swing analysis Shorts, titles with 'Slow Mo ... Swing Analysis', all-time views from yt.py (Shorts shelf gives no date or channel)"
+      ],
+      "evidence": "strong: slow motion plus analysis in the title, median 1.15M (8 Shorts), 4 of 8 over 1M. 5 of the 60 Shorts over 1M that I read on the sheets had drawn lines.",
+      "top_examples": [
+        {
+          "title": "SO ACCURATE! Bryson DeChambeau Slow Motion Driver Swing Analysis (DTL) #golf #golfswing",
+          "channel": null,
+          "views": 3600000,
+          "views_text": "3.6M",
+          "length": null,
+          "published": null,
+          "url": "https://www.youtube.com/watch?v=h3NC_qS-qsE"
+        },
+        {
+          "title": "The OPPOSITE of “over the top” ❌ If you struggle with swinging the hand path over the top more than",
+          "channel": null,
+          "views": 2600000,
+          "views_text": "2.6M",
+          "length": null,
+          "published": null,
+          "url": "https://www.youtube.com/watch?v=IlIjLBjHWjI"
+        },
+        {
+          "title": "Jake Knapp Slow Mo Driver Swing Analysis #golf #pgatour",
+          "channel": null,
+          "views": 2000000,
+          "views_text": "2M",
+          "length": null,
+          "published": null,
+          "url": "https://www.youtube.com/watch?v=ZfMvH_TB21I"
+        }
+      ],
+      "fits": [
+        "one clean swing from face-on or down the line",
+        "a swing with a visible plane or hand path to point at",
+        "no talking"
+      ],
+      "length_s": [
+        6,
+        10
+      ],
+      "recipe": "python3 tools/reel.py <clip> out/<name>/reel.mp4 --label \"shaft plane\" --mood hype ; then page editor: draw lines (yellow, white, red or blue) on the swing",
+      "needs": [
+        "Confirm the page editor lines stay on the slow-motion frames and export into the video; a line that follows the club head would need tracking, which is not built"
+      ],
+      "buildable": true,
+      "make_first_rank": 2
+    },
+    {
+      "id": "ranked-countdown",
+      "name": "Best five shots, ranked 5 to 1",
+      "looks_like": "Five of the session's best swings or shots cut on the strike, each with a small label with its rank (5, 4, 3, 2, 1) and a few words; the best one last and longest. Real crack of each strike as the sound.",
+      "seen_on": [
+        "Ranking and top-N Shorts: 'Top 12 Most Satisfying Shots in Golf', 'Ranking Insane Golf Trickshots 2', 'Ranking the 5 most satisfying golf stingers' (all-time views from yt.py, no dates)"
+      ],
+      "evidence": "strong for the top three, mixed overall: ranking and top-N titles median 116K (15 Shorts), 20% over 1M.",
+      "top_examples": [
+        {
+          "title": "Top 12 Most Satisfying Shots in Golf | Part 2",
+          "channel": null,
+          "views": 13000000,
+          "views_text": "13M",
+          "length": null,
+          "published": null,
+          "url": "https://www.youtube.com/watch?v=rOBjFBI0joA"
+        },
+        {
+          "title": "Ranking Insane Golf Trickshots 2",
+          "channel": null,
+          "views": 2600000,
+          "views_text": "2.6M",
+          "length": null,
+          "published": null,
+          "url": "https://www.youtube.com/watch?v=pN3Ag9xhODc"
+        },
+        {
+          "title": "Ranking the 5 most satisfying golf stingers #golf #golfshot #pgatour",
+          "channel": null,
+          "views": 1300000,
+          "views_text": "1.3M",
+          "length": null,
+          "published": null,
+          "url": "https://www.youtube.com/watch?v=uG6m3itlCGM"
+        }
+      ],
+      "fits": [
+        "a range session with 5 or more good swings",
+        "a round with 5 good shots",
+        "no talking"
+      ],
+      "length_s": [
+        10,
+        18
+      ],
+      "recipe": "python3 tools/montage.py out/montage-<date>/ranked.mp4 <shot5> <shot4> <shot3> <shot2> <shot1> --label \"5 pure iron|4 low stinger|3 high draw|2 full finish|1 best of the day\" --mood hype",
+      "needs": [
+        "Countdown counter 5 to 1 (montage --counter counts up, 1/5 to 5/5); the per-clip labels do the job for now"
+      ],
+      "buildable": true,
+      "make_first_rank": 4
+    },
+    {
+      "id": "club-by-club-session",
+      "name": "One swing per club, a list ticking down the side",
+      "looks_like": "A range session shown as one swing per club, wedge up to driver, each cut on the strike, a small label with the club name (and the list of clubs along the side on the best-known example), the real crack as the sound.",
+      "seen_on": [
+        "'Most satisfying golf video ever' with a club list from lob wedge to putter beside the swing (yt.py, 3M views, no date, channel not shown)"
+      ],
+      "evidence": "medium: one 3M example with the list, the other two are smaller range-session list Shorts.",
+      "top_examples": [
+        {
+          "title": "Most satisfying golf video ever",
+          "channel": null,
+          "views": 3000000,
+          "views_text": "3M",
+          "length": null,
+          "published": null,
+          "url": "https://www.youtube.com/watch?v=v-7iBetrPpE"
+        },
+        {
+          "title": "Pure Golf ASMR: The Top 5 ⛳️ #subscribe",
+          "channel": null,
+          "views": 220000,
+          "views_text": "220K",
+          "length": null,
+          "published": null,
+          "url": "https://www.youtube.com/watch?v=lUbNDea7NW8"
+        },
+        {
+          "title": "RANGE SESSION WITH ONLY 9 BALLS!!",
+          "channel": null,
+          "views": 40000,
+          "views_text": "40K",
+          "length": null,
+          "published": null,
+          "url": "https://www.youtube.com/watch?v=thcm43HN1NA"
+        }
+      ],
+      "fits": [
+        "a range session where Aarav hits one shot with each club",
+        "no talking"
+      ],
+      "length_s": [
+        10,
+        20
+      ],
+      "recipe": "python3 tools/montage.py out/montage-<date>/clubs.mp4 <pw> <8iron> <6iron> <5wood> <driver> --label \"pitching wedge|8 iron|6 iron|5 wood|driver\" --counter --mood hype",
+      "needs": [
+        "A club list kept on screen with the current club highlighted (montage shows one label per clip, not a list)"
+      ],
+      "buildable": true,
+      "make_first_rank": 5
+    },
+    {
+      "id": "range-warmup-routine",
+      "name": "The range routine, club by club with real strikes",
+      "looks_like": "A warm-up or practice routine shown as a run of swings in the order the golfer hits them, small labels for club or purpose, the strike sound, no talking. Titles promise a result ('shoot under par with this routine').",
+      "seen_on": [
+        "Routine and range-session Shorts (yt.py, all-time views, no dates)"
+      ],
+      "evidence": "strong numbers, weak median: range and routine titles median 37K (33 Shorts), 6% over 1M, one 4M outlier.",
+      "top_examples": [
+        {
+          "title": "YOU WILL SHOOT UNDER PAR EVERYTIME WITH THIS ROUTINE!  #golflife #golf #golfswing #golftips",
+          "channel": null,
+          "views": 4000000,
+          "views_text": "4M",
+          "length": null,
+          "published": null,
+          "url": "https://www.youtube.com/watch?v=F4KqC78B_OE"
+        },
+        {
+          "title": "Nelly Korda's Range Warm-Up Routine | TaylorMade Golf",
+          "channel": null,
+          "views": 892000,
+          "views_text": "892K",
+          "length": null,
+          "published": null,
+          "url": "https://www.youtube.com/watch?v=NUi3Nog6rsk"
+        },
+        {
+          "title": "Xander Schauffele Range Session At The 2024 ZOZO Championship",
+          "channel": null,
+          "views": 651000,
+          "views_text": "651K",
+          "length": null,
+          "published": null,
+          "url": "https://www.youtube.com/watch?v=gx1Jhq_XB8o"
+        }
+      ],
+      "fits": [
+        "a normal range session",
+        "no talking"
+      ],
+      "length_s": [
+        12,
+        25
+      ],
+      "recipe": "python3 tools/montage.py out/montage-<date>/routine.mp4 <clip1> <clip2> <clip3> <clip4> --label \"warm up|short irons|mid irons|driver\" --music-volume 0.2",
+      "needs": [],
+      "buildable": true
+    },
+    {
+      "id": "tempo-number-label",
+      "name": "Tempo number on a smooth swing (rhythm and tempo)",
+      "looks_like": "A smooth full swing in slow motion with one label that states the tempo ('tempo 3:1', 'rhythm & tempo'), nothing else. Matches the owner's first example strip. On YouTube the name of a tour player sits next to the number.",
+      "seen_on": [
+        "Tempo Shorts: Ernie Els, Haruka Amamoto, Nelly Korda (yt.py, all-time views, no dates, channels not shown)"
+      ],
+      "evidence": "strong numbers, weak median: tempo, rhythm or smooth titles median 80.5K (34 Shorts), 9% over 1M; the big ones carry a famous name.",
+      "top_examples": [
+        {
+          "title": "The most comfortable swing rhythm and tempo I've ever seen. She is Haruka Amamoto from Japan.",
+          "channel": null,
+          "views": 922000,
+          "views_text": "922K",
+          "length": null,
+          "published": null,
+          "url": "https://www.youtube.com/watch?v=fQQq-AuOPVk"
+        },
+        {
+          "title": "Watch how perfect Ernie Els’ tempo is! #golf",
+          "channel": null,
+          "views": 577000,
+          "views_text": "577K",
+          "length": null,
+          "published": null,
+          "url": "https://www.youtube.com/watch?v=2kZe5MOpGow"
+        },
+        {
+          "title": "Nelly Korda’s golf swing is definitely Tour Tempo! #golf",
+          "channel": null,
+          "views": 88000,
+          "views_text": "88K",
+          "length": null,
+          "published": null,
+          "url": "https://www.youtube.com/watch?v=FgffVSIAsZA"
+        }
+      ],
+      "fits": [
+        "one smooth swing",
+        "no talking"
+      ],
+      "length_s": [
+        5,
+        9
+      ],
+      "recipe": "python3 tools/reel.py <clip> out/<name>/reel.mp4 --label \"rhythm & tempo\" --mood hype",
+      "needs": [
+        "Tempo counter: a tool that counts backswing and downswing frames and returns the ratio for the label, so the number is measured, not guessed (tools/tempo.py)"
+      ],
+      "buildable": true,
+      "make_first_rank": 7
+    },
+    {
+      "id": "impact-closeup",
+      "name": "Impact or divot close-up in slow motion",
+      "looks_like": "A low camera next to the ball: the club arrives, the ball compresses and leaves, the divot flies. Very slow, the crack as the sound, no text or one small label. Shot on a phone in 240 fps slow motion mode.",
+      "seen_on": [
+        "'What Actually Happens When You Hit a Golf Ball (SLOW MO)', 'Scottie Scheffler's Mesmerizing Divot Pattern | TaylorMade Golf', 'Rory McIlroy's Driver Swing at Impact | TaylorMade Golf' (yt.py, all-time views, no dates)"
+      ],
+      "evidence": "strong for the three examples; impact and divot titles overall median 25K (19 Shorts), 21% over 1M.",
+      "top_examples": [
+        {
+          "title": "What Actually Happens When You Hit a Golf Ball (SLOW MO) 🤯⛳️ Golf Swing Tips #shorts",
+          "channel": null,
+          "views": 6500000,
+          "views_text": "6.5M",
+          "length": null,
+          "published": null,
+          "url": "https://www.youtube.com/watch?v=8La7qU10nMg"
+        },
+        {
+          "title": "Scottie Scheffler's Mesmerizing Divot Pattern | TaylorMade Golf",
+          "channel": null,
+          "views": 5800000,
+          "views_text": "5.8M",
+          "length": null,
+          "published": null,
+          "url": "https://www.youtube.com/watch?v=zrf3ALauEqI"
+        },
+        {
+          "title": "Rory McIlroy's Driver Swing at Impact | TaylorMade Golf",
+          "channel": null,
+          "views": 4600000,
+          "views_text": "4.6M",
+          "length": null,
+          "published": null,
+          "url": "https://www.youtube.com/watch?v=58Cq0Nj5osQ"
+        }
+      ],
+      "fits": [
+        "a clip filmed close and low at the ball",
+        "good strike sound on the phone mic"
+      ],
+      "length_s": [
+        4,
+        8
+      ],
+      "recipe": "python3 tools/reel.py <closeup-clip> out/<name>/reel.mp4 --label \"the strike\" --slow 3.0 --mood hype",
+      "needs": [
+        "Check that reel.py reads a 240 fps phone clip and runs --slow 3 or 4 without stutter (untested here; the brand rule says no frame interpolation)"
+      ],
+      "buildable": true,
+      "make_first_rank": 6
+    },
+    {
+      "id": "two-angles-split",
+      "name": "Face-on and down-the-line side by side",
+      "looks_like": "The same swing from two cameras, face-on on one side and down the line on the other, synced on the strike, slow motion, one small label.",
+      "seen_on": [
+        "'Jordan Spieth Slow Motion Golf Swing (DOWN THE LINE AND FACE ON)' (Golf247, 0:43, 8 years ago); 'Tiger Woods Slow Mo Driver Swing | TaylorMade Golf' (thumbnail shows two panels side by side); 'The evolution of Tiger Woods' swing' (thumbnail is a four-panel grid)"
+      ],
+      "evidence": "strong numbers, old uploads: the three are 99.8K, 3.76M and 508K views, all older than a year.",
+      "top_examples": [
+        {
+          "title": "Tiger Woods Slow Mo Driver Swing | TaylorMade Golf",
+          "channel": "TaylorMade Golf",
+          "views": 3758721,
+          "views_text": "3,758,721",
+          "length": "0:32",
+          "published": "6 years ago",
+          "url": "https://www.youtube.com/watch?v=Jlp8G9paliw"
+        },
+        {
+          "title": "The evolution of Tiger Woods’ swing",
+          "channel": "PGA Tour",
+          "views": 507931,
+          "views_text": "507,931",
+          "length": "1:52",
+          "published": "11 years ago",
+          "url": "https://www.youtube.com/watch?v=R9Sm4r8UEok"
+        },
+        {
+          "title": "Jordan Spieth Slow Motion Golf Swing (DOWN THE LINE AND FACE ON)",
+          "channel": "Golf247",
+          "views": 99765,
+          "views_text": "99,765",
+          "length": "0:43",
+          "published": "8 years ago",
+          "url": "https://www.youtube.com/watch?v=9YuObuvGano"
+        }
+      ],
+      "fits": [
+        "a swing filmed from two angles",
+        "two clips of the same swing"
+      ],
+      "length_s": [
+        6,
+        12
+      ],
+      "recipe": "python3 tools/reel.py <face-on-clip> out/<name>/reel.mp4 --label \"face on\" --mood hype (closest: one angle only)",
+      "needs": [
+        "Split-screen compare tool: two clips side by side or stacked, synced on the strike, slow motion (tools/compare.py); also used by before-after-swing"
+      ],
+      "buildable": false,
+      "make_first_rank": 10
+    },
+    {
+      "id": "stats-card",
+      "name": "Swing with a launch-monitor stats card",
+      "looks_like": "A full swing, then a small grid of numbers (club speed, ball speed, carry) pops up at the strike, as in the owner's Trackman example. On YouTube it shows up as a short caption with one number ('190 mph', '2-iron from 274 yards').",
+      "seen_on": [
+        "Owner's example: trackmangolf, Instagram (Trackman numbers over a range swing); YouTube Shorts with one speed or yardage in the caption (yt.py, all-time views, no dates)"
+      ],
+      "evidence": "strong for one-number captions: yt.py views. The grid card itself has no YouTube number.",
+      "top_examples": [
+        {
+          "title": "Just Tiger Woods things 🐅",
+          "channel": null,
+          "views": 3100000,
+          "views_text": "3.1M",
+          "length": null,
+          "published": null,
+          "url": "https://www.youtube.com/watch?v=Erb8Bt2K9tQ"
+        },
+        {
+          "title": "Jake Knapp Slow Mo Driver Swing Analysis #golf #pgatour",
+          "channel": null,
+          "views": 2000000,
+          "views_text": "2M",
+          "length": null,
+          "published": null,
+          "url": "https://www.youtube.com/watch?v=ZfMvH_TB21I"
+        },
+        {
+          "title": "The Furthest Ball Ever Hit At Top Golf🚀 #golf",
+          "channel": null,
+          "views": 1400000,
+          "views_text": "1.4M",
+          "length": null,
+          "published": null,
+          "url": "https://www.youtube.com/watch?v=wLEg6K18NGg"
+        }
+      ],
+      "fits": [
+        "a swing with launch monitor numbers",
+        "a long drive"
+      ],
+      "length_s": [
+        6,
+        10
+      ],
+      "recipe": "python3 tools/reel.py <clip> out/<name>/reel.mp4 --label \"190 mph ball speed\" --mood hype (closest: one number in the label)",
+      "needs": [
+        "Stats card tool: a grid of up to 6 numbers typed by the owner, shown from the strike frame (tools/stats.py)",
+        "The owner has to supply the numbers; nothing reads a launch monitor"
+      ],
+      "buildable": false,
+      "make_first_rank": 8
+    },
+    {
+      "id": "trick-shot-reaction",
+      "name": "Trick shot, one take",
+      "looks_like": "A hook line, the trick set up in two seconds, the shot, the result held. Real crack, big reaction from anyone in frame.",
+      "seen_on": [
+        "Trick shot Shorts (yt.py, all-time views, no dates, channels not shown)"
+      ],
+      "evidence": "strong numbers, lottery: trick titles median 28K (29 Shorts), 14% over 1M, top clips 3.3M to 19M.",
+      "top_examples": [
+        {
+          "title": "One of the more satisfying golf trick shots I’ve done #shorts #golf",
+          "channel": null,
+          "views": 19000000,
+          "views_text": "19M",
+          "length": null,
+          "published": null,
+          "url": "https://www.youtube.com/watch?v=kIWg0w_Lk28"
+        },
+        {
+          "title": "INSANE trick shot by @gabbygolfgirl 🔥",
+          "channel": null,
+          "views": 3300000,
+          "views_text": "3.3M",
+          "length": null,
+          "published": null,
+          "url": "https://www.youtube.com/watch?v=4pkIA5AGt5w"
+        },
+        {
+          "title": "These golf trick shots keep getting crazier,. #golf #golfswing",
+          "channel": null,
+          "views": 3300000,
+          "views_text": "3.3M",
+          "length": null,
+          "published": null,
+          "url": "https://www.youtube.com/watch?v=IUxfVK_RYBM"
+        }
+      ],
+      "fits": [
+        "only a real trick shot or an unlikely shot"
+      ],
+      "length_s": [
+        5,
+        10
+      ],
+      "recipe": "python3 tools/reel.py <clip> out/<name>/reel.mp4 --style punch --hook \"one take\" --mood hype",
+      "needs": [],
+      "buildable": true
+    },
+    {
+      "id": "pov-hands",
+      "name": "POV from the hands (chest or grip camera)",
+      "looks_like": "First-person view of the grip and the club through the swing, a short caps caption naming the point ('POWER.', 'SLICE'). Needs a chest mount or a camera on the club.",
+      "seen_on": [
+        "POV golf tips Shorts (yt.py, all-time views, no dates)"
+      ],
+      "evidence": "strong numbers, weak fit: POV titles median 52K (28 Shorts); the top clips are an ad and a comedy sketch.",
+      "top_examples": [
+        {
+          "title": "NEVER HAVE A GRIP LIKE THIS IF YOU SLICE… #golf #golfswing #golfstance #golfcoach #golftips",
+          "channel": null,
+          "views": 3100000,
+          "views_text": "3.1M",
+          "length": null,
+          "published": null,
+          "url": "https://www.youtube.com/watch?v=e5Uab7j0p6o"
+        },
+        {
+          "title": "POV: 3 things PGA Pros do to create effortless Power in the golf swing!",
+          "channel": null,
+          "views": 499000,
+          "views_text": "499K",
+          "length": null,
+          "published": null,
+          "url": "https://www.youtube.com/watch?v=S8Nz5QIhetE"
+        },
+        {
+          "title": "POV: How a Professional Release looks like! #golfswing",
+          "channel": null,
+          "views": 92000,
+          "views_text": "92K",
+          "length": null,
+          "published": null,
+          "url": "https://www.youtube.com/watch?v=S_QlstLBz3Y"
+        }
+      ],
+      "fits": [
+        "only if Aarav buys a chest mount",
+        "not for the current phone clips"
+      ],
+      "length_s": [
+        6,
+        12
+      ],
+      "recipe": "python3 tools/reel.py <pov-clip> out/<name>/reel.mp4 --label \"the grip\" --mood hype",
+      "needs": [],
+      "buildable": true
+    },
+    {
+      "id": "angles-stacked",
+      "name": "Three angles stacked",
+      "looks_like": "Two or three cameras on the same session, stacked in horizontal strips that play at once and line up on the strike: a low close-up at the ball, a wide side view, a tight view from behind or below. Cuts to the next rep every three or four seconds. Moody grade, calm music low, one small label or none.",
+      "seen_on": [
+        "owner's example (noahhenry, 'Aesthetic reps', Instagram), 2026-10-20"
+      ],
+      "fits": [
+        "the same swing or session filmed from two or three angles",
+        "range sessions",
+        "moody light"
+      ],
+      "length_s": [
+        6,
+        15
+      ],
+      "recipe": "python3 tools/stack.py out/<name>/stack.mp4 <rep1-angleA> <rep1-angleB> <rep1-angleC> <rep2-angleA> ... --rows 3 --focus \"<x,y per row>\" --label \"aesthetic reps\" --mood chill",
+      "needs": [],
+      "evidence": "owner's pick; one Instagram example, no view count readable",
+      "buildable": true,
+      "make_first_rank": 4
     }
   ],
   "unreachable_sources": {
@@ -276,6 +1067,12 @@
       "golfscout.net weekly and daily Shorts charts: HTTP 410; the Sep 13-20 numbers below come only from search-result snippets",
       "axios.com article on the Utah country club hitchhiker (Instagram, Sep 14 2026): HTTP 403, read from the search snippet only",
       "Bash/curl to YouTube was blocked by the permission system and not retried"
+    ],
+    "2026-10-20 second run (yt.py)": [
+      "Video pages and streams are sign-in gated: only titles, views, lengths and thumbnails were read; no dates for Shorts shelf items (3 of 537 videos show a recent date), so the last 90 days could not be filtered",
+      "Shorts shelf items give no channel name; channel is null in top_examples unless the title names it",
+      "Instagram and TikTok: not searched (no tool reaches them); the owner's four example strips are the only Instagram evidence",
+      "A direct fetch of the YouTube oEmbed endpoint for channel names was blocked by the permission system and not retried"
     ]
   }
 }
