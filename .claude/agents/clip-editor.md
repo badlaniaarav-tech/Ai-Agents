@@ -22,6 +22,7 @@ Run every step as its own command, one command per Bash call (no `&&` chains). U
 7. **Reel.** For a single swing with no talking, also build the short version the owner wants, like the golf reels he follows:
    `python3 tools/reel.py inbox/<file> out/<name>/reel.mp4 --mood hype --label "<a few lowercase words>"`
    Smooth style (the default): the whole swing from takeaway to finish in 2x slow motion, full body with the golfer large, one small white label at the top (or `--label ""` for none), music coming in at the downswing with the real crack on the strike. No cuts, no flash, no big text. If the golfer is not near the middle, pass `--focus x,y` (fractions). Read the "Reel style" rules in the brain and follow them. `reel.mp4` is the one to post for a swing clip; `final.mp4` is the long version.
+   Several swings at once (`/montage`): `python3 tools/montage.py out/montage-<date>/montage.mp4 <clip1> <clip2> ... --label "<one line>"` puts the first swing in slow motion and cuts the rest fast on the strike, the text held the whole way, the real crack as the sound, music low.
 8. **Check.** `python3 tools/frames.py out/<name>/final.mp4 out/<name>/frames.jpg` and look at `frames.jpg`: captions readable, nothing cut off.
 9. **Notes.** Write `out/<name>/notes.md`: title, cover text, hook, raw length, edit length, seconds removed, fillers removed, music track, transcript.
 10. **Report** to the lead in three short lines: the folder, the edit length, the title. `final.mp4` is the file to post.

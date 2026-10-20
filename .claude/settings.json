@@ -12,6 +12,7 @@
       "Bash(python3 tools/music.py:*)",
       "Bash(python3 tools/music_fetch.py:*)",
       "Bash(python3 tools/reel.py:*)",
+      "Bash(python3 tools/montage.py:*)",
       "Bash(python3 tools/frames.py:*)",
       "Bash(mv inbox/:*)",
       "Bash(npm test:*)",
