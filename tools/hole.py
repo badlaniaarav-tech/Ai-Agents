@@ -18,8 +18,9 @@ ap.add_argument("out"); ap.add_argument("shots", nargs="+", help='"clip|line 1|l
 ap.add_argument("--result", default=""); ap.add_argument("--card", default="", help="hole card on the first shot: \"hole 15|par 3\" or \"512 yards|par 5\""); ap.add_argument("--pre", type=float, default=1.3); ap.add_argument("--post", type=float, default=3.5)
 ap.add_argument("--zoom", type=float, default=1.12); ap.add_argument("--focus", default="0.5,0.55"); ap.add_argument("--impacts", default="")
 ap.add_argument("--mood", default="chill"); ap.add_argument("--track"); ap.add_argument("--music-volume", type=float, default=0.3); ap.add_argument("--label-pos", choices=["top", "mid"], default="mid")
+ap.add_argument("--font", default="Poppins-ExtraBold.ttf", help="file in tools/fonts; Poppins ExtraBold matches the Instagram Strong look of the owner's example"); ap.add_argument("--shadow", type=int, default=8, help="hard shadow offset in px, like the example"); ap.add_argument("--tracking", type=float, default=0.06, help="letter spacing as a fraction of the font size"); ap.add_argument("--size", type=int, default=112, help="shot label size"); ap.add_argument("--card-size", type=int, default=136); ap.add_argument("--label-x", type=float, default=0.70); ap.add_argument("--label-y", type=float, default=0.52)
 a = ap.parse_args()
-ROOT = os.path.dirname(HERE); FONT = os.path.join(HERE, "fonts", "Geist.ttf"); fx, fy = [float(x) for x in a.focus.split(",")]
+ROOT = os.path.dirname(HERE); FONT = os.path.join(HERE, "fonts", a.font); fx, fy = [float(x) for x in a.focus.split(",")]
 IMPS = [float(x) for x in a.impacts.split(",") if x.strip()]
 
 def pcm(path, sr=16000):
@@ -35,14 +36,24 @@ def crop(w, h):
     cw, ch = int(w / a.zoom) // 2 * 2, int(h / a.zoom) // 2 * 2; x = min(max(0, int(w * fx - cw / 2)), w - cw); y = min(max(0, int(h * fy - ch / 2)), h - ch)
     return f"crop={cw}:{ch}:{x}:{y},scale=1080:1920:flags=lanczos"
 def esc(t): return t.replace("\\", "\\\\").replace("'", r"\'").replace(":", r"\:").replace(",", r"\,")
-def label(lines, pos, start, end, size=96):
-    """Two lines of bold white caps with a soft shadow. top: centred near the top (the hole card). mid: right of centre, mid height."""
-    out = ""; en = f":enable='between(t,{start:.3f},{end:.3f})'"; bw = max(2, size // 14)
-    for i, line in enumerate([l for l in lines if l.strip()]):
-        txt = esc(line.strip().upper()); y = (f"h*0.11+{i * size * 1.1}" if pos == "top" else f"h*0.47+{i * size * 1.1}"); x = "(w-text_w)/2" if pos == "top" else f"w*0.73-text_w/2"
-        out += f",drawtext=fontfile={FONT}:text='{txt}':fontsize={size}:fontcolor=black@0.45:borderw={bw}:bordercolor=black@0.45:x={x}+6:y={y}+8{en}"
-        out += f",drawtext=fontfile={FONT}:text='{txt}':fontsize={size}:fontcolor=white:borderw={bw}:bordercolor=white:x={x}:y={y}{en}"
-    return out
+from PIL import Image, ImageDraw, ImageFont
+overlays = []  # (png path, x expr, y expr, start, end)
+def make_png(lines, size):
+    """Lines of heavy white caps, letter-spaced, with a hard dark shadow offset down-right, like the example."""
+    f = ImageFont.truetype(FONT, size); tr = int(size * a.tracking); sh = a.shadow; lh = int(size * 1.22)
+    def width(t): return sum(int(f.getlength(ch)) + tr for ch in t) - tr
+    lines = [l.strip().upper() for l in lines if l.strip()]; W_ = max(width(l) for l in lines) + sh + 20; H_ = lh * len(lines) + sh + 20
+    im = Image.new("RGBA", (W_, H_), (0, 0, 0, 0)); d = ImageDraw.Draw(im)
+    for i, line in enumerate(lines):
+        x0 = (W_ - sh - width(line)) // 2; y = i * lh
+        for col, dx, dy in (((26, 31, 43, 220), sh, sh), ((255, 255, 255, 255), 0, 0)):
+            x = x0
+            for ch in line: d.text((x + dx, y + dy), ch, font=f, fill=col); x += int(f.getlength(ch)) + tr
+    return im
+def label(lines, pos, start, end, size=None):
+    size = size or a.size; im = make_png(lines, size); path = f"{a.out}.label{len(overlays)}.png"; im.save(path)
+    x = "(W-w)/2" if pos == "top" else f"W*{a.label_x}-w/2"; y = "H*0.09" if pos == "top" else f"H*{a.label_y}-h/2"
+    overlays.append((path, x, y, start, end)); return ""
 
 shots = []
 for i, spec in enumerate(a.shots):
@@ -57,14 +68,16 @@ for n, sh in enumerate(shots):
     aparts.append(f"[{n}:a:0]atrim={sh['s0']:.3f}:{sh['s1']:.3f},asetpts=PTS-STARTPTS,volume=1.2[a{n}]")
     segs.append({"clip": os.path.basename(sh["clip"]), "label": " / ".join(l for l in sh["lines"] if l), "impact": round(sh["impact"], 2), "starts_at": round(t, 2), "seconds": round(length, 2)}); t += length
 total = t; n = len(shots)
-labels = ""
 card = [c.strip() for c in a.card.split("|") if c.strip()]
 for i, (sh, sg) in enumerate(zip(shots, segs)):
     end = (segs[i + 1]["starts_at"] - 0.04) if i + 1 < n else total + 1  # stop one frame before the next shot so labels never overlap
-    if i == 0 and card: labels += label(card, "top", sg["starts_at"], end, size=104) + label(sh["lines"], a.label_pos, sg["starts_at"], end, size=88)
-    else: labels += label(sh["lines"], "top" if (i == 0 and not card) else a.label_pos, sg["starts_at"], end, size=104 if (i == 0 and not card) else 88)
-if a.result.strip(): labels += label([a.result], "top", max(0.0, total - 1.6), total + 1, size=120)
-vf = ";".join(vparts) + ";" + "".join(f"[v{i}]" for i in range(n)) + f"concat=n={n}:v=1:a=0{labels},format=yuv420p[v]"
+    if i == 0 and card: label(card, "top", sg["starts_at"], end, size=a.card_size); label(sh["lines"], a.label_pos, sg["starts_at"], end)
+    else: label(sh["lines"], "top" if (i == 0 and not card) else a.label_pos, sg["starts_at"], end, size=a.card_size if (i == 0 and not card) else None)
+if a.result.strip(): label([a.result], "top", max(0.0, total - 1.6), total + 1, size=a.card_size + 20)
+vf = ";".join(vparts) + ";" + "".join(f"[v{i}]" for i in range(n)) + f"concat=n={n}:v=1:a=0[base]"; prev = "base"
+for k, (path, x, y, start, end) in enumerate(overlays):
+    vf += f";[{n + k}:v]format=rgba,setpts=PTS-STARTPTS[l{k}];[{prev}][l{k}]overlay=x={x}:y={y}:enable='between(t,{start:.3f},{end:.3f})':format=auto[o{k}]"; prev = f"o{k}"
+vf += f";[{prev}]format=yuv420p[v]"
 af = ";".join(aparts) + ";" + "".join(f"[a{i}]" for i in range(n)) + f"concat=n={n}:v=0:a=1,alimiter=limit=0.95[clip]"
 track = a.track
 if not track and a.music_volume > 0:
@@ -74,10 +87,12 @@ if track and a.music_volume > 0:
     inputs += ["-i", track]; af += f";[{n}:a]atrim=0:{total:.3f},asetpts=PTS-STARTPTS,volume={a.music_volume},afade=t=in:d=0.6,afade=t=out:st={max(0, total - 1.5):.3f}:d=1.5[m];[clip][m]amix=inputs=2:duration=first:dropout_transition=0:normalize=0[a]"
 else: af += ";[clip]anull[a]"
 os.makedirs(os.path.dirname(os.path.abspath(a.out)) or ".", exist_ok=True); tmpv, tmpa = a.out + ".video.mp4", a.out + ".audio.m4a"
-run([*inputs[: 2 * n], "-filter_complex", vf, "-map", "[v]", "-c:v", "libx264", "-preset", "medium", "-crf", "20", "-profile:v", "high", "-level", "4.0", "-an", tmpv])
+vin = inputs[: 2 * n]
+for path, *_ in overlays: vin += ["-loop", "1", "-t", f"{total:.3f}", "-i", path]
+run([*vin, "-filter_complex", vf, "-map", "[v]", "-c:v", "libx264", "-preset", "medium", "-crf", "20", "-profile:v", "high", "-level", "4.0", "-an", tmpv])
 run([*inputs, "-filter_complex", af, "-map", "[a]", "-vn", "-c:a", "aac", "-b:a", "160k", tmpa])
 run(["-i", tmpv, "-i", tmpa, "-map", "0:v", "-map", "1:a", "-c", "copy", "-movflags", "+faststart", a.out])
-for f in (tmpv, tmpa):
+for f in [tmpv, tmpa] + [o[0] for o in overlays]:
     try: os.remove(f)
     except OSError: pass
 report(tool="hole", out=a.out, seconds=round(total, 2), shots=segs, card=" / ".join(card), result=a.result.strip(), track=os.path.basename(track) if track else "", music_volume=a.music_volume if track else 0)
