@@ -16,6 +16,7 @@
       "Bash(python3 tools/yt.py:*)",
       "Bash(python3 tools/stack.py:*)",
       "Bash(python3 tools/hole.py:*)",
+      "Bash(python3 tools/track.py:*)",
       "Bash(python3 tools/frames.py:*)",
       "Bash(mv inbox/:*)",
       "Bash(npm test:*)",
