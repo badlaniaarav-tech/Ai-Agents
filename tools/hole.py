@@ -58,7 +58,7 @@ def label(lines, pos, start, end, size=None, sizes=None):
     while im.width > 1080 * 0.92:  # never wider than the frame: shrink every line a step
         sizes = [int(z * 0.94) for z in (sizes or [size] * len(lines))]; im = make_png(lines, size, sizes)
     path = f"{a.out}.label{len(overlays)}.png"; im.save(path)
-    x = "(W-w)/2" if pos in ("top", "center") else f"W*{a.label_x}-w/2"; y = "H*0.09" if pos == "top" else (f"H*{a.intro_y}-h/2" if pos == "center" else f"H*{a.label_y}-h/2")
+    x = "(W-w)/2" if pos in ("top", "center") else f"'min(W*{a.label_x}-w/2\,W-w-30)'"; y = "H*0.09" if pos == "top" else (f"H*{a.intro_y}-h/2" if pos == "center" else f"H*{a.label_y}-h/2")
     overlays.append((path, x, y, start, end)); return ""
 
 shots = []
