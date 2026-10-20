@@ -19,7 +19,7 @@ ap.add_argument("--result", default=""); ap.add_argument("--card", default="", h
 ap.add_argument("--zoom", type=float, default=1.12); ap.add_argument("--focus", default="0.5,0.55"); ap.add_argument("--impacts", default="")
 ap.add_argument("--mood", default="chill"); ap.add_argument("--track"); ap.add_argument("--music-volume", type=float, default=0.3); ap.add_argument("--label-pos", choices=["top", "mid"], default="mid")
 ap.add_argument("--font", default="Poppins-ExtraBold.ttf", help="file in tools/fonts; Poppins ExtraBold matches the Instagram Strong look of the owner's example"); ap.add_argument("--shadow", type=int, default=8, help="hard shadow offset in px, like the example"); ap.add_argument("--tracking", type=float, default=0.06, help="letter spacing as a fraction of the font size"); ap.add_argument("--size", type=int, default=60, help="shot label size (the example's side label is about a quarter of the frame wide)"); ap.add_argument("--card-size", type=int, default=136); ap.add_argument("--label-x", type=float, default=0.70); ap.add_argument("--label-y", type=float, default=0.55)
-ap.add_argument("--intro", default="", help='title card over the tee shot address: "come play|1 hole with me" (big line | small line)'); ap.add_argument("--intro-size", type=int, default=150); ap.add_argument("--intro-seconds", type=float, default=1.2)
+ap.add_argument("--intro", default="", help='title card over the tee shot address: "come play|1 hole with me" (big line | small line)'); ap.add_argument("--intro-size", type=int, default=150); ap.add_argument("--intro-seconds", type=float, default=1.2); ap.add_argument("--intro-y", type=float, default=0.22, help="center of the title card as a fraction of the height; 0.22 sits above the golfer")
 a = ap.parse_args()
 ROOT = os.path.dirname(HERE); FONT = os.path.join(HERE, "fonts", a.font); fx, fy = [float(x) for x in a.focus.split(",")]
 IMPS = [float(x) for x in a.impacts.split(",") if x.strip()]
@@ -58,7 +58,7 @@ def label(lines, pos, start, end, size=None, sizes=None):
     while im.width > 1080 * 0.92:  # never wider than the frame: shrink every line a step
         sizes = [int(z * 0.94) for z in (sizes or [size] * len(lines))]; im = make_png(lines, size, sizes)
     path = f"{a.out}.label{len(overlays)}.png"; im.save(path)
-    x = "(W-w)/2" if pos in ("top", "center") else f"W*{a.label_x}-w/2"; y = "H*0.09" if pos == "top" else ("H*0.45-h/2" if pos == "center" else f"H*{a.label_y}-h/2")
+    x = "(W-w)/2" if pos in ("top", "center") else f"W*{a.label_x}-w/2"; y = "H*0.09" if pos == "top" else (f"H*{a.intro_y}-h/2" if pos == "center" else f"H*{a.label_y}-h/2")
     overlays.append((path, x, y, start, end)); return ""
 
 shots = []
