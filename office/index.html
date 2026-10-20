@@ -112,6 +112,17 @@
   .drop .ic { font-size:26px; line-height:1; color:var(--accent) } .drop .big { font-size:15px; font-weight:600 } .drop .sub { font-size:12px; color:var(--muted) }
   .clip .acts button.send { background:var(--accent); color:#06121c; font-weight:600; border-color:transparent; padding:0 10px }
   .stylerow { display:flex; align-items:center; gap:8px; margin-top:8px } .stylerow select { flex:1; background:var(--bg); color:var(--text); border:1px solid var(--line); border-radius:9px; padding:8px 10px; font:inherit; font-size:13px; min-width:0 }
+  .drop.small { flex-direction:row; gap:12px; padding:10px 14px; margin-top:10px; text-align:left } .drop.small .ic { font-size:20px } .drop.small > span:last-child { display:flex; flex-direction:column } .drop.small .big { font-size:13px } .drop.small .sub { font-size:11px }
+  .uprow { display:grid; grid-template-columns:1fr auto; gap:6px; margin-top:6px } .uprow select { background:var(--bg); color:var(--text); border:1px solid var(--line); border-radius:9px; padding:6px 8px; font:inherit; font-size:12px; max-width:170px } .uprow .note { margin-top:0; padding:7px 10px; font-size:12px }
+  .card.compact { padding:8px 10px } .card.compact h2 { margin-bottom:4px } .card.compact .clip { grid-template-columns:44px 1fr auto; gap:8px; padding:5px 6px; margin-bottom:4px } .card.compact .clip video, .card.compact .clip img { width:44px; height:44px; border-radius:5px } .card.compact .clip .ti { font-size:12px } .card.compact .clip .meta { font-size:10px } .clip .acts button { height:24px; min-width:24px; padding:0 6px; font-size:11px }
+  #panel .col h3 { font-size:11px; padding:4px 0 } .task { padding:5px 7px; margin-bottom:4px } .task .ti { font-size:12px } .task .meta { font-size:10px } details.more { padding:8px 10px }
+  .edwrap { display:grid; grid-template-columns:150px 1fr; gap:10px; align-items:start } .edpreview canvas { width:150px; height:267px; border-radius:8px; background:#000; display:block; touch-action:none } .edpreview canvas.draw { cursor:crosshair; outline:2px solid var(--accent) } .edscrub { display:flex; align-items:center; gap:6px; margin-top:4px } .edscrub input { flex:1; min-width:0 } .edscrub .kv { font-size:10px }
+  .edctl { display:flex; flex-direction:column; gap:5px } .edctl label { display:grid; grid-template-columns:78px 1fr; align-items:center; gap:6px; font-size:11px; color:var(--muted) } .edctl input[type=text], .edctl input:not([type]), .edctl select { background:var(--bg); color:var(--text); border:1px solid var(--line); border-radius:7px; padding:5px 7px; font:inherit; font-size:12px; min-width:0 } .edctl input[type=range] { width:100% }
+  .edbtns { display:flex; gap:4px; flex-wrap:wrap } .edbtns button, .edbtns select, .edask button, .mini { background:var(--well2); color:var(--text); border:1px solid var(--line); border-radius:6px; padding:4px 8px; font:inherit; font-size:11px; cursor:pointer } .edbtns button.on { background:var(--accent); color:#06121c; border-color:transparent }
+  .edask { display:grid; grid-template-columns:1fr auto; gap:4px } .edask input { background:var(--bg); color:var(--text); border:1px solid var(--line); border-radius:7px; padding:6px 8px; font:inherit; font-size:12px; min-width:0 }
+  .edctl button.big { background:var(--accent); color:#06121c; font-weight:600; border:0; border-radius:9px; padding:9px; font:inherit; font-size:13px; cursor:pointer } .edctl button.big[disabled] { opacity:.6; cursor:progress }
+  #ed-result video { width:100%; max-height:320px; border-radius:9px; background:#000; margin:4px 0 } #ed-result a { font-size:12px; color:var(--accent); margin-right:10px } #ed-captionbox pre { white-space:pre-wrap; font-size:12px } .mini { padding:2px 7px; font-size:10px; vertical-align:middle }
+  @media (max-width:600px) { .edwrap { grid-template-columns:1fr } .edpreview canvas { width:100%; height:auto; max-height:52vh; object-fit:contain } }
   .card .note { width:100%; margin-top:8px; background:var(--bg); color:var(--text); border:1px solid var(--line); border-radius:9px; padding:9px 11px; font:inherit; font-size:13px }
   #t-opts[hidden] { display:none } .card .addrow button.primary { background:var(--accent); color:#06121c }
   #runbox:not(.on) { display:none }
@@ -203,15 +214,33 @@
         <p class="kv hintline">The chief of staff picks the team and starts right away. <a href="#" id="t-more">More options</a></p>
         <div id="t-opts" hidden><label>Team <select id="t-team"></select></label><label>Date <input id="t-date" type="date" title="Optional: a due date or post date"></label><label>Kind <select id="t-type"><option value="task">task</option><option value="post">post</option><option value="meeting">meeting</option></select></label></div>
       </form>
-    </section>
-    <section class="card">
-      <h2>Golf clips</h2>
-      <button type="button" id="clip-up" class="drop"><span class="ic">⬆</span><span class="big">Choose from camera roll</span><span class="sub">pick one or more swing videos · up to 45 MB each</span></button><input id="clip-file" type="file" accept="video/*" multiple hidden>
-      <input id="clip-note" class="note" placeholder="Description for the caption, e.g. “new driver, first round back”">
-      <label class="stylerow"><span class="kv">Style</span><select id="clip-style"><option value="">Let the office pick</option></select></label>
+      <button type="button" id="clip-up" class="drop small"><span class="ic">⬆</span><span><span class="big">Add swing videos</span><span class="sub">camera roll · up to 45 MB each</span></span></button><input id="clip-file" type="file" accept="video/*" multiple hidden>
+      <div class="uprow"><input id="clip-note" class="note" placeholder="Description for the caption (optional)"><select id="clip-style" title="Style"><option value="">Style: office picks</option></select></div>
       <p id="clip-style-help" class="kv hintline"></p>
-      <p class="kv hintline">The office writes the caption and hashtags and makes the thumbnail, in about a minute. Then press <b>Send</b> on the clip and Metricool holds it until you approve. The edited video with spoken captions and music comes from <b>/edit-clips</b> in Claude Code.</p>
+    </section>
+    <section class="card compact">
+      <h2>Golf clips <span class="kv" style="text-transform:none; letter-spacing:0; float:right">✎ edit · ▶ caption · Send</span></h2>
       <div id="clips"></div>
+    </section>
+    <section class="card" id="editcard" hidden>
+      <h2>Edit clips <span id="ed-name" class="kv" style="text-transform:none; letter-spacing:0"></span></h2>
+      <div class="edwrap">
+        <div class="edpreview"><canvas id="ed-canvas" width="1080" height="1920"></canvas><div class="edscrub"><input id="ed-scrub" type="range" min="0" max="1000" value="0"><span id="ed-time" class="kv">0.0 s</span></div><p class="kv hintline" id="ed-hint">Drag the slider to a frame. Press "Draw a line" and drag on the picture to draw on the swing.</p></div>
+        <div class="edctl">
+          <label>Style <select id="ed-style"></select></label>
+          <label>Text on the video <input id="ed-label" placeholder="a few lowercase words, or leave empty"></label>
+          <label>Music <select id="ed-music"><option value="">none</option></select></label>
+          <label>Music level <input id="ed-vol" type="range" min="0" max="100" value="55"></label>
+          <label>Slow motion <select id="ed-slow"><option value="2">2x, the whole swing</option><option value="strike">2x at the strike only</option><option value="1">off</option></select></label>
+          <label>Zoom <input id="ed-zoom" type="range" min="100" max="180" value="135"></label>
+          <div class="edbtns"><button type="button" id="ed-draw">Draw a line</button><button type="button" id="ed-undo">Undo</button><button type="button" id="ed-clear">Clear lines</button><select id="ed-color" title="Line color"><option value="#FFD400">yellow</option><option value="#ffffff">white</option><option value="#ff3b3b">red</option><option value="#5ee0ff">blue</option></select></div>
+          <div class="edask"><input id="ed-change" placeholder="Say what to change: “smaller text, chill music, no slow motion”"><button type="button" id="ed-apply">Apply</button></div>
+          <button type="button" id="ed-render" class="primary big">Render the edit</button>
+          <p id="ed-status" class="kv hintline"></p>
+        </div>
+      </div>
+      <div id="ed-result" hidden><h3>The edit</h3><video id="ed-out" controls playsinline></video><div class="resacts"><a id="ed-dl" download="reel.mp4">Save the file</a><button type="button" id="ed-send">Send to Metricool for my approval</button></div></div>
+      <div id="ed-captionbox"><h3>Caption <button type="button" id="ed-recap" class="mini">Write it</button> <button type="button" id="ed-copy" class="mini">Copy</button></h3><pre id="ed-captext" class="wait">Press "Write it": the Creative and Scripts teams look at the clip and write the caption and hashtags.</pre></div>
     </section>
     <section class="card">
       <h2>Board <span id="where" class="kv" style="text-transform:none; letter-spacing:0; float:right"></span></h2>
@@ -623,6 +652,7 @@
     el.querySelectorAll('[data-run]').forEach(b => b.onclick = () => { const i = items.find(x => x.id === b.dataset.run); if (i) runTask(i); });
     el.querySelectorAll('[data-open]').forEach(b => b.onclick = () => { const i = items.find(x => x.id === b.dataset.open); if (i) openResult(i); });
     el.querySelectorAll('[data-send]').forEach(b => b.onclick = () => { const i = items.find(x => x.id === b.dataset.send); if (i) sendForApproval(i); });
+    el.querySelectorAll('[data-edit]').forEach(b => b.onclick = () => { const i = items.find(x => x.id === b.dataset.edit); if (i) openEditor(i); });
   }
   function renderBoard() {
     const board = document.getElementById('board');
@@ -777,14 +807,121 @@
     } catch (err) { notify('Golf clips', `Upload failed (${err?.code || 'error'}). Try a smaller file.`, '#e64a4a'); return; } finally { dropBtn.classList.remove('busy'); label.textContent = was; }
     const added = await postTask('add', { type: 'clip', title: `Clip: ${f.name.replace(/\.[^.]+$/, '')}`, team: 'Creative', agent: 'creative-director', date: new Date().toISOString().slice(0, 10), notes: document.getElementById('clip-note').value.trim(), style: document.getElementById('clip-style').value, media, assetId, fileName: original.name, size: original.size, shrunk: f !== original });
     if (!added) return; if (!media) { localClips.set(added.id, URL.createObjectURL(f)); notify('Golf clips', 'Kept in this browser only (no asset store here). Run it now.'); }
-    document.getElementById('clip-note').value = ''; renderClips(); runTask(added); notify('Golf clips', `${f.name} is in. The Creative team is on it.`, teamColor('Creative'));
+    document.getElementById('clip-note').value = ''; renderClips(); openEditor(added); notify('Golf clips', `${f.name} is in. Edit it below, or press ▶ for the caption.`, teamColor('Creative'));
   }
   const clipSrc = i => i.media || localClips.get(i.id) || '';
   function renderClips() {
     const el = document.getElementById('clips'); if (!el) return; const clips = items.filter(i => i.type === 'clip').sort((a, b) => (b.created || 0) - (a.created || 0));
-    el.innerHTML = clips.length ? clips.map(i => `<div class="clip">${coverOf(i) ? `<img src="${esc(coverOf(i))}" alt="">` : `<video src="${esc(clipSrc(i))}" muted playsinline preload="metadata"></video>`}<div><div class="ti">${esc(i.title)}${runs.has(i.id) ? '<span class="type live">running</span>' : ''}</div><div class="meta">${esc(i.status)}${i.result?.caption ? (coverOf(i) ? ' · caption and thumbnail ready' : ' · caption ready') : ''}${i.style ? ' · ' + esc(((data.formats || []).find(x => x.id === i.style) || {}).name || i.style) : ''}${i.notes ? ' · ' + esc(i.notes.slice(0, 60)) : ''}</div></div><div class="acts" style="display:flex; gap:4px">${!runs.has(i.id) ? `<button data-run="${i.id}" title="write caption, hooks, tags">▶</button>` : ''}${i.result ? `<button data-open="${i.id}" title="open">▤</button>` : ''}${i.result?.caption && !runs.has(i.id) ? `<button data-send="${i.id}" class="send" title="Send to Metricool for my approval">Send</button>` : ''}<button data-rm="${i.id}" title="remove">✕</button></div></div>`).join('') : '<div class="kv">No clips yet.</div>';
+    el.innerHTML = clips.length ? clips.map(i => `<div class="clip">${coverOf(i) ? `<img src="${esc(coverOf(i))}" alt="">` : `<video src="${esc(clipSrc(i))}" muted playsinline preload="metadata"></video>`}<div><div class="ti">${esc(i.title)}${runs.has(i.id) ? '<span class="type live">running</span>' : ''}</div><div class="meta">${esc(i.status)}${i.result?.edit ? ' · edited' : ''}${i.result?.caption ? (coverOf(i) ? ' · caption and thumbnail ready' : ' · caption ready') : ''}${i.style ? ' · ' + esc(((data.formats || []).find(x => x.id === i.style) || {}).name || i.style) : ''}${i.notes ? ' · ' + esc(i.notes.slice(0, 60)) : ''}</div></div><div class="acts" style="display:flex; gap:4px"><button data-edit="${i.id}" title="edit this clip here">✎</button>${!runs.has(i.id) ? `<button data-run="${i.id}" title="write the caption">▶</button>` : ''}${i.result?.outputs?.length ? `<button data-open="${i.id}" title="open">▤</button>` : ''}${i.result?.caption && !runs.has(i.id) ? `<button data-send="${i.id}" class="send" title="Send to Metricool for my approval">Send</button>` : ''}<button data-rm="${i.id}" title="remove">✕</button></div></div>`).join('') : '<div class="kv">No clips yet.</div>';
     wireActs(el);
   }
+
+  // ===== Edit clips: a real editor in the page. Preview, style, text, music, lines drawn on the swing, plain-words changes, render in the browser, caption, send. =====
+  const ED = { item: null, v: null, impact: 0, dur: 0, drawing: false, lines: [], cur: null, settings: null, catalog: [], buffers: new Map(), srcNode: null, actx: null, line: null };
+  const edEl = id => document.getElementById(id);
+  const DEF = () => ({ style: 'smooth-slow', label: '', labelStyle: 'box', music: '', vol: 55, slow: '2', zoom: 1.35, focus: [0.5, 0.52] });
+  const STYLE_PRESETS = { 'smooth-slow': { slow: '2', labelStyle: 'box', zoom: 1.35 }, 'hook-punch': { slow: 'strike', labelStyle: 'bold', zoom: 1.3 }, 'signature-move-slow': { slow: '2', labelStyle: 'box', zoom: 1.4 }, 'rate-my-swing': { slow: '2', labelStyle: 'box', label: 'rate my swing' }, 'pure-strike-sound': { slow: '1', label: '', vol: 0 }, 'long-drive-bomb': { slow: 'strike', labelStyle: 'bold' } };
+  async function loadCatalog() {
+    if (ED.catalog.length) return ED.catalog;
+    try { const db = await dbPromise; if (db) { const d = await db.doc('music/catalog').get(); const t = (d && (d.data ? d.data() : d)) || {}; if (t.tracks) ED.catalog = t.tracks; } } catch (e) { }
+    if (!ED.catalog.length) { try { const j = await fetch('/music/catalog.json').then(r => r.json()); if (j.tracks) ED.catalog = j.tracks; } catch (e) { } }
+    return ED.catalog;
+  }
+  async function openEditor(item) {
+    ED.item = item; ED.lines = (item.result?.edit?.settings?.lines) || []; ED.settings = { ...DEF(), ...(item.result?.edit?.settings || {}) }; delete ED.settings.lines;
+    if (item.style && !item.result?.edit) { ED.settings.style = item.style; Object.assign(ED.settings, STYLE_PRESETS[item.style] || {}); }
+    const card = edEl('editcard'); card.hidden = false; edEl('ed-name').textContent = item.title.replace(/^Clip: /, '');
+    const sel = edEl('ed-style'); sel.innerHTML = (data.formats || []).filter(f => f.id !== 'montage-on-the-strike').map(f => `<option value="${f.id}">${esc(f.name)}</option>`).join('') || '<option value="smooth-slow">Smooth slow-motion swing</option>';
+    const cat = await loadCatalog(); const ms = edEl('ed-music'); ms.innerHTML = '<option value="">none</option>' + cat.map(t => `<option value="${esc(t.url)}">${esc(t.mood)} · ${esc(t.title)}</option>`).join('');
+    if (!ED.settings.music && cat.length) ED.settings.music = (cat.find(t => t.mood === 'hype') || cat[0]).url;
+    fillControls();
+    // the source video, hidden; its audio is routed into the recorder only
+    if (ED.v) { try { ED.v.pause(); } catch (e) { } }
+    const v = document.createElement('video'); v.src = clipSrc(item); v.preload = 'auto'; v.playsInline = true; v.muted = true; v.crossOrigin = 'anonymous'; ED.v = v; ED.srcNode = null; ED.impact = 0;
+    edEl('ed-status').textContent = 'Loading the clip…'; edEl('ed-render').disabled = true;
+    await new Promise((res, rej) => { v.onloadedmetadata = res; v.onerror = () => rej(new Error('cannot read the video')); setTimeout(res, 15000); }).catch(e => { edEl('ed-status').textContent = e.message; });
+    ED.dur = v.duration || 0; edEl('ed-scrub').max = Math.max(1, Math.round(ED.dur * 100));
+    try { ED.impact = await findImpact(clipSrc(item)); } catch (e) { ED.impact = Math.min(ED.dur * 0.55, ED.dur); }
+    await seekTo(Math.max(0, ED.impact - 0.3)); drawPreview(); edEl('ed-render').disabled = false;
+    edEl('ed-status').textContent = `Strike found at ${ED.impact.toFixed(2)} s. Set the style, text, music and lines, then Render.`;
+    const out = edEl('ed-result'), ov = edEl('ed-out'); if (item.result?.edit?.url) { out.hidden = false; ov.src = item.result.edit.url; edEl('ed-dl').href = item.result.edit.url; } else { out.hidden = true; ov.removeAttribute('src'); }
+    showCaption(item); card.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+  function fillControls() { const s = ED.settings; edEl('ed-style').value = s.style; edEl('ed-label').value = s.label || ''; edEl('ed-music').value = s.music || ''; edEl('ed-vol').value = s.vol; edEl('ed-slow').value = s.slow; edEl('ed-zoom').value = Math.round(s.zoom * 100); }
+  function readControls() { const s = ED.settings; s.style = edEl('ed-style').value; s.label = edEl('ed-label').value.trim(); s.music = edEl('ed-music').value; s.vol = +edEl('ed-vol').value; s.slow = edEl('ed-slow').value; s.zoom = +edEl('ed-zoom').value / 100; }
+  ['ed-label', 'ed-zoom', 'ed-slow', 'ed-music', 'ed-vol'].forEach(id => edEl(id).addEventListener('input', () => { readControls(); drawPreview(); }));
+  edEl('ed-style').onchange = () => { readControls(); Object.assign(ED.settings, STYLE_PRESETS[ED.settings.style] || {}); fillControls(); drawPreview(); };
+  function showCaption(item) { const r = item.result || {}; const pre = edEl('ed-captext'); if (r.caption) { pre.className = ''; pre.textContent = `${r.caption}\n\n${(r.tags || []).map(x => '#' + String(x).replace(/^#/, '')).join(' ')}${r.coverText ? `\n\nCover text: ${r.coverText}` : ''}${(r.outputs || [])[0]?.text?.includes('HOOKS') ? '\n\n' + (r.outputs[0].text.split('HOOKS')[1] || '').split('CAPTION')[0].trim().replace(/^/, 'Hooks:\n') : ''}`; } else { pre.className = 'wait'; pre.textContent = runs.has(item.id) ? 'The team is writing it…' : 'Press "Write it": the Creative and Scripts teams look at the clip and write the caption and hashtags.'; } }
+  edEl('ed-recap').onclick = () => { if (ED.item) { runTask(ED.item); showTab('tasks'); showCaption(ED.item); } };
+  edEl('ed-copy').onclick = async () => { try { await navigator.clipboard.writeText(edEl('ed-captext').textContent); notify('Caption', 'Copied.'); } catch (e) { notify('Caption', 'Select the text and copy it.', '#e8902a'); } };
+  edEl('ed-send').onclick = () => { if (ED.item) sendForApproval(ED.item); };
+  function seekTo(t) { const v = ED.v; return new Promise(res => { if (!v) return res(); v.onseeked = () => res(); v.currentTime = Math.max(0, Math.min(ED.dur || t, t)); setTimeout(res, 1500); }); }
+  edEl('ed-scrub').oninput = async e => { const t = +e.target.value / 100; edEl('ed-time').textContent = `${t.toFixed(2)} s`; await seekTo(t); drawPreview(); };
+  // where the picture is cropped from (zoom and focus), shared by preview and render
+  function cropRect(vw, vh) { const z = ED.settings.zoom, [fx, fy] = ED.settings.focus; const cw = vw / z, ch = vh / z; return { x: Math.min(Math.max(0, vw * fx - cw / 2), vw - cw), y: Math.min(Math.max(0, vh * fy - ch / 2), vh - ch), w: cw, h: ch }; }
+  function paintFrame(ctx, W, H, withOverlays = true) {
+    const v = ED.v; if (!v || !v.videoWidth) { ctx.fillStyle = '#000'; ctx.fillRect(0, 0, W, H); return; }
+    const r = cropRect(v.videoWidth, v.videoHeight); ctx.drawImage(v, r.x, r.y, r.w, r.h, 0, 0, W, H);
+    if (!withOverlays) return; const s = ED.settings;
+    for (const ln of ED.lines.concat(ED.cur ? [ED.cur] : [])) { ctx.strokeStyle = ln.color || '#FFD400'; ctx.lineWidth = W * 0.009; ctx.lineCap = 'round'; ctx.beginPath(); ctx.moveTo(ln.x1 * W, ln.y1 * H); ctx.lineTo(ln.x2 * W, ln.y2 * H); ctx.stroke(); }
+    if (s.label) {
+      const size = W * (s.labelStyle === 'bold' ? 0.085 : 0.043); ctx.font = `${s.labelStyle === 'bold' ? 900 : 600} ${size}px Geist, Inter, Arial, sans-serif`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      const txt = s.labelStyle === 'bold' ? s.label.toUpperCase() : s.label; const tw = Math.min(W * 0.9, ctx.measureText(txt).width);
+      if (s.labelStyle === 'bold') { ctx.lineWidth = size * 0.1; ctx.strokeStyle = 'rgba(0,0,0,.6)'; ctx.strokeText(txt, W / 2, H * 0.17, W * 0.9); ctx.fillStyle = '#fff'; ctx.fillText(txt, W / 2, H * 0.17, W * 0.9); }
+      else { const pad = size * 0.5, bw = tw + pad * 2, bh = size * 1.75, bx = W / 2 - bw / 2, by = H * 0.17 - bh / 2; ctx.fillStyle = 'rgba(255,255,255,.96)'; ctx.beginPath(); ctx.roundRect(bx, by, bw, bh, size * 0.3); ctx.fill(); ctx.fillStyle = '#16181f'; ctx.fillText(txt, W / 2, H * 0.17, W * 0.9); }
+    }
+  }
+  function drawPreview() { const c = edEl('ed-canvas'); paintFrame(c.getContext('2d'), c.width, c.height); }
+  // drawing lines on the preview
+  const cv = edEl('ed-canvas'); const norm = e => { const b = cv.getBoundingClientRect(); return [(e.clientX - b.left) / b.width, (e.clientY - b.top) / b.height]; };
+  edEl('ed-draw').onclick = () => { ED.drawing = !ED.drawing; cv.classList.toggle('draw', ED.drawing); edEl('ed-draw').classList.toggle('on', ED.drawing); edEl('ed-hint').textContent = ED.drawing ? 'Drag on the picture to draw a line. Press "Draw a line" again to stop.' : 'Drag the slider to a frame. Press "Draw a line" and drag on the picture to draw on the swing.'; };
+  cv.addEventListener('pointerdown', e => { if (!ED.drawing) return; e.preventDefault(); cv.setPointerCapture(e.pointerId); const [x, y] = norm(e); ED.cur = { x1: x, y1: y, x2: x, y2: y, color: edEl('ed-color').value }; });
+  cv.addEventListener('pointermove', e => { if (!ED.cur) return; const [x, y] = norm(e); ED.cur.x2 = x; ED.cur.y2 = y; drawPreview(); });
+  cv.addEventListener('pointerup', e => { if (!ED.cur) return; const [x, y] = norm(e); ED.cur.x2 = x; ED.cur.y2 = y; if (Math.hypot(ED.cur.x2 - ED.cur.x1, ED.cur.y2 - ED.cur.y1) > 0.01) ED.lines.push(ED.cur); ED.cur = null; drawPreview(); });
+  edEl('ed-undo').onclick = () => { ED.lines.pop(); drawPreview(); }; edEl('ed-clear').onclick = () => { ED.lines = []; drawPreview(); };
+  // plain words to settings
+  edEl('ed-apply').onclick = async () => {
+    const q = edEl('ed-change').value.trim(); if (!q) return; readControls(); const sample = await samplePromise; const cat = ED.catalog; let patch = null;
+    if (sample) { try { patch = await sample.json(`You adjust video edit settings for a golf swing reel. Current settings: ${JSON.stringify({ ...ED.settings, music: (cat.find(t => t.url === ED.settings.music) || {}).title || 'none' })}. Music available (mood · title): ${cat.map(t => `${t.mood} · ${t.title}`).join('; ') || 'none'}. The owner says: "${q}". Reply with only JSON of the fields to change, among {"label": string, "labelStyle": "box"|"bold", "slow": "2"|"strike"|"1", "vol": 0-100, "zoom": 1.0-1.8, "music_title": one of the titles or "none", "clear_lines": boolean}.`, { modelTier: 'quick' }); } catch (e) { } }
+    if (!patch) { patch = {}; const l = q.toLowerCase(); if (/no text|remove text|without text/.test(l)) patch.label = ''; if (/smaller text|small text/.test(l)) patch.labelStyle = 'box'; if (/bigger text|big text|bold/.test(l)) patch.labelStyle = 'bold'; if (/no slow|normal speed|real time/.test(l)) patch.slow = '1'; if (/slow/.test(l) && !patch.slow) patch.slow = '2'; if (/no music|without music/.test(l)) patch.vol = 0; if (/quieter|lower music|music down/.test(l)) patch.vol = Math.max(0, ED.settings.vol - 20); if (/louder|music up/.test(l)) patch.vol = Math.min(100, ED.settings.vol + 20); for (const m of ['hype', 'chill', 'cinematic', 'funny', 'pop']) if (l.includes(m)) { const t = cat.find(x => x.mood === m); if (t) patch.music_title = t.title; } if (/zoom in|closer|tighter/.test(l)) patch.zoom = Math.min(1.8, ED.settings.zoom + 0.15); if (/zoom out|wider|further/.test(l)) patch.zoom = Math.max(1, ED.settings.zoom - 0.15); if (/no lines|remove lines|clear lines/.test(l)) patch.clear_lines = true; }
+    if (patch.music_title !== undefined) { const t = cat.find(x => x.title === patch.music_title); ED.settings.music = t ? t.url : (patch.music_title === 'none' ? '' : ED.settings.music); }
+    if (patch.clear_lines) ED.lines = []; for (const k of ['label', 'labelStyle', 'slow', 'vol', 'zoom']) if (patch[k] !== undefined && patch[k] !== null) ED.settings[k] = patch[k];
+    fillControls(); drawPreview(); edEl('ed-change').value = ''; edEl('ed-status').textContent = 'Applied. Press Render to see it.';
+  };
+  // the strike: the loudest moment of the clip
+  async function findImpact(url) { const ac = ED.actx || (ED.actx = new (window.AudioContext || window.webkitAudioContext)()); const buf = await ac.decodeAudioData(await (await fetch(url)).arrayBuffer()); const d = buf.getChannelData(0), w = Math.round(buf.sampleRate * 0.02); let best = 0, at = 0; for (let i = 0; i < d.length - w; i += w) { let m = 0; for (let j = i; j < i + w; j++) { const a = Math.abs(d[j]); if (a > m) m = a; } if (m > best) { best = m; at = i / buf.sampleRate; } } return at; }
+  async function musicBuffer(url) { if (ED.buffers.has(url)) return ED.buffers.get(url); const ac = ED.actx; const buf = await ac.decodeAudioData(await (await fetch(url)).arrayBuffer()); ED.buffers.set(url, buf); return buf; }
+  function dropOf(buf) { const d = buf.getChannelData(0), hop = Math.round(buf.sampleRate * 0.05), n = Math.min(Math.floor(d.length / hop), Math.round(45 / 0.05)); const rms = new Float32Array(n); for (let i = 0; i < n; i++) { let s = 0; for (let j = i * hop; j < (i + 1) * hop; j++) s += d[j] * d[j]; rms[i] = Math.sqrt(s / hop); } let best = 0, at = 0; for (let i = 10; i < n - 10; i++) { let b = 0, a = 0; for (let k = 1; k <= 10; k++) { b += rms[i - k]; a += rms[i + k - 1]; } if (a - b > best) { best = a - b; at = i * 0.05; } } return at; }
+  // render: play the source through a canvas with the overlays, speed changes per phase, music mixed in, recorded in the browser
+  edEl('ed-render').onclick = async () => {
+    const item = ED.item, v = ED.v; if (!item || !v) return; readControls(); const s = ED.settings; const btn = edEl('ed-render'), st = edEl('ed-status');
+    if (!('MediaRecorder' in window) || !HTMLCanvasElement.prototype.captureStream) { st.textContent = 'This browser cannot record video. Safari and Chrome can.'; return; }
+    const ac = ED.actx || (ED.actx = new (window.AudioContext || window.webkitAudioContext)()); try { await ac.resume(); } catch (e) { }
+    v.muted = false; try { await v.play(); v.pause(); } catch (e) { } // the click lets the clip play with sound later
+    btn.disabled = true; st.textContent = 'Rendering… 0%';
+    try {
+      const W = 1080, H = 1920, c = document.createElement('canvas'); c.width = W; c.height = H; const g = c.getContext('2d');
+      const dest = ac.createMediaStreamDestination(); if (!ED.srcNode) ED.srcNode = ac.createMediaElementSource(v); const vg = ac.createGain(); vg.gain.value = 1; ED.srcNode.disconnect(); ED.srcNode.connect(vg); vg.connect(dest);
+      const imp = ED.impact, lead = 0.4, pre = 1.3, hold = 1.6, S0 = Math.max(0, imp - pre - lead), S1 = Math.min(ED.dur, imp + hold);
+      const rateAt = t => s.slow === '2' ? 0.5 : s.slow === 'strike' ? (t >= imp - 0.12 && t < imp + 0.3 ? 0.5 : 1) : 1;
+      const outOf = t => { let o = 0, x = S0; const step = 0.01; while (x < t) { o += step / rateAt(x); x += step; } return o; }; const impactAt = outOf(imp), total = outOf(S1);
+      let msrc = null, mg = null; if (s.music && s.vol > 0) { try { const buf = await musicBuffer(s.music); const drop = dropOf(buf); const startAt = Math.max(0, impactAt - 0.9); const offset = Math.max(0, drop - (impactAt - startAt)); msrc = ac.createBufferSource(); msrc.buffer = buf; mg = ac.createGain(); mg.gain.value = 0; msrc.connect(mg); mg.connect(dest); msrc._startAt = startAt; msrc._offset = offset; } catch (e) { st.textContent = 'Music could not load; rendering without it.'; } }
+      const mime = ['video/mp4;codecs=avc1,mp4a.40.2', 'video/mp4', 'video/webm;codecs=vp9,opus', 'video/webm'].find(m => MediaRecorder.isTypeSupported(m));
+      const rec = new MediaRecorder(new MediaStream([...c.captureStream(30).getVideoTracks(), ...dest.stream.getAudioTracks()]), { mimeType: mime, videoBitsPerSecond: 7000000, audioBitsPerSecond: 128000 }); const chunks = []; rec.ondataavailable = e => { if (e.data.size) chunks.push(e.data); }; const done = new Promise(r => { rec.onstop = r; });
+      await seekTo(S0); v.playbackRate = rateAt(S0); const t0 = ac.currentTime; let musicOn = false, raf;
+      const loop = () => { paintFrame(g, W, H); const t = v.currentTime; v.playbackRate = rateAt(t); const out = ac.currentTime - t0; st.textContent = `Rendering… ${Math.min(99, Math.round(out / total * 100))}%`;
+        if (msrc && !musicOn && out >= msrc._startAt) { musicOn = true; msrc.start(0, msrc._offset); mg.gain.setValueAtTime(0, ac.currentTime); mg.gain.linearRampToValueAtTime(s.vol / 100, ac.currentTime + 0.35); mg.gain.setValueAtTime(s.vol / 100, t0 + Math.max(0, total - 1.2)); mg.gain.linearRampToValueAtTime(0, t0 + total); }
+        if (t >= S1 || v.ended || out > total + 1) { finish(); return; } raf = requestAnimationFrame(loop); };
+      const finish = async () => { cancelAnimationFrame(raf); v.pause(); rec.stop(); await done; try { msrc && msrc.stop(); } catch (e) { } ED.srcNode.disconnect(); v.muted = true;
+        const ext = mime.startsWith('video/mp4') ? 'mp4' : 'webm'; const blob = new Blob(chunks, { type: mime.split(';')[0] }); const file = new File([blob], `${item.id}-edit.${ext}`, { type: blob.type });
+        st.textContent = 'Saving…'; let url = '', id = ''; const assets = await assetsPromise; if (assets && file.size <= 20 * 1024 * 1024) { try { const up = await assets.upload(file); url = up.url; id = up.id; } catch (e) { } }
+        if (!url) url = URL.createObjectURL(blob);
+        item.result = { ...(item.result || {}), edit: { url, id, seconds: Math.round(total * 10) / 10, settings: { ...s, lines: ED.lines }, at: Date.now() } }; await postTask('update', { id: item.id, status: 'review', result: item.result });
+        const out = edEl('ed-result'); out.hidden = false; edEl('ed-out').src = url; edEl('ed-dl').href = url; edEl('ed-dl').download = `reel.${ext}`; renderClips(); btn.disabled = false;
+        st.textContent = `Done: ${total.toFixed(1)} s${url.startsWith('blob:') ? ' (kept in this browser only; on claude.ai it saves to your account)' : ', saved to your account'}. Change anything and render again, or Send.`; notify('Edit clips', `"${item.title}" rendered (${total.toFixed(1)} s).`, teamColor('Creative')); };
+      rec.start(500); await v.play(); loop();
+    } catch (err) { btn.disabled = false; st.textContent = `Could not render (${err.message || err}).`; }
+  };
   async function framesOf(url) { // three stills from the clip, for the team to look at
     const v = document.createElement('video'); v.src = url; v.muted = true; v.playsInline = true; v.crossOrigin = 'anonymous';
     await new Promise((res, rej) => { v.onloadedmetadata = res; v.onerror = rej; setTimeout(rej, 15000); });
@@ -889,7 +1026,7 @@
   }
   async function sendForApproval(i) { // Metricool holds the post until you approve it; it emails you (and the Metricool app notifies you)
     const box = document.getElementById('review-box'); if (!metricoolAllowed()) { box.textContent = `Metricool here is linked to ${brandInfo?.email || 'its owner'}. Sign in as that person to send posts.`; return; } const mcp = await mcpPromise; if (!mcp) { box.textContent = 'Needs this page open on claude.ai with the Metricool connector.'; return; }
-    const r = i.result || {}; const text = r.caption ? `${r.caption}\n\n${(r.tags || []).map(x => '#' + String(x).replace(/^#/, '')).join(' ')}` : ((r.outputs || []).map(o => o.text).filter(Boolean).join('\n\n') || i.notes || i.title);
+    const r = i.result || {}; if (r.edit?.url && !/^blob:/.test(r.edit.url)) i.media = r.edit.url; const text = r.caption ? `${r.caption}\n\n${(r.tags || []).map(x => '#' + String(x).replace(/^#/, '')).join(' ')}` : ((r.outputs || []).map(o => o.text).filter(Boolean).join('\n\n') || i.notes || i.title);
     box.innerHTML = `<p>Instagram needs an image or video. Paste a public link to the media (a Google Drive or Dropbox share link works if Metricool has Drive linked).${i.type === 'clip' ? ' The clip uploaded here is private to this page, so Metricool cannot fetch it: share the file from Drive and paste that link.' : ''}</p><div class="addrow" style="margin:6px 0"><input id="rv-media" placeholder="https://… .mp4 or .jpg"><select id="rv-type"><option>REEL</option><option>POST</option><option>STORY</option></select><input id="rv-when" type="datetime-local"><button id="rv-go">Send for approval</button></div><p>Caption to send (edit the task result to change it):</p><pre style="white-space:pre-wrap">${esc(text.slice(0, 1200))}</pre><div id="rv-out"></div>`;
     const when = document.getElementById('rv-when'); const d = new Date(Date.now() + 36e5); when.value = (i.date && i.date > new Date().toISOString().slice(0, 10) ? i.date + 'T10:00' : d.toISOString().slice(0, 16));
     document.getElementById('rv-go').onclick = async () => {
