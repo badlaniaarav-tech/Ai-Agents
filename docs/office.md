@@ -1,6 +1,6 @@
 # Org chart
 
-34 agents in 9 teams around the Brain, led by the chief of staff (the Claude Code session itself, with its instructions in `CLAUDE.md`). Each of the 34 agents is a sub-agent file in `.claude/agents/`. Team heads run on Opus and orchestrate; workers run on Sonnet and do one job each.
+35 agents in 9 teams around the Brain, led by the chief of staff (the Claude Code session itself, with its instructions in `CLAUDE.md`). Each of the 35 agents is a sub-agent file in `.claude/agents/`. Team heads run on Opus and orchestrate; workers run on Sonnet and do one job each.
 
 | # | Agent | Team | Job |
 |---|---|---|---|
@@ -33,6 +33,7 @@
 | 26 | `clip-editor` | Creative | One raw clip to a captioned vertical edit, cover and notes (`tools/`) |
 | 27 | `brand-checker` | Creative | Reviews every creative deliverable against the brand rules; PASS or FIX |
 | 28 | `thumbnail-designer` | Creative | Picks the frame, text and placement for covers |
+| 35 | `idea-scout` | Creative | Golf video formats getting views on YouTube and Instagram, kept in `ideas/formats.json` with how to build each |
 | 29 | `analytics-lead` | Analytics | The weekly report: what the numbers mean, what to change |
 | 30 | `data-analyst` | Analytics | Cleans exports, computes metrics and trends, shows the work |
 | 31 | `strategist` | Analytics | Goal to options, recommendation, first three steps |

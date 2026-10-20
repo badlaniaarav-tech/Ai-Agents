@@ -1,7 +1,8 @@
 """Swing montage, like the golf reels the owner follows: one text line held the whole way, the first swing in slow
 motion, then the other swings cut fast on the strike, the real crack of the ball as the sound, music low under it.
 
-usage: python3 tools/montage.py <out.mp4> <clip1> <clip2> ... [--label "Addicted to this sound"] [--mood hype | --track x.mp3]
+usage: python3 tools/montage.py <out.mp4> <clip1> <clip2> ... [--label "one line" | --label "line one|line two|…" per clip] [--label-style box|bold]
+       [--counter] [--end-card "3 of 5"] [--mood hype | --track x.mp3]
        [--music-volume 0.25] [--slow 2.0] [--pre-first 1.4] [--post-first 0.5] [--pre 0.9] [--post 0.35] [--zoom 1.3] [--focus 0.5,0.52] [--label-y 0.24]
 The strike in each clip is found from its loudest moment. Prints one JSON line.
 """
@@ -12,7 +13,8 @@ from media import FFMPEG, report, run
 
 ap = argparse.ArgumentParser()
 ap.add_argument("out"); ap.add_argument("clips", nargs="+")
-ap.add_argument("--label", default="Addicted to this sound"); ap.add_argument("--mood", default="hype"); ap.add_argument("--track"); ap.add_argument("--music-volume", type=float, default=0.25)
+ap.add_argument("--label", default="Addicted to this sound", help="one line held the whole way; or several separated by | to change per clip"); ap.add_argument("--label-style", choices=["box", "bold"], default="box", help="box: small white rounded box with dark lowercase text (brand rule). bold: large white outlined text");
+ap.add_argument("--counter", action="store_true", help="running count on screen per clip, 1/5, 2/5 … (for challenges)"); ap.add_argument("--end-card", default="", help="text held for a second at the end, like '3 of 5'"); ap.add_argument("--mood", default="hype"); ap.add_argument("--track"); ap.add_argument("--music-volume", type=float, default=0.25)
 ap.add_argument("--slow", type=float, default=2.0); ap.add_argument("--pre-first", type=float, default=1.4); ap.add_argument("--post-first", type=float, default=0.5)
 ap.add_argument("--pre", type=float, default=0.9); ap.add_argument("--post", type=float, default=0.35); ap.add_argument("--zoom", type=float, default=1.3); ap.add_argument("--focus", default="0.5,0.52"); ap.add_argument("--label-y", type=float, default=0.24, help="label height as a fraction of the frame; keep it above the golfer")
 a = ap.parse_args()
@@ -46,12 +48,27 @@ for n, clip in enumerate(a.clips):
         aparts.append(f"[{n}:a:0]atrim={s0:.3f}:{s1:.3f},asetpts=PTS-STARTPTS,volume=1.3[a{n}]")
     segs.append({"clip": os.path.basename(clip), "impact": round(imp, 2), "from": round(s0, 2), "to": round(s1, 2), "slow": slow, "starts_at": round(t, 2)}); t += length
 total = t; n = len(a.clips)
-label = ""
+def esc(t): return t.replace("'", r"\'").replace(":", r"\:")
+def dt(txt, y, start, end, size=46, box=True):
+    en = f":enable='between(t,{start:.3f},{end:.3f})'"
+    if box: return f",drawtext=fontfile={FONT}:text='{esc(txt)}':fontsize={size}:fontcolor=#16181f:box=1:boxcolor=white@0.96:boxborderw=22:x=(w-text_w)/2:y={y}{en}"
+    return f",drawtext=fontfile={FONT}:text='{esc(txt)}':fontsize={int(size * 1.4)}:fontcolor=white:borderw=3:bordercolor=black@0.55:shadowcolor=black@0.5:shadowx=2:shadowy=3:x=(w-text_w)/2:y={y}{en}"
+label = ""; box = a.label_style == "box"; lines = [l.strip() for l in a.label.split("|")]
 if a.label.strip():
-    esc = a.label.strip().replace("'", r"\'").replace(":", r"\:")
-    label = f",drawtext=fontfile={FONT}:text='{esc}':fontsize=66:fontcolor=white:borderw=3:bordercolor=black@0.55:shadowcolor=black@0.5:shadowx=2:shadowy=3:x=(w-text_w)/2:y=h*{a.label_y}"
-vf = ";".join(vparts) + ";" + "".join(f"[v{i}]" for i in range(n)) + f"concat=n={n}:v=1:a=0{label},format=yuv420p[v]"
-af = ";".join(aparts) + ";" + "".join(f"[a{i}]" for i in range(n)) + f"concat=n={n}:v=0:a=1,alimiter=limit=0.95[clip]"
+    if len(lines) == 1: label += dt(lines[0], f"h*{a.label_y}", 0, total + 1, box=box)
+    else:
+        for i, sg in enumerate(segs):  # a label per clip; the last one carries on if there are more clips than lines
+            txt = lines[min(i, len(lines) - 1)]; nxt = segs[i + 1]["starts_at"] if i + 1 < len(segs) else total + 1
+            if txt: label += dt(txt, f"h*{a.label_y}", sg["starts_at"], nxt, box=box)
+if a.counter:
+    for i, sg in enumerate(segs):
+        nxt = segs[i + 1]["starts_at"] if i + 1 < len(segs) else total + 1
+        label += dt(f"{i + 1}/{len(segs)}", f"h*{a.label_y}+90", sg["starts_at"], nxt, size=40, box=box)
+end_card = ""
+if a.end_card.strip():
+    end_card = f",tpad=stop_mode=clone:stop_duration=1.2" + dt(a.end_card.strip(), "(h-text_h)/2", total, total + 2, size=72, box=box); total += 1.2
+vf = ";".join(vparts) + ";" + "".join(f"[v{i}]" for i in range(n)) + f"concat=n={n}:v=1:a=0{label}{end_card},format=yuv420p[v]"
+af = ";".join(aparts) + ";" + "".join(f"[a{i}]" for i in range(n)) + f"concat=n={n}:v=0:a=1,apad=whole_dur={total:.3f},alimiter=limit=0.95[clip]"
 track = a.track
 if not track and a.music_volume > 0:
     folder = os.path.join(ROOT, "music"); files = [f for f in (os.listdir(folder) if os.path.isdir(folder) else []) if f.lower().endswith((".mp3", ".wav", ".m4a"))]
@@ -70,4 +87,4 @@ run(["-i", tmpv, "-i", tmpa, "-map", "0:v", "-map", "1:a", "-c", "copy", "-movfl
 for f in (tmpv, tmpa):
     try: os.remove(f)
     except OSError: pass
-report(tool="montage", out=a.out, seconds=round(total, 2), clips=len(a.clips), label=a.label.strip(), segments=segs, track=os.path.basename(track) if track else "", music_volume=a.music_volume if track else 0)
+report(tool="montage", out=a.out, seconds=round(total, 2), clips=len(a.clips), label=a.label.strip(), label_style=a.label_style, counter=a.counter, end_card=a.end_card.strip(), segments=segs, track=os.path.basename(track) if track else "", music_volume=a.music_volume if track else 0)
