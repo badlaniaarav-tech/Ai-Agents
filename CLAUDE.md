@@ -38,10 +38,10 @@ Company facts, brand rules and the owner's preferences live in the memory MCP se
 - `music/` Creative Commons tracks named `<mood>-<name>.mp3`, refreshed weekly by the Music team; `music/brief.md` says which mood fits what, `music/credits.md` has the credit lines; `tools/music.py --mood` picks from here
 - `done/` raw clips that were edited successfully
 - `work/<team>/<task>/` every other deliverable (drafts, research, plans, code), one folder per task, with a `README.md` that says what is inside
-- `tools/` the video tools: `cut.py`, `captions.py`, `music.py`, `music_fetch.py`, `reel.py`, `thumbnail.py`, `frames.py`. Each prints one JSON line with its result.
+- `tools/` the video tools: `cut.py`, `captions.py`, `music.py`, `music_fetch.py`, `reel.py`, `montage.py`, `thumbnail.py`, `frames.py`. Each prints one JSON line with its result.
 
 ## Commands
-`/edit-clips` edit every clip in `inbox/` · `/music-research` the Music team refreshes `music/brief.md` and the tracks in `music/` (runs by itself every Monday) · `/brief <task>` route any task through the office · `/standup` every team reports · `/research <topic>` · `/campaign <launch>` · `/hire <name>` add an agent · `/office` refresh the 3D office · `/tasks` the board and calendar · `/best-time` best posting slots from Metricool · `/competitors` Instagram competitors from Metricool · `/deck <topic>` a presentation (.pptx)
+`/edit-clips` edit every clip in `inbox/` · `/montage <text line>` several swings cut into one reel · `/music-research` the Music team refreshes `music/brief.md` and the tracks in `music/` (runs by itself every Monday) · `/brief <task>` route any task through the office · `/standup` every team reports · `/research <topic>` · `/campaign <launch>` · `/hire <name>` add an agent · `/office` refresh the 3D office · `/tasks` the board and calendar · `/best-time` best posting slots from Metricool · `/competitors` Instagram competitors from Metricool · `/deck <topic>` a presentation (.pptx)
 
 ## Rules
 - Nothing gets published, uploaded, posted, emailed or pushed. Finished work waits for the owner's OK.
