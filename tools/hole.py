@@ -2,9 +2,9 @@
 ("512 YARDS / PAR 5" on the tee shot, "170 YARDS / 9 IRON" on the next, "22 YARDS / 60 WEDGE" at the green), the real
 sound kept, music low. Optional result line at the end ("PAR", "BIRDIE").
 
-usage: python3 tools/hole.py <out.mp4> "<clip>|<line 1>|<line 2>" "<clip>|<line 1>|<line 2>" ... [--result "par"]
+usage: python3 tools/hole.py <out.mp4> "<clip>|<line 1>|<line 2>[|<seconds after the key moment>]" ... [--card "hole 15|par 3"] [--result "par"]
        [--pre 1.3] [--post 3.5] [--zoom 1.12] [--focus 0.5,0.55] [--impacts 3.1,6.6,...] [--mood chill | --track x.mp3] [--music-volume 0.3]
-       [--label-pos top|mid]   (the first clip's label is always the hole card at the top; the rest default to mid-right)
+       [--label-pos top|mid]   --card is the hole card at the top of the first shot; every shot's own label sits mid-right. Without --card the first shot's label is the card.
 Each shot runs from --pre seconds before its key moment (the strike, found from the loudest sound or --impacts) to --post seconds
 after it, or to the end of the clip if shorter, so the ball flight stays in. Prints one JSON line.
 """
@@ -15,7 +15,7 @@ from media import FFMPEG, report, run
 
 ap = argparse.ArgumentParser()
 ap.add_argument("out"); ap.add_argument("shots", nargs="+", help='"clip|line 1|line 2"')
-ap.add_argument("--result", default=""); ap.add_argument("--pre", type=float, default=1.3); ap.add_argument("--post", type=float, default=3.5)
+ap.add_argument("--result", default=""); ap.add_argument("--card", default="", help="hole card on the first shot: \"hole 15|par 3\" or \"512 yards|par 5\""); ap.add_argument("--pre", type=float, default=1.3); ap.add_argument("--post", type=float, default=3.5)
 ap.add_argument("--zoom", type=float, default=1.12); ap.add_argument("--focus", default="0.5,0.55"); ap.add_argument("--impacts", default="")
 ap.add_argument("--mood", default="chill"); ap.add_argument("--track"); ap.add_argument("--music-volume", type=float, default=0.3); ap.add_argument("--label-pos", choices=["top", "mid"], default="mid")
 a = ap.parse_args()
@@ -46,10 +46,10 @@ def label(lines, pos, start, end, size=96):
 
 shots = []
 for i, spec in enumerate(a.shots):
-    parts = [p.strip() for p in spec.split("|")]; clip = parts[0]; lines = parts[1:3] + [""] * (3 - len(parts))
+    parts = [p.strip() for p in spec.split("|")]; clip = parts[0]; lines = (parts[1:3] + ["", ""])[:2]; post = float(parts[3]) if len(parts) > 3 and parts[3] else a.post
     w, h, dur, imp = info(clip)
     if i < len(IMPS): imp = IMPS[i]
-    s0, s1 = max(0.0, imp - a.pre), min(dur, imp + a.post); shots.append({"clip": clip, "lines": lines[:2], "w": w, "h": h, "s0": s0, "s1": s1, "impact": imp})
+    s0, s1 = max(0.0, imp - a.pre), min(dur, imp + post); shots.append({"clip": clip, "lines": lines, "w": w, "h": h, "s0": s0, "s1": s1, "impact": imp})
 inputs, vparts, aparts, t, segs = [], [], [], 0.0, []
 for n, sh in enumerate(shots):
     inputs += ["-i", sh["clip"]]; length = sh["s1"] - sh["s0"]
@@ -58,9 +58,11 @@ for n, sh in enumerate(shots):
     segs.append({"clip": os.path.basename(sh["clip"]), "label": " / ".join(l for l in sh["lines"] if l), "impact": round(sh["impact"], 2), "starts_at": round(t, 2), "seconds": round(length, 2)}); t += length
 total = t; n = len(shots)
 labels = ""
+card = [c.strip() for c in a.card.split("|") if c.strip()]
 for i, (sh, sg) in enumerate(zip(shots, segs)):
-    end = segs[i + 1]["starts_at"] if i + 1 < n else total + 1
-    labels += label(sh["lines"], "top" if i == 0 else a.label_pos, sg["starts_at"], end, size=104 if i == 0 else 88)
+    end = (segs[i + 1]["starts_at"] - 0.04) if i + 1 < n else total + 1  # stop one frame before the next shot so labels never overlap
+    if i == 0 and card: labels += label(card, "top", sg["starts_at"], end, size=104) + label(sh["lines"], a.label_pos, sg["starts_at"], end, size=88)
+    else: labels += label(sh["lines"], "top" if (i == 0 and not card) else a.label_pos, sg["starts_at"], end, size=104 if (i == 0 and not card) else 88)
 if a.result.strip(): labels += label([a.result], "top", max(0.0, total - 1.6), total + 1, size=120)
 vf = ";".join(vparts) + ";" + "".join(f"[v{i}]" for i in range(n)) + f"concat=n={n}:v=1:a=0{labels},format=yuv420p[v]"
 af = ";".join(aparts) + ";" + "".join(f"[a{i}]" for i in range(n)) + f"concat=n={n}:v=0:a=1,alimiter=limit=0.95[clip]"
@@ -78,4 +80,4 @@ run(["-i", tmpv, "-i", tmpa, "-map", "0:v", "-map", "1:a", "-c", "copy", "-movfl
 for f in (tmpv, tmpa):
     try: os.remove(f)
     except OSError: pass
-report(tool="hole", out=a.out, seconds=round(total, 2), shots=segs, result=a.result.strip(), track=os.path.basename(track) if track else "", music_volume=a.music_volume if track else 0)
+report(tool="hole", out=a.out, seconds=round(total, 2), shots=segs, card=" / ".join(card), result=a.result.strip(), track=os.path.basename(track) if track else "", music_volume=a.music_volume if track else 0)
