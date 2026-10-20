@@ -2,7 +2,7 @@
 ("512 YARDS / PAR 5" on the tee shot, "170 YARDS / 9 IRON" on the next, "22 YARDS / 60 WEDGE" at the green), the real
 sound kept, music low. Optional result line at the end ("PAR", "BIRDIE").
 
-usage: python3 tools/hole.py <out.mp4> "<clip>|<line 1>|<line 2>[|<seconds after the key moment>]" ... [--card "hole 15|par 3"] [--intro "come play|1 hole with me"] [--result "par"]
+usage: python3 tools/hole.py <out.mp4> "<clip>|<line 1>|<line 2>[|<seconds after the key moment>[|<seconds before>]]" ... [--card "hole 15|par 3"] [--intro "come play|1 hole with me"] [--result "par"]
        [--pre 1.3] [--post 3.5] [--zoom 1.12] [--focus 0.5,0.55] [--impacts 3.1,6.6,...] [--mood chill | --track x.mp3] [--music-volume 0.3]
        [--label-pos top|mid]   --card is the hole card at the top of the first shot; every shot's own label sits mid-right. Without --card the first shot's label is the card.
 Each shot runs from --pre seconds before its key moment (the strike, found from the loudest sound or --impacts) to --post seconds
@@ -63,10 +63,10 @@ def label(lines, pos, start, end, size=None, sizes=None):
 
 shots = []
 for i, spec in enumerate(a.shots):
-    parts = [p.strip() for p in spec.split("|")]; clip = parts[0]; lines = (parts[1:3] + ["", ""])[:2]; post = float(parts[3]) if len(parts) > 3 and parts[3] else a.post
+    parts = [p.strip() for p in spec.split("|")]; clip = parts[0]; lines = (parts[1:3] + ["", ""])[:2]; post = float(parts[3]) if len(parts) > 3 and parts[3] else a.post; pre = float(parts[4]) if len(parts) > 4 and parts[4] else a.pre
     w, h, dur, imp = info(clip)
     if i < len(IMPS): imp = IMPS[i]
-    s0, s1 = max(0.0, imp - a.pre), min(dur, imp + post); shots.append({"clip": clip, "lines": lines, "w": w, "h": h, "s0": s0, "s1": s1, "impact": imp})
+    s0, s1 = max(0.0, imp - pre), min(dur, imp + post); shots.append({"clip": clip, "lines": lines, "w": w, "h": h, "s0": s0, "s1": s1, "impact": imp})
 inputs, vparts, aparts, t, segs = [], [], [], 0.0, []
 for n, sh in enumerate(shots):
     inputs += ["-i", sh["clip"]]; length = sh["s1"] - sh["s0"]; hold = a.hold if n == len(shots) - 1 else 0.0; length += hold
