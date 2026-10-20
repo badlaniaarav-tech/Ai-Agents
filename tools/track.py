@@ -55,7 +55,8 @@ while True:
     if frame_i == max(0, f_imp - 3) and start_pos is None:  # find the ball at rest: lower middle, small and round
         region = np.zeros((H, W), np.uint8); region[int(H * 0.5):int(H * 0.88), int(W * 0.3):int(W * 0.7)] = 1
         cands = bright_small(gray, hsv, region)
-        if cands: c = min(cands, key=lambda c: abs(c[2] - 60)); start_pos = np.array([c[0], c[1]])
+        cands = [c for c in cands if 8 <= c[2] <= 400]
+        if cands: c = max(cands, key=lambda c: c[1]); start_pos = np.array([c[0], c[1]])  # the lowest small white thing: the ball on the tee, not a shirt or a glove
     if frame_i >= f_imp and t <= T + a.max and lost < 4 and (start_pos is not None):
         if pos is None: pos = start_pos.copy(); vel = np.zeros(2)
         pred = pos + vel
@@ -63,15 +64,16 @@ while True:
             motion = (cv2.absdiff(gray, prev_gray) > 18).astype(np.uint8)
             x0, y0 = int(max(0, pred[0] - a.search)), int(max(0, pred[1] - a.search)); x1, y1 = int(min(W, pred[0] + a.search)), int(min(H, pred[1] + a.search))
             region = np.zeros((H, W), np.uint8); region[y0:y1, x0:x1] = 1
-            cands = [c for c in bright_small(gray, hsv, region & motion) if np.hypot(c[0] - pred[0], c[1] - pred[1]) <= a.search]
+            cands = [c for c in bright_small(gray, hsv, region & motion) if np.hypot(c[0] - pred[0], c[1] - pred[1]) <= a.search and c[2] <= 400]
             if not cands and frame_i == f_imp: cands = bright_small(gray, hsv, region)
             if cands:
                 c = min(cands, key=lambda c: np.hypot(c[0] - pred[0], c[1] - pred[1])); new = np.array([c[0], c[1]])
                 if frame_i > f_imp: vel = 0.6 * vel + 0.4 * (new - pos)
                 pos = new; lost = 0; tracked += 1; path.append((int(pos[0]), int(pos[1])))
+                if tracked == 3 and np.hypot(pos[0] - start_pos[0], pos[1] - start_pos[1]) < 40: lost = 99; path = []; tracked = 0  # a ball that has not moved in three frames is not the ball
             else:
                 lost += 1; pos = pred
-        if lost < 2 and path:
+        if lost < 2 and path and tracked >= 2:
             if a.trail and len(path) > 1: cv2.polylines(frame, [np.array(path, np.int32)], False, col, 4, cv2.LINE_AA)
             cv2.circle(frame, (int(pos[0]), int(pos[1])), a.radius, col, 4, cv2.LINE_AA)
     enc.stdin.write(frame.tobytes()); prev_gray = gray; frame_i += 1
