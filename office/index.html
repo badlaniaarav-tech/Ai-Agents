@@ -123,6 +123,7 @@
   .edctl button.big { background:var(--accent); color:#06121c; font-weight:600; border:0; border-radius:9px; padding:9px; font:inherit; font-size:13px; cursor:pointer } .edctl button.big[disabled] { opacity:.6; cursor:progress }
   #ed-result video { width:100%; max-height:320px; border-radius:9px; background:#000; margin:4px 0 } #ed-result a { font-size:12px; color:var(--accent); margin-right:10px } #ed-captionbox pre { white-space:pre-wrap; font-size:12px } .mini { padding:2px 7px; font-size:10px; vertical-align:middle }
   @media (max-width:600px) { .edwrap { grid-template-columns:1fr } .edpreview canvas { width:100%; height:auto; max-height:52vh; object-fit:contain } }
+  .rec { display:grid; grid-template-columns:1fr auto; gap:8px; align-items:center; background:var(--bg); border:1px solid var(--line); border-radius:9px; padding:7px 9px; margin-bottom:5px; font-size:12px } .rec .why { color:var(--text); margin:2px 0 } .rec .kv { font-size:10px; text-transform:none; letter-spacing:0 } .rec button { background:var(--accent); color:#06121c; font-weight:600; border:0; border-radius:7px; padding:6px 12px; font:inherit; font-size:12px; cursor:pointer }
   .card .note { width:100%; margin-top:8px; background:var(--bg); color:var(--text); border:1px solid var(--line); border-radius:9px; padding:9px 11px; font:inherit; font-size:13px }
   #t-opts[hidden] { display:none } .card .addrow button.primary { background:var(--accent); color:#06121c }
   #runbox:not(.on) { display:none }
@@ -152,7 +153,7 @@
 
 <div id="nav">
   <div class="logo" id="logo">HQ</div><h1 id="office-name">Agent HQ</h1>
-  <div id="tabs"><button class="on" data-tab="office">Office</button><button data-tab="tasks">Tasks<b id="taskn">0</b></button><button data-tab="calendar">Calendar</button><button data-tab="competitors">Competitors</button><button data-tab="brain">Brain</button></div>
+  <div id="tabs"><button class="on" data-tab="office">Office</button><button data-tab="tasks">Tasks<b id="taskn">0</b></button><button data-tab="edit">Edit</button><button data-tab="calendar">Calendar</button><button data-tab="competitors">Competitors</button><button data-tab="brain">Brain</button></div>
   <form id="ask" autocomplete="off"><select id="ask-agent" title="Which agent"></select><input id="ask-q" placeholder="Ask any agent…" aria-label="Ask any agent"><button type="button" id="ask-mic" class="mic" title="Say it">🎤</button><kbd>⌘K</kbd><button type="submit" title="Ask">↵</button></form>
   <span class="pill live" id="live"><b id="count">0</b> agents · <b id="running">0</b> running</span>
   <button id="overview" title="See the whole office (O)">Overview</button>
@@ -218,6 +219,22 @@
       <div class="uprow"><input id="clip-note" class="note" placeholder="Description for the caption (optional)"><select id="clip-style" title="Style"><option value="">Style: office picks</option></select></div>
       <p id="clip-style-help" class="kv hintline"></p>
     </section>
+    <section class="card">
+      <h2>Board <span id="where" class="kv" style="text-transform:none; letter-spacing:0; float:right"></span></h2>
+      <div id="runbox"><div class="kv" style="margin-bottom:6px">Running now</div><ul id="runlist"><li style="color:var(--muted)">nobody</li></ul></div>
+      <div id="board"></div>
+    </section>
+    <details class="card more"><summary>Log &amp; backup</summary>
+      <div class="resacts" style="margin:8px 0"><button id="t-export" title="Save a copy of the board and results as a file">Export backup</button><button type="button" id="t-import-btn">Import backup</button><input id="t-import" type="file" accept="application/json" hidden></div>
+      <div id="log" style="font-size:12px; color:var(--muted)"></div>
+    </details>
+  </div>
+  <div data-view="edit" style="display:none">
+    <section class="card compact" id="reccard">
+      <h2>Recommendations <span id="rec-for" class="kv" style="text-transform:none; letter-spacing:0"></span><button type="button" id="rec-go" class="mini" style="float:right">Ask the team</button></h2>
+      <div id="recs" class="kv hintline">Pick a clip below (✎) and the Creative team says how to edit it: style, text, music, lines. Press Use on the one you like.</div>
+      <div class="edask" style="margin-top:6px"><input id="rec-ask" placeholder="Or tell them what you want: “make it look like the Trackman one”, “something funny”"><button type="button" id="rec-ask-go">Ask</button></div>
+    </section>
     <section class="card compact">
       <h2>Golf clips <span class="kv" style="text-transform:none; letter-spacing:0; float:right">✎ edit · ▶ caption · Send</span></h2>
       <div id="clips"></div>
@@ -242,15 +259,6 @@
       <div id="ed-result" hidden><h3>The edit</h3><video id="ed-out" controls playsinline></video><div class="resacts"><a id="ed-dl" download="reel.mp4">Save the file</a><button type="button" id="ed-send">Send to Metricool for my approval</button></div></div>
       <div id="ed-captionbox"><h3>Caption <button type="button" id="ed-recap" class="mini">Write it</button> <button type="button" id="ed-copy" class="mini">Copy</button></h3><pre id="ed-captext" class="wait">Press "Write it": the Creative and Scripts teams look at the clip and write the caption and hashtags.</pre></div>
     </section>
-    <section class="card">
-      <h2>Board <span id="where" class="kv" style="text-transform:none; letter-spacing:0; float:right"></span></h2>
-      <div id="runbox"><div class="kv" style="margin-bottom:6px">Running now</div><ul id="runlist"><li style="color:var(--muted)">nobody</li></ul></div>
-      <div id="board"></div>
-    </section>
-    <details class="card more"><summary>Log &amp; backup</summary>
-      <div class="resacts" style="margin:8px 0"><button id="t-export" title="Save a copy of the board and results as a file">Export backup</button><button type="button" id="t-import-btn">Import backup</button><input id="t-import" type="file" accept="application/json" hidden></div>
-      <div id="log" style="font-size:12px; color:var(--muted)"></div>
-    </details>
   </div>
   <div data-view="calendar" style="display:none">
     <div class="calhead"><button id="cprev">‹</button><h2 id="calmonth" style="margin:0"></h2><button id="cnext">›</button><button id="ctoday">today</button><button id="besttime" title="Best times to post, from Metricool">Best times</button></div>
@@ -562,10 +570,10 @@
   const panel = document.getElementById('panel'); let tab = null;
   function showTab(name) {
     if (tab === name) { tab = null; panel.classList.remove('on'); document.querySelectorAll('#tabs button').forEach(b => b.classList.toggle('on', b.dataset.tab === 'office')); return; }
-    tab = name; panel.classList.add('on'); panel.classList.toggle('wide', name === 'tasks' || name === 'calendar' || name === 'task' || name === 'competitors');
+    tab = name; panel.classList.add('on'); panel.classList.toggle('wide', name === 'tasks' || name === 'edit' || name === 'calendar' || name === 'task' || name === 'competitors');
     panel.querySelectorAll('[data-view]').forEach(v => v.style.display = v.dataset.view === name ? 'block' : 'none');
     document.querySelectorAll('#tabs button').forEach(b => b.classList.toggle('on', b.dataset.tab === name));
-    if (name === 'brain') loadBrain(); if (name === 'tasks') renderBoard(); if (name === 'calendar') renderCal();
+    if (name === 'brain') loadBrain(); if (name === 'tasks') renderBoard(); if (name === 'edit') renderClips(); if (name === 'calendar') renderCal();
   }
 
   // ---------- tasks + calendar (office/tasks.json via /tasks) ----------
@@ -609,7 +617,7 @@
     saveLocal(); afterTasks(); return out;
   }
   function afterTasks() {
-    const open = items.filter(i => i.status !== 'done'); document.getElementById('taskn').textContent = open.length; if (tab === 'tasks') renderClips();
+    const open = items.filter(i => i.status !== 'done'); document.getElementById('taskn').textContent = open.length; if (tab === 'tasks' || tab === 'edit') renderClips();
     const w = document.getElementById('where'); if (w) w.textContent = serverTasks ? 'saved to office/tasks.json' : boardCol ? `saved for ${profile?.email || 'you'}` : profile ? `saved in this browser for ${profile.email}` : 'saved in this browser only';
     if (tab === 'tasks') renderBoard(); if (tab === 'calendar') renderCal(); refreshCounts();
   }
@@ -652,7 +660,7 @@
     el.querySelectorAll('[data-run]').forEach(b => b.onclick = () => { const i = items.find(x => x.id === b.dataset.run); if (i) runTask(i); });
     el.querySelectorAll('[data-open]').forEach(b => b.onclick = () => { const i = items.find(x => x.id === b.dataset.open); if (i) openResult(i); });
     el.querySelectorAll('[data-send]').forEach(b => b.onclick = () => { const i = items.find(x => x.id === b.dataset.send); if (i) sendForApproval(i); });
-    el.querySelectorAll('[data-edit]').forEach(b => b.onclick = () => { const i = items.find(x => x.id === b.dataset.edit); if (i) openEditor(i); });
+    el.querySelectorAll('[data-edit]').forEach(b => b.onclick = () => { const i = items.find(x => x.id === b.dataset.edit); if (i) { if (tab !== 'edit') showTab('edit'); openEditor(i); } });
   }
   function renderBoard() {
     const board = document.getElementById('board');
@@ -807,7 +815,7 @@
     } catch (err) { notify('Golf clips', `Upload failed (${err?.code || 'error'}). Try a smaller file.`, '#e64a4a'); return; } finally { dropBtn.classList.remove('busy'); label.textContent = was; }
     const added = await postTask('add', { type: 'clip', title: `Clip: ${f.name.replace(/\.[^.]+$/, '')}`, team: 'Creative', agent: 'creative-director', date: new Date().toISOString().slice(0, 10), notes: document.getElementById('clip-note').value.trim(), style: document.getElementById('clip-style').value, media, assetId, fileName: original.name, size: original.size, shrunk: f !== original });
     if (!added) return; if (!media) { localClips.set(added.id, URL.createObjectURL(f)); notify('Golf clips', 'Kept in this browser only (no asset store here). Run it now.'); }
-    document.getElementById('clip-note').value = ''; renderClips(); openEditor(added); notify('Golf clips', `${f.name} is in. Edit it below, or press ▶ for the caption.`, teamColor('Creative'));
+    document.getElementById('clip-note').value = ''; if (tab !== 'edit') showTab('edit'); renderClips(); openEditor(added); notify('Golf clips', `${f.name} is in. Edit it below, or press ▶ for the caption.`, teamColor('Creative'));
   }
   const clipSrc = i => i.media || localClips.get(i.id) || '';
   function renderClips() {
@@ -845,8 +853,26 @@
     await seekTo(Math.max(0, ED.impact - 0.3)); drawPreview(); edEl('ed-render').disabled = false;
     edEl('ed-status').textContent = `Strike found at ${ED.impact.toFixed(2)} s. Set the style, text, music and lines, then Render.`;
     const out = edEl('ed-result'), ov = edEl('ed-out'); if (item.result?.edit?.url) { out.hidden = false; ov.src = item.result.edit.url; edEl('ed-dl').href = item.result.edit.url; } else { out.hidden = true; ov.removeAttribute('src'); }
-    showCaption(item); card.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    showCaption(item); edEl('rec-for').textContent = 'for ' + item.title.replace(/^Clip: /, ''); if (item.result?.recs) renderRecs(item.result.recs); else recommend('');
   }
+  // recommendations from the Creative team: three ways to edit this clip, with one-press Use
+  async function recommend(ask) {
+    const item = ED.item, box = edEl('recs'); if (!item) { box.textContent = 'Pick a clip first (✎ on the list).'; return; }
+    edEl('rec-for').textContent = 'for ' + item.title.replace(/^Clip: /, ''); box.textContent = 'The creative director is looking at the clip…'; box.className = 'kv hintline';
+    const sample = await samplePromise; const cat = ED.catalog, fmts = (data.formats || []).filter(f => f.id !== 'montage-on-the-strike'); let recs = null;
+    if (sample) { try {
+      let imgs = []; try { const lim = await sample.limits(); if (lim.images && clipSrc(item)) imgs = (await framesOf(clipSrc(item))).slice(0, lim.images.maxCount); } catch (e) { }
+      const head = headOf('Creative');
+      recs = await sample.json(`${instructionsFor(head, 'work')}\n\nA golf swing clip from the owner${item.notes ? ` ("${item.notes}")` : ''}. ${imgs.length ? 'Three stills are attached.' : ''} The office can build these formats:\n${fmts.map(f => `- ${f.id}: ${f.name}. ${f.looks_like} Fits: ${(f.fits || []).join(', ')}.`).join('\n')}\nMusic available (mood · title): ${cat.map(t => `${t.mood} · ${t.title}`).join('; ') || 'none'}. The page can also draw lines on the swing (shaft at address, spine angle, swing plane) in yellow, white, red or blue.${ask ? `\nThe owner asks: "${ask}".` : ''}\nRecommend three different edits for THIS clip, best first. Reply with only JSON {"recs":[{"title":"<five words>","why":"<one plain sentence, what the viewer gets>","style":"<format id>","label":"<text on the video, lowercase, under six words, or empty>","labelStyle":"box"|"bold","slow":"2"|"strike"|"1","music_title":"<one of the titles or none>","vol":0-100,"zoom":1.0-1.8,"lines":"<none, or what to draw and where in one short sentence>"}]}`, { modelTier: 'default', images: imgs.length ? imgs : undefined, cache: false });
+    } catch (e) { recs = null; } }
+    if (!recs || !recs.recs) { recs = { recs: fmts.slice(0, 3).map(f => ({ title: f.name, why: f.looks_like.split('.')[0] + '.', style: f.id, label: f.id === 'rate-my-swing' ? 'rate my swing' : '', labelStyle: 'box', slow: (STYLE_PRESETS[f.id] || {}).slow || '2', music_title: (cat.find(t => t.mood === 'hype') || {}).title || 'none', vol: 55, zoom: 1.35, lines: 'none' })) }; }
+    box.className = ''; box.innerHTML = recs.recs.map((r, i) => `<div class="rec"><div><b>${esc(r.title)}</b> <span class="kv">${esc(((fmts.find(f => f.id === r.style) || {}).name) || r.style)}</span><div class="why">${esc(r.why)}</div><div class="kv">${esc(r.label ? `text “${r.label}”` : 'no text')} · ${esc(r.music_title && r.music_title !== 'none' ? r.music_title : 'no music')} · ${r.slow === '2' ? 'whole swing slow' : r.slow === 'strike' ? 'slow at the strike' : 'real speed'}${r.lines && r.lines !== 'none' ? ' · lines: ' + esc(r.lines) : ''}</div></div><button type="button" data-use="${i}">Use</button></div>`).join('');
+    box.querySelectorAll('[data-use]').forEach(b => b.onclick = () => { const r = recs.recs[+b.dataset.use]; Object.assign(ED.settings, { style: r.style || ED.settings.style, label: r.label || '', labelStyle: r.labelStyle || 'box', slow: r.slow || '2', vol: typeof r.vol === 'number' ? r.vol : ED.settings.vol, zoom: typeof r.zoom === 'number' ? r.zoom : ED.settings.zoom }); const t = cat.find(x => x.title === r.music_title); ED.settings.music = t ? t.url : (r.music_title === 'none' ? '' : ED.settings.music); fillControls(); drawPreview(); edEl('ed-status').textContent = `Set to “${r.title}”.${r.lines && r.lines !== 'none' ? ' Lines to draw: ' + r.lines : ''} Press Render.`; edEl('editcard').scrollIntoView({ behavior: 'smooth', block: 'start' }); });
+    item.result = { ...(item.result || {}), recs: recs.recs }; postTask('update', { id: item.id, result: item.result });
+  }
+  function renderRecs(list) { const cat = ED.catalog, fmts = (data.formats || []); const box = edEl('recs'); box.className = ''; box.innerHTML = list.map((r, i) => `<div class="rec"><div><b>${esc(r.title)}</b> <span class="kv">${esc(((fmts.find(f => f.id === r.style) || {}).name) || r.style)}</span><div class="why">${esc(r.why)}</div><div class="kv">${esc(r.label ? `text “${r.label}”` : 'no text')} · ${esc(r.music_title && r.music_title !== 'none' ? r.music_title : 'no music')} · ${r.slow === '2' ? 'whole swing slow' : r.slow === 'strike' ? 'slow at the strike' : 'real speed'}${r.lines && r.lines !== 'none' ? ' · lines: ' + esc(r.lines) : ''}</div></div><button type="button" data-use="${i}">Use</button></div>`).join('');
+    box.querySelectorAll('[data-use]').forEach(b => b.onclick = () => { const r = list[+b.dataset.use]; Object.assign(ED.settings, { style: r.style || ED.settings.style, label: r.label || '', labelStyle: r.labelStyle || 'box', slow: r.slow || '2', vol: typeof r.vol === 'number' ? r.vol : ED.settings.vol, zoom: typeof r.zoom === 'number' ? r.zoom : ED.settings.zoom }); const t = cat.find(x => x.title === r.music_title); ED.settings.music = t ? t.url : (r.music_title === 'none' ? '' : ED.settings.music); fillControls(); drawPreview(); edEl('ed-status').textContent = `Set to “${r.title}”.${r.lines && r.lines !== 'none' ? ' Lines to draw: ' + r.lines : ''} Press Render.`; edEl('editcard').scrollIntoView({ behavior: 'smooth', block: 'start' }); }); }
+  edEl('rec-go').onclick = () => recommend(''); edEl('rec-ask-go').onclick = () => { const q = edEl('rec-ask').value.trim(); recommend(q); edEl('rec-ask').value = ''; };
   function fillControls() { const s = ED.settings; edEl('ed-style').value = s.style; edEl('ed-label').value = s.label || ''; edEl('ed-music').value = s.music || ''; edEl('ed-vol').value = s.vol; edEl('ed-slow').value = s.slow; edEl('ed-zoom').value = Math.round(s.zoom * 100); }
   function readControls() { const s = ED.settings; s.style = edEl('ed-style').value; s.label = edEl('ed-label').value.trim(); s.music = edEl('ed-music').value; s.vol = +edEl('ed-vol').value; s.slow = edEl('ed-slow').value; s.zoom = +edEl('ed-zoom').value / 100; }
   ['ed-label', 'ed-zoom', 'ed-slow', 'ed-music', 'ed-vol'].forEach(id => edEl(id).addEventListener('input', () => { readControls(); drawPreview(); }));
