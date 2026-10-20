@@ -5,7 +5,7 @@ reps" reels: moody grade, calm music low, one small label or none.
 usage: python3 tools/stack.py <out.mp4> <rep1-angleA> <rep1-angleB> <rep1-angleC> [<rep2-angleA> ...] [--rows 3]
        [--pre 1.4] [--post 1.6] [--slow 1.0] [--label "aesthetic reps"] [--grade moody|none] [--mood chill | --track x.mp3] [--music-volume 0.35]
        [--focus "0.5,0.52;0.5,0.5;0.5,0.4"]  (one x,y per row, where the golfer or the ball is in that angle)
-Each clip's strike is found from its loudest moment, so the rows line up on impact. Prints one JSON line.
+Each clip's key moment is found from its loudest moment (or --impacts), so the rows line up on it. Prints one JSON line.
 """
 import argparse, json, os, random, subprocess, sys
 import numpy as np
@@ -16,7 +16,7 @@ ap = argparse.ArgumentParser()
 ap.add_argument("out"); ap.add_argument("clips", nargs="+")
 ap.add_argument("--rows", type=int, default=3); ap.add_argument("--pre", type=float, default=1.4); ap.add_argument("--post", type=float, default=1.6); ap.add_argument("--slow", type=float, default=1.0)
 ap.add_argument("--label", default=""); ap.add_argument("--grade", choices=["moody", "none"], default="moody"); ap.add_argument("--mood", default="chill"); ap.add_argument("--track"); ap.add_argument("--music-volume", type=float, default=0.35)
-ap.add_argument("--focus", default="0.5,0.52;0.5,0.5;0.5,0.5"); ap.add_argument("--label-y", type=float, default=0.06)
+ap.add_argument("--impacts", default="", help="key moment per clip in seconds, comma separated, when the loudest sound is not it"); ap.add_argument("--focus", default="0.5,0.52;0.5,0.5;0.5,0.5"); ap.add_argument("--label-y", type=float, default=0.06)
 a = ap.parse_args()
 ROOT = os.path.dirname(HERE); FONT = os.path.join(HERE, "fonts", "Geist.ttf")
 W, H = 1080, 1920; rows = max(2, min(3, a.rows)); RH = H // rows; RH -= RH % 2
@@ -41,9 +41,10 @@ def strip(w, h, fx, fy):
     return f"crop={cw}:{ch}:{x}:{y},scale={W}:{RH}:flags=lanczos"
 grade = ",eq=contrast=1.08:saturation=0.8:brightness=-0.02,curves=preset=darker" if a.grade == "moody" else ""
 
+IMPS = [float(x) for x in a.impacts.split(",") if x.strip()]
 reps = [a.clips[i:i + rows] for i in range(0, len(a.clips), rows)]; inputs = []; vparts = []; aparts = []; segs = []; t = 0.0; n = 0
 for r, group in enumerate(reps):
-    infos = [info(c) for c in group]; pre = min([a.pre] + [i[3] for i in infos]); post = min([a.post] + [i[2] - i[3] for i in infos]); length = (pre + post) * a.slow
+    infos = [info(c) for c in group]; infos = [(w, h, d, IMPS[r * rows + k]) if r * rows + k < len(IMPS) else (w, h, d, i) for k, (w, h, d, i) in enumerate(infos)]; pre = min([a.pre] + [i[3] for i in infos]); post = min([a.post] + [i[2] - i[3] for i in infos]); length = (pre + post) * a.slow
     row_labels = []
     for k, (clip, (w, h, dur, imp)) in enumerate(zip(group, infos)):
         inputs += ["-i", clip]; s0, s1 = imp - pre, imp + post

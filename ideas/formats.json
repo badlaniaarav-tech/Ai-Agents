@@ -1,6 +1,6 @@
 {
   "updated": "2026-10-20",
-  "note": "Video formats the office can build. The idea-scout adds and refreshes these from YouTube and Instagram; the clip-editor offers them as options and builds the one the owner picks. 'recipe' is the exact tool call. 'needs' lists anything our tools cannot do yet. \"buildable\" is true when the recipe works with the tools as they are; the page lists only those as styles. Second run (deep): numbers come from tools/yt.py, saved in work/research/ideas/results.jsonl. top_examples are the three best-viewed matches; 'views' are all-time views, Shorts shelf items give no date or channel. make_first_rank (1 = first) is set on the ten formats Aarav should make first, see work/research/ideas/summary.md.",
+  "note": "Video formats the office can build. The idea-scout adds and refreshes these from YouTube and Instagram; the clip-editor offers them as options and builds the one the owner picks. 'recipe' is the exact tool call. 'needs' lists anything our tools cannot do yet. \"buildable\" is true when the recipe works with the tools as they are; the page lists only those as styles. Second run (deep): numbers come from tools/yt.py, saved in work/research/ideas/results.jsonl. top_examples are the three best-viewed matches; 'views' are all-time views, Shorts shelf items give no date or channel. make_first_rank (1 = first) is set on the ten formats Aarav should make first, see work/research/ideas/summary.md. Formats apply to any kind of clip: the key moment (impact) is the strike for golf, the lockout for a lift, the landing for a jump.",
   "formats": [
     {
       "id": "smooth-slow",
@@ -1059,6 +1059,47 @@
       "evidence": "owner's pick; one Instagram example, no view count readable",
       "buildable": true,
       "make_first_rank": 4
+    },
+    {
+      "id": "lift-with-numbers",
+      "name": "Lift with the numbers",
+      "looks_like": "A set or a PR at normal speed, the whole clip, one slow push-in, a quick pulse at the top of the lift, then dark tiles in free space with weight, reps, set, and a note like 'PR'. Music drop on the lockout. Same look as the golf stats clip.",
+      "seen_on": [
+        "the owner's golf stats format, applied to the gym (not yet researched: run /ideas workout reels)"
+      ],
+      "fits": [
+        "a lift",
+        "a PR",
+        "any rep with a clear top"
+      ],
+      "length_s": [
+        5,
+        10
+      ],
+      "recipe": "python3 tools/reel.py <clip> out/<name>/reel.mp4 --slow 1 --from <start> --to <end> --impact <second of the lockout> --push 1.15:1.36 --pulse 0.06 --grade pop --label \"\" --stats \"Weight|<v>|lb;Reps|<v>|;Set|<v> of <n>|\" --stats-style dark --stats-cols 3 --stats-scale 0.92 --stats-y <free space> --stagger 0 --mood hype --music-volume 0.6",
+      "needs": [],
+      "evidence": "owner's format; no view data yet",
+      "buildable": true
+    },
+    {
+      "id": "workout-montage",
+      "name": "Workout montage on the rep",
+      "looks_like": "One text line held the whole way, the first set in slow motion, every other set at normal speed cut right at the top of the rep, the sound of the gym kept, music low. Same build as the golf montage.",
+      "seen_on": [
+        "the owner's golf montage format, applied to the gym (not yet researched: run /ideas workout reels)"
+      ],
+      "fits": [
+        "3 to 8 sets or exercises",
+        "a whole session"
+      ],
+      "length_s": [
+        7,
+        15
+      ],
+      "recipe": "python3 tools/montage.py out/<name>/montage.mp4 <set1> <set2> ... --impacts <top of each rep, comma separated> --label \"<one line>\" --mood hype",
+      "needs": [],
+      "evidence": "owner's format; no view data yet",
+      "buildable": true
     }
   ],
   "unreachable_sources": {
