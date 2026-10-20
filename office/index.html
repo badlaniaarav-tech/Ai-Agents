@@ -27,7 +27,7 @@
   .pill b { color:var(--text); font-weight:600 }
   .pill.live::before { content:""; display:inline-block; width:8px; height:8px; border-radius:50%; background:#5a6472; margin-right:7px }
   .pill.live.on::before { background:var(--ok); box-shadow:0 0 8px var(--ok) }
-  #demo, #overview { cursor:pointer; background:var(--well); color:var(--text); border:1px solid var(--line); border-radius:8px; padding:6px 10px; font:inherit; font-size:12px; white-space:nowrap }
+  #overview { cursor:pointer; background:var(--well); color:var(--text); border:1px solid var(--line); border-radius:8px; padding:6px 10px; font:inherit; font-size:12px; white-space:nowrap }
   #panel { position:fixed; top:76px; right:12px; width:320px; max-height:calc(100% - 170px); overflow:auto; background:var(--panel); border:1px solid var(--line); border-radius:14px; padding:14px; display:none }
   #panel.on { display:block }
   #panel h2 { font-size:12px; text-transform:uppercase; letter-spacing:.06em; color:var(--muted); margin:0 0 8px }
@@ -145,7 +145,7 @@
   #calgrid .day.other { opacity:.4 } #calgrid .day.today { border-color:var(--accent) } #calgrid .day.sel { background:var(--well2) } #calgrid .day .n { color:var(--text); font-weight:500 }
   #calgrid .chip { display:block; font-size:10px; color:#fff; border-radius:3px; padding:0 3px; margin-top:2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis }
   @media (max-width:860px) { #ask, #hint { display:none } #nav { height:auto; flex-wrap:wrap; padding:8px 10px; row-gap:6px } #tabs { margin:0; order:5; flex-basis:100%; overflow-x:auto; -webkit-overflow-scrolling:touch; scrollbar-width:none } #tabs::-webkit-scrollbar { display:none } #tabs button { white-space:nowrap; flex:0 0 auto } #panel, #panel.wide { width:min(320px, calc(100% - 24px)) } #tabs button b, #bell { display:none } #map, #pad { display:none } }
-  @media (max-width:600px) { #nav h1 { font-size:14px; margin-right:4px } #nav .pill { font-size:11px; padding:3px 8px } #overview, #demo { padding:4px 8px; font-size:12px } #menu { left:12px; right:12px; width:auto; max-height:calc(100vh - 110px); overflow:auto } #menu .row:not(:has(input)) { flex-wrap:wrap } #panel, #panel.wide { width:calc(100% - 24px); max-height:60vh } }
+  @media (max-width:600px) { #nav h1 { font-size:14px; margin-right:4px } #nav .pill { font-size:11px; padding:3px 8px } #overview { padding:4px 8px; font-size:12px } #menu { left:12px; right:12px; width:auto; max-height:calc(100vh - 110px); overflow:auto } #menu .row:not(:has(input)) { flex-wrap:wrap } #panel, #panel.wide { width:calc(100% - 24px); max-height:60vh } }
   body.demo .claude-only, body.demo #menu .row.claude-only { display:none } .demo-only, #menu .row.demo-only { display:none } body.demo .demo-only, body.demo #menu .row.demo-only { display:flex } #menu .row.demo-only { flex-direction:column; align-items:stretch; gap:8px; background:var(--well); border:1px solid var(--line); border-radius:10px; padding:10px; margin:6px 0 } #menu .row.demo-only .kv { white-space:normal; line-height:1.5 } #menu .row.demo-only a { display:block; text-align:center; background:var(--accent); color:#06121c; font-weight:600; border-radius:8px; padding:9px; text-decoration:none; font-size:13px }
 </style>
 </head>
@@ -158,7 +158,6 @@
   <form id="ask" autocomplete="off"><select id="ask-agent" title="Which agent"></select><input id="ask-q" placeholder="Ask any agent…" aria-label="Ask any agent"><button type="button" id="ask-mic" class="mic" title="Say it">🎤</button><kbd>⌘K</kbd><button type="submit" title="Ask">↵</button></form>
   <span class="pill live" id="live"><b id="count">0</b> agents · <b id="running">0</b> running</span>
   <button id="overview" title="See the whole office (O)">Overview</button>
-  <button id="demo">Demo</button>
   <button id="bell" title="Notifications">🔔<i id="bellc">0</i></button>
   <div class="me" id="me" title="Account">A</div>
 </div>
@@ -1263,12 +1262,6 @@
     setTimeout(poll, 1500);
   }
   poll();
-  document.getElementById('demo').onclick = function () {
-    if (demo) { clearInterval(demo); demo = null; this.textContent = 'Demo'; agents.forEach(a => setWorking(a.name, false)); return; }
-    this.textContent = 'Stop demo'; setWorking('chief-of-staff', true, 'demo'); notify('Analytics', 'Weekly report is ready');
-    demo = setInterval(() => { const a = agents[Math.floor(Math.random() * agents.length)]; setWorking(a.name, !a.working, 'demo'); }, 800);
-  };
-
   // ---------- minimap ----------
   const mc = document.getElementById('mapc'), mctx = mc.getContext('2d');
   function drawMap() {
