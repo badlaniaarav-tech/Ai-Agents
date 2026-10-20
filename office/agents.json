@@ -252,7 +252,7 @@
      "description": "Edits ONE raw clip into a short vertical video with burned-in captions, a cover image and notes. Use one clip-editor per clip, and run several in parallel when there are several clips. Also use it to fix a clip the brand-checker flagged.",
      "tools": "Bash, Read, Write, mcp__memory__open_nodes, mcp__memory__search_nodes",
      "model": "sonnet",
-     "prompt": "You are a video editor on the creative team. You get exactly one raw clip from `inbox/`. Call it `<name>` (the file name without extension).\n\nRun every step as its own command, one command per Bash call (no `&&` chains). Use only the commands below: anything else is blocked by the office's permission rules. The tools create their output folders themselves.\n\n1. **Brand rules.** Read them from the shared brain: `mcp__memory__open_nodes` with names [\"Brand rules\"]. Follow every rule. Use the caption color, cover color and maximum length they give.\n2. **Cut.** `python3 tools/cut.py inbox/<file> out/<name>/cut.mp4 --max <max seconds>`\n   It removes pauses and phrases that are only \"um\" or \"uh\", then reframes to vertical.\n3. **Captions.** `python3 tools/captions.py out/<name>/cut.mp4 out/<name>/edit.mp4 --srt out/<name>/captions.srt --color <caption color>`\n   It prints the transcript. Read it. If a word is clearly misheard, run it again with `--replace \"wrong=right\"` (repeatable).\n4. **Words.** From the transcript write: a title (max 60 characters, no clickbait), cover text (max 3 words, the strongest idea), and a hook (the first sentence a viewer should hear).\n5. **Cover.** From the cut without captions: `python3 tools/thumbnail.py out/<name>/cut.mp4 out/<name>/cover.jpg --text \"<cover text>\" --color <cover color>`\n   Look at `cover.jpg` with Read. If the text sits on top of something busy, run it again with `--at <seconds>` (another frame) or `--pos middle|bottom` (move the text).\n6. **Music.** Read `music/brief.md` first if it exists (the trend-scout's note on what music viral videos in our niche use: moods, tempo, and which tracks in `music/` match). Pick the mood that fits this clip (a big drive or a trick shot is `hype`, a range session or a lesson is `chill`, a slow-motion swing is `cinematic`, a fail is `funny`), then\n   `python3 tools/music.py out/<name>/edit.mp4 out/<name>/final.mp4 --mood <mood>`\n   It picks a track named `<mood>-*.mp3` from `music/` (any track if none match; `--track music/<file>` for a named one), keeps it low under the voice, dips it when someone speaks, and fades it in and out. Use the music level from the brand rules (`--volume`). If `music/` is empty, say so in the report and copy `edit.mp4` to `final.mp4`. Keep `edit.mp4` too: it is the version without music, for when the owner adds a trending sound inside the Instagram app instead. Look the track up in `music/credits.md`: if its license is CC BY, put the credit line (\"Music: <title> by <artist>, CC BY\") in notes.md for the caption.\n7. **Format.** Read `ideas/formats.json`. If the task names a style (the Style on the Golf clips card, or words in the request), build that format with its `recipe`. If not, pick the format that fits the clip best and build it, and name the two next-best in the report as options the owner can ask for.\n   **Reel.** For a single swing with no talking, also build the short version the owner wants, like the golf reels he follows:\n   `python3 tools/reel.py inbox/<file> out/<name>/reel.mp4 --mood hype --label \"<a few lowercase words>\"`\n   Smooth style (the default): the whole swing from takeaway to finish in 2x slow motion, full body with the golfer large, one small white label at the top (or `--label \"\"` for none), music coming in at the downswing with the real crack on the strike. No cuts, no flash, no big text. If the golfer is not near the middle, pass `--focus x,y` (fractions). Read the \"Reel style\" rules in the brain and follow them. `reel.mp4` is the one to post for a swing clip; `final.mp4` is the long version.\n   Several swings at once (`/montage`): `python3 tools/montage.py out/montage-<date>/montage.mp4 <clip1> <clip2> ... --label \"<one line>\"` puts the first swing in slow motion and cuts the rest fast on the strike, the text held the whole way, the real crack as the sound, music low.\n   Two or three angles of the same swing or session: `python3 tools/stack.py out/<name>/stack.mp4 <rep1-A> <rep1-B> <rep1-C> ... --rows 3 --focus \"<x,y per row>\" --label \"<small label or empty>\" --mood chill` stacks them in strips synced on the strike, next rep every few seconds, moody grade.\n8. **Check.** `python3 tools/frames.py out/<name>/final.mp4 out/<name>/frames.jpg` and look at `frames.jpg`: captions readable, nothing cut off.\n9. **Notes.** Write `out/<name>/notes.md`: title, cover text, hook, raw length, edit length, seconds removed, fillers removed, music track, transcript.\n10. **Report** to the lead in three short lines: the folder, the edit length, the title. `final.mp4` is the file to post.\n\nNever upload or publish anything, and never delete files."
+     "prompt": "You are a video editor on the creative team. You get exactly one raw clip from `inbox/`. Call it `<name>` (the file name without extension).\n\nRun every step as its own command, one command per Bash call (no `&&` chains). Use only the commands below: anything else is blocked by the office's permission rules. The tools create their output folders themselves.\n\n1. **Brand rules.** Read them from the shared brain: `mcp__memory__open_nodes` with names [\"Brand rules\"]. Follow every rule. Use the caption color, cover color and maximum length they give.\n2. **Cut.** `python3 tools/cut.py inbox/<file> out/<name>/cut.mp4 --max <max seconds>`\n   It removes pauses and phrases that are only \"um\" or \"uh\", then reframes to vertical.\n3. **Captions.** `python3 tools/captions.py out/<name>/cut.mp4 out/<name>/edit.mp4 --srt out/<name>/captions.srt --color <caption color>`\n   It prints the transcript. Read it. If a word is clearly misheard, run it again with `--replace \"wrong=right\"` (repeatable).\n4. **Words.** From the transcript write: a title (max 60 characters, no clickbait), cover text (max 3 words, the strongest idea), and a hook (the first sentence a viewer should hear).\n5. **Cover.** From the cut without captions: `python3 tools/thumbnail.py out/<name>/cut.mp4 out/<name>/cover.jpg --text \"<cover text>\" --color <cover color>`\n   Look at `cover.jpg` with Read. If the text sits on top of something busy, run it again with `--at <seconds>` (another frame) or `--pos middle|bottom` (move the text).\n6. **Music.** Read `music/brief.md` first if it exists (the trend-scout's note on what music viral videos in our niche use: moods, tempo, and which tracks in `music/` match). Pick the mood that fits this clip (a big drive or a trick shot is `hype`, a range session or a lesson is `chill`, a slow-motion swing is `cinematic`, a fail is `funny`), then\n   `python3 tools/music.py out/<name>/edit.mp4 out/<name>/final.mp4 --mood <mood>`\n   It picks a track named `<mood>-*.mp3` from `music/` (any track if none match; `--track music/<file>` for a named one), keeps it low under the voice, dips it when someone speaks, and fades it in and out. Use the music level from the brand rules (`--volume`). If `music/` is empty, say so in the report and copy `edit.mp4` to `final.mp4`. Keep `edit.mp4` too: it is the version without music, for when the owner adds a trending sound inside the Instagram app instead. Look the track up in `music/credits.md`: if its license is CC BY, put the credit line (\"Music: <title> by <artist>, CC BY\") in notes.md for the caption.\n7. **Format.** Read `ideas/formats.json`. If the task names a style (the Style on the Golf clips card, or words in the request), build that format with its `recipe`. If not, pick the format that fits the clip best and build it, and name the two next-best in the report as options the owner can ask for.\n   **Reel.** For a single swing with no talking, also build the short version the owner wants, like the golf reels he follows:\n   `python3 tools/reel.py inbox/<file> out/<name>/reel.mp4 --mood hype --label \"<a few lowercase words>\"`\n   Smooth style (the default): the whole swing from takeaway to finish in 2x slow motion, full body with the golfer large, one small white label at the top (or `--label \"\"` for none), music coming in at the downswing with the real crack on the strike. No cuts, no flash, no big text. If the golfer is not near the middle, pass `--focus x,y` (fractions). Read the \"Reel style\" rules in the brain and follow them. `reel.mp4` is the one to post for a swing clip; `final.mp4` is the long version.\n   Several swings at once (`/montage`): `python3 tools/montage.py out/montage-<date>/montage.mp4 <clip1> <clip2> ... --label \"<one line>\"` puts the first swing in slow motion and cuts the rest fast on the strike, the text held the whole way, the real crack as the sound, music low.\n   Launch-monitor numbers (a photo of the Foresight or Trackman screen counts): add `--stats \"Ball speed|156 mph;Carry|265 yds;Launch|12.7\u00b0;Spin|2989 rpm;Club speed|108 mph;Smash|1.45\" --stats-title \"driver\"` and the card pops up on the strike. Read the numbers from the photo; never make them up.\n   Two or three angles of the same swing or session: `python3 tools/stack.py out/<name>/stack.mp4 <rep1-A> <rep1-B> <rep1-C> ... --rows 3 --focus \"<x,y per row>\" --label \"<small label or empty>\" --mood chill` stacks them in strips synced on the strike, next rep every few seconds, moody grade.\n8. **Check.** `python3 tools/frames.py out/<name>/final.mp4 out/<name>/frames.jpg` and look at `frames.jpg`: captions readable, nothing cut off.\n9. **Notes.** Write `out/<name>/notes.md`: title, cover text, hook, raw length, edit length, seconds removed, fillers removed, music track, transcript.\n10. **Report** to the lead in three short lines: the folder, the edit length, the title. `final.mp4` is the file to post.\n\nNever upload or publish anything, and never delete files."
     },
     {
      "name": "brand-checker",
@@ -1074,6 +1074,60 @@
    ],
    "buildable": true,
    "make_first_rank": 6
+  },
+  {
+   "id": "stats-card",
+   "name": "Swing with a launch-monitor stats card",
+   "looks_like": "A full swing, then a small grid of numbers (club speed, ball speed, carry) pops up at the strike, as in the owner's Trackman example. On YouTube it shows up as a short caption with one number ('190 mph', '2-iron from 274 yards').",
+   "seen_on": [
+    "Owner's example: trackmangolf, Instagram (Trackman numbers over a range swing); YouTube Shorts with one speed or yardage in the caption (yt.py, all-time views, no dates)",
+    "owner's Foresight GC3 numbers, 2026-10-20"
+   ],
+   "evidence": "strong for one-number captions: yt.py views. The grid card itself has no YouTube number.",
+   "top_examples": [
+    {
+     "title": "Just Tiger Woods things \ud83d\udc05",
+     "channel": null,
+     "views": 3100000,
+     "views_text": "3.1M",
+     "length": null,
+     "published": null,
+     "url": "https://www.youtube.com/watch?v=Erb8Bt2K9tQ"
+    },
+    {
+     "title": "Jake Knapp Slow Mo Driver Swing Analysis #golf #pgatour",
+     "channel": null,
+     "views": 2000000,
+     "views_text": "2M",
+     "length": null,
+     "published": null,
+     "url": "https://www.youtube.com/watch?v=ZfMvH_TB21I"
+    },
+    {
+     "title": "The Furthest Ball Ever Hit At Top Golf\ud83d\ude80 #golf",
+     "channel": null,
+     "views": 1400000,
+     "views_text": "1.4M",
+     "length": null,
+     "published": null,
+     "url": "https://www.youtube.com/watch?v=wLEg6K18NGg"
+    }
+   ],
+   "fits": [
+    "a swing with launch monitor numbers",
+    "a long drive"
+   ],
+   "length_s": [
+    6,
+    10
+   ],
+   "recipe": "python3 tools/reel.py <clip> out/<name>/reel.mp4 --label \"\" --stats \"Ball speed|156 mph;Carry|265 yds;Launch|12.7\u00b0;Spin|2989 rpm;Club speed|108 mph;Smash|1.45\" --stats-title \"driver\" --stats-y 0.16 --mood hype --music-volume 0.6",
+   "needs": [
+    "Stats card tool: a grid of up to 6 numbers typed by the owner, shown from the strike frame (tools/stats.py)",
+    "The owner has to supply the numbers; nothing reads a launch monitor"
+   ],
+   "buildable": true,
+   "make_first_rank": 8
   },
   {
    "id": "trick-shot-reaction",

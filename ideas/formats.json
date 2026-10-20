@@ -892,7 +892,8 @@
       "name": "Swing with a launch-monitor stats card",
       "looks_like": "A full swing, then a small grid of numbers (club speed, ball speed, carry) pops up at the strike, as in the owner's Trackman example. On YouTube it shows up as a short caption with one number ('190 mph', '2-iron from 274 yards').",
       "seen_on": [
-        "Owner's example: trackmangolf, Instagram (Trackman numbers over a range swing); YouTube Shorts with one speed or yardage in the caption (yt.py, all-time views, no dates)"
+        "Owner's example: trackmangolf, Instagram (Trackman numbers over a range swing); YouTube Shorts with one speed or yardage in the caption (yt.py, all-time views, no dates)",
+        "owner's Foresight GC3 numbers, 2026-10-20"
       ],
       "evidence": "strong for one-number captions: yt.py views. The grid card itself has no YouTube number.",
       "top_examples": [
@@ -932,12 +933,12 @@
         6,
         10
       ],
-      "recipe": "python3 tools/reel.py <clip> out/<name>/reel.mp4 --label \"190 mph ball speed\" --mood hype (closest: one number in the label)",
+      "recipe": "python3 tools/reel.py <clip> out/<name>/reel.mp4 --label \"\" --stats \"Ball speed|156 mph;Carry|265 yds;Launch|12.7°;Spin|2989 rpm;Club speed|108 mph;Smash|1.45\" --stats-title \"driver\" --stats-y 0.16 --mood hype --music-volume 0.6",
       "needs": [
         "Stats card tool: a grid of up to 6 numbers typed by the owner, shown from the strike frame (tools/stats.py)",
         "The owner has to supply the numbers; nothing reads a launch monitor"
       ],
-      "buildable": false,
+      "buildable": true,
       "make_first_rank": 8
     },
     {
