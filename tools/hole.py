@@ -15,7 +15,7 @@ from media import FFMPEG, report, run
 
 ap = argparse.ArgumentParser()
 ap.add_argument("out"); ap.add_argument("shots", nargs="+", help='"clip|line 1|line 2"')
-ap.add_argument("--result", default=""); ap.add_argument("--card", default="", help="hole card on the first shot: \"hole 15|par 3\" or \"512 yards|par 5\""); ap.add_argument("--pre", type=float, default=1.3); ap.add_argument("--post", type=float, default=3.5)
+ap.add_argument("--result", default=""); ap.add_argument("--result-at", choices=["end", "impact"], default="end", help="end: the last 1.6 s; impact: from the last shot's key moment"); ap.add_argument("--hold", type=float, default=0.0, help="freeze the last frame this many seconds at the end"); ap.add_argument("--card", default="", help="hole card on the first shot: \"hole 15|par 3\" or \"512 yards|par 5\""); ap.add_argument("--pre", type=float, default=1.3); ap.add_argument("--post", type=float, default=3.5)
 ap.add_argument("--zoom", type=float, default=1.12); ap.add_argument("--focus", default="0.5,0.55"); ap.add_argument("--impacts", default="")
 ap.add_argument("--mood", default="chill"); ap.add_argument("--track"); ap.add_argument("--music-volume", type=float, default=0.3); ap.add_argument("--label-pos", choices=["top", "mid"], default="mid")
 ap.add_argument("--font", default="Poppins-ExtraBold.ttf", help="file in tools/fonts; Poppins ExtraBold matches the Instagram Strong look of the owner's example"); ap.add_argument("--shadow", type=int, default=8, help="hard shadow offset in px, like the example"); ap.add_argument("--tracking", type=float, default=0.06, help="letter spacing as a fraction of the font size"); ap.add_argument("--size", type=int, default=60, help="shot label size (the example's side label is about a quarter of the frame wide)"); ap.add_argument("--card-size", type=int, default=136); ap.add_argument("--label-x", type=float, default=0.70); ap.add_argument("--label-y", type=float, default=0.55)
@@ -69,9 +69,9 @@ for i, spec in enumerate(a.shots):
     s0, s1 = max(0.0, imp - a.pre), min(dur, imp + post); shots.append({"clip": clip, "lines": lines, "w": w, "h": h, "s0": s0, "s1": s1, "impact": imp})
 inputs, vparts, aparts, t, segs = [], [], [], 0.0, []
 for n, sh in enumerate(shots):
-    inputs += ["-i", sh["clip"]]; length = sh["s1"] - sh["s0"]
-    vparts.append(f"[{n}:v]trim={sh['s0']:.3f}:{sh['s1']:.3f},setpts=PTS-STARTPTS,{crop(sh['w'], sh['h'])},fps=30[v{n}]")
-    aparts.append(f"[{n}:a:0]atrim={sh['s0']:.3f}:{sh['s1']:.3f},asetpts=PTS-STARTPTS,volume=1.2[a{n}]")
+    inputs += ["-i", sh["clip"]]; length = sh["s1"] - sh["s0"]; hold = a.hold if n == len(shots) - 1 else 0.0; length += hold
+    vparts.append(f"[{n}:v]trim={sh['s0']:.3f}:{sh['s1']:.3f},setpts=PTS-STARTPTS,{crop(sh['w'], sh['h'])},fps=30" + (f",tpad=stop_mode=clone:stop_duration={hold:.3f}" if hold else "") + f"[v{n}]")
+    aparts.append(f"[{n}:a:0]atrim={sh['s0']:.3f}:{sh['s1']:.3f},asetpts=PTS-STARTPTS,volume=1.2" + (f",apad=pad_dur={hold:.3f}" if hold else "") + f"[a{n}]")
     segs.append({"clip": os.path.basename(sh["clip"]), "label": " / ".join(l for l in sh["lines"] if l), "impact": round(sh["impact"], 2), "starts_at": round(t, 2), "seconds": round(length, 2)}); t += length
 total = t; n = len(shots)
 card = [c.strip() for c in a.card.split("|") if c.strip()]
@@ -83,8 +83,8 @@ for i, (sh, sg) in enumerate(zip(shots, segs)):
     end = (segs[i + 1]["starts_at"] - 0.04) if i + 1 < n else total + 1  # stop one frame before the next shot so labels never overlap
     start = sg["starts_at"] + (intro_end + 0.04 if i == 0 else 0)
     if i == 0 and card: label(card, "top", start, end, size=a.card_size); label(sh["lines"], a.label_pos, start, end)
-    else: label(sh["lines"], "top" if (i == 0 and not card) else a.label_pos, start, end, size=a.card_size if (i == 0 and not card) else None)
-if a.result.strip(): label([a.result], "top", max(0.0, total - 1.6), total + 1, size=a.card_size + 20)
+    else: big = (i == 0 and not card and not intro); label(sh["lines"], "top" if big else a.label_pos, start, end, size=a.card_size if big else None)  # without a card or an intro the first label is the card
+if a.result.strip(): label([a.result], "top", max(0.0, (segs[-1]["starts_at"] + shots[-1]["impact"] - shots[-1]["s0"]) if a.result_at == "impact" else total - 1.6), total + 1, size=a.card_size + 20)
 vf = ";".join(vparts) + ";" + "".join(f"[v{i}]" for i in range(n)) + f"concat=n={n}:v=1:a=0[base]"; prev = "base"
 for k, (path, x, y, start, end) in enumerate(overlays):
     vf += f";[{n + k}:v]format=rgba,setpts=PTS-STARTPTS[l{k}];[{prev}][l{k}]overlay=x={x}:y={y}:enable='between(t,{start:.3f},{end:.3f})':format=auto[o{k}]"; prev = f"o{k}"
