@@ -79,6 +79,11 @@ def main():
             out["departments"][0]["agents"].append({"name": name, "role": "worker", "description": meta.get("description", ""), "tools": meta.get("tools", ""), "model": meta.get("model", "inherit")})
     out["count"] = sum(len(d["agents"]) for d in out["departments"])
     out["brain"] = brain()
+    ideas = os.path.join(ROOT, "ideas", "formats.json")
+    try:
+        out["formats"] = [f for f in json.load(open(ideas, encoding="utf-8")).get("formats", []) if not f.get("retired")]
+    except Exception:
+        out["formats"] = []
     json.dump(out, open(OUT, "w", encoding="utf-8"), indent=1)
     print(json.dumps({"agents": out["count"], "departments": len(out["departments"]), "out": os.path.relpath(OUT, ROOT)}))
 

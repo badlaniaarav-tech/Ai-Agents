@@ -1,0 +1,3 @@
+# Ideas: video formats the office can build
+
+`formats.json` is the database of video formats, each with what it looks like, where it was seen, when it fits, the length, and the exact tool call to build it. The `idea-scout` refreshes it every week from YouTube and Instagram (`/ideas`), adding formats that are getting views and marking what our tools cannot do yet (`needs`). When a clip comes in, the clip-editor reads this file and either builds the format the owner picked (the Style on the Golf clips card, or the words in the request) or offers the three best-fitting ones. The office page shows the same list in the Style dropdown.

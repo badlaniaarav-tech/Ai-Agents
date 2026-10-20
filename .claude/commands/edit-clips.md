@@ -12,3 +12,5 @@ Edit the new clips in `inbox/`.
 6. Report to the owner: a short table (clip, edit length, title, cover text, music track and mood) and the paths; `reel.mp4` is the one to post for a swing clip (`final.mp4` is the long version), `edit.mp4` is the same without music for adding a trending sound in the Instagram app. If the brief names tracks that are not in `music/` yet, list them with their download links. End with: "Nothing is published. Reply OK to approve."
 
 $ARGUMENTS
+
+Style: if $ARGUMENTS names a format from `ideas/formats.json` (by id or name), every clip-editor builds that one; otherwise each picks the best fit and lists two alternatives in the report.
