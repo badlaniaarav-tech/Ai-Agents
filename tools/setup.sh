@@ -4,7 +4,7 @@ set -e
 cd "$(dirname "$0")/.."
 command -v ffmpeg >/dev/null || { echo "Install ffmpeg first (macOS: brew install ffmpeg)"; exit 1; }
 command -v npx >/dev/null || { echo "Install Node.js 18+ first (it runs the shared-brain memory server)"; exit 1; }
-python3 -m pip install --quiet numpy pillow
+python3 -m pip install --quiet numpy pillow opencv-python-headless
 if python3 -m pip install --quiet faster-whisper; then
   echo "speech-to-text: faster-whisper (downloads its model on first use)"
 else

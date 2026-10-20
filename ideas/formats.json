@@ -211,9 +211,9 @@
       ],
       "recipe": "python3 tools/reel.py <clip> out/<name>/reel.mp4 --style punch --hook \"longest drive today\" --end \"287 YARDS\" --mood hype",
       "needs": [
-        "Ball-flight tracer overlay: nothing in tools/ can draw the ball path, so the flight is only what the phone sees",
         "The number on the end card is typed by hand; the owner has to give the yardage (no launch monitor data is read)",
-        "Stats card with ball speed, carry and club speed shown after the strike (see stats-card)"
+        "Stats card with ball speed, carry and club speed shown after the strike (see stats-card)",
+        "The ball circle (tools/track.py) only works when the phone keeps the ball in frame; a face-on driver loses it in two frames"
       ],
       "buildable": false,
       "top_examples": [
@@ -1117,10 +1117,8 @@
         10,
         20
       ],
-      "recipe": "python3 tools/hole.py out/hole-<date>/hole.mp4 \"<tee>|512 yards|par 5\" \"<second>|170 yards|9 iron\" \"<third>|22 yards|60 wedge\" --result \"par\" --mood chill --music-volume 0.3",
-      "needs": [
-        "A ball tracer line like the example's is not built (the flight is only what the phone sees)"
-      ],
+      "recipe": "python3 tools/hole.py out/hole-<date>/hole.mp4 \"<tee>|512 yards|par 5\" \"<second>|170 yards|9 iron\" \"<third>|22 yards|60 wedge\" --result \"par\" --mood chill --music-volume 0.3  &&  python3 tools/track.py out/hole-<date>/hole.mp4 out/hole-<date>/hole-ball.mp4 --trail",
+      "needs": [],
       "evidence": "owner's pick; one Instagram example, no view count readable",
       "buildable": true,
       "make_first_rank": 3
