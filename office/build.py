@@ -81,7 +81,7 @@ def main():
     out["brain"] = brain()
     ideas = os.path.join(ROOT, "ideas", "formats.json")
     try:
-        out["formats"] = [f for f in json.load(open(ideas, encoding="utf-8")).get("formats", []) if not f.get("retired")]
+        out["formats"] = [f for f in json.load(open(ideas, encoding="utf-8")).get("formats", []) if not f.get("retired") and f.get("buildable", not f.get("needs"))]
     except Exception:
         out["formats"] = []
     json.dump(out, open(OUT, "w", encoding="utf-8"), indent=1)

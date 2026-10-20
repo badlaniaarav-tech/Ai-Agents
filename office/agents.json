@@ -393,7 +393,8 @@
     9
    ],
    "recipe": "python3 tools/reel.py <clip> out/<name>/reel.mp4 --label \"<a few lowercase words>\" --mood hype",
-   "needs": []
+   "needs": [],
+   "buildable": true
   },
   {
    "id": "montage-on-the-strike",
@@ -412,7 +413,8 @@
     15
    ],
    "recipe": "python3 tools/montage.py out/montage-<date>/montage.mp4 <clip1> <clip2> ... --label \"<one line>\" --mood hype",
-   "needs": []
+   "needs": [],
+   "buildable": true
   },
   {
    "id": "hook-punch",
@@ -431,7 +433,139 @@
     7
    ],
    "recipe": "python3 tools/reel.py <clip> out/<name>/reel.mp4 --style punch --hook \"<under five words>\" --mood hype",
-   "needs": []
+   "needs": [],
+   "buildable": true
+  },
+  {
+   "id": "signature-move-slow",
+   "name": "Name the one move (slow motion on a signature feature)",
+   "looks_like": "One full swing in smooth slow motion, camera still, golfer large. One small label names the single thing to watch ('the pause at the top', 'rhythm & tempo'). No other text. Real strike sound on contact, music low. Built around one visible quirk so the viewer replays it to see it.",
+   "seen_on": [
+    "Cameron Young's pause at the top: slow-motion clip embedded by Australian Golf Digest from an X post by LukeKerrDineen, 2026-03-16 (outside 90 days, no views shown)",
+    "Titleist video 'Cameron Young shares his driver secrets', September 2026 (titleist.com; views not shown)",
+    "'Ultra slow motion' swing uploads by Justin Thomas and Nelly Korda seen in YouTube search results for 'golf swing slow motion' (2026 in the titles, views and dates not readable)"
+   ],
+   "evidence": "weak: topic is clearly active, no view counts found for this exact format",
+   "fits": [
+    "one swing",
+    "a swing with something visible to point at (pause, big hip turn, late release)",
+    "no talking"
+   ],
+   "length_s": [
+    5,
+    9
+   ],
+   "recipe": "python3 tools/reel.py <clip> out/<name>/reel.mp4 --label \"the pause at the top\" --mood hype",
+   "needs": [],
+   "buildable": true
+  },
+  {
+   "id": "pure-strike-sound",
+   "name": "Pure strike sound (impacts only, real audio)",
+   "looks_like": "Many range swings cut on the contact frame, no talking, no music or almost none, the crack of each ball as the whole soundtrack. Dead time between shots removed. Optional one short label.",
+   "seen_on": [
+    "PGA Tour video of Tiger Woods hitting range shots at Torrey Pines, edited to only the moments of impact, covered by Golf.com as 'mesmerizing' (golf.com, date not confirmed, views not shown)",
+    "Substack essay 'the sounds of golf' (treyton.substack.com) by a creator who makes short ASMR-style range videos with announcers and dead time removed (date and views not shown)"
+   ],
+   "evidence": "weak: the format and the sound-first idea are documented, no view counts found",
+   "fits": [
+    "a range session with 5 to 10 swings",
+    "good strike sound on the phone mic",
+    "no talking"
+   ],
+   "length_s": [
+    8,
+    15
+   ],
+   "recipe": "python3 tools/montage.py out/<name>/montage.mp4 <swing1> <swing2> ... --label \"\" --music-volume 0",
+   "needs": [],
+   "buildable": true
+  },
+  {
+   "id": "rate-my-swing",
+   "name": "Rate my swing (one slow swing and a question)",
+   "looks_like": "One swing in slow motion, label asks the question ('rate my swing 1 to 10' or 'what is wrong here'), nothing else. The caption invites comments. Built to get comments and sends rather than shares.",
+   "seen_on": [
+    "TikTok slow-mo swing clips with short captions such as 'Rate my swing' and #slowmo (TikTok discover page for 'Big Justice golf swing slow mo', reported by search as 2.3M posts; not a reliable view measure, date not shown)"
+   ],
+   "evidence": "weak: a pattern from a discovery page, no single video verified",
+   "fits": [
+    "one clean swing",
+    "no talking",
+    "a swing the owner is happy to be judged on"
+   ],
+   "length_s": [
+    5,
+    9
+   ],
+   "recipe": "python3 tools/reel.py <clip> out/<name>/reel.mp4 --label \"rate my swing 1 to 10\" --mood hype",
+   "needs": [],
+   "buildable": true
+  },
+  {
+   "id": "drill-in-one-line",
+   "name": "One drill in one line (no talking)",
+   "looks_like": "The drill shown at real speed for one rep, then the same rep in slow motion; the label states the drill and what it fixes ('towel under the arm: stops the over the top move'). Ends on the finish.",
+   "seen_on": [
+    "TikTok drill and tip captions from @priscillia_karol (power and using the ground, 8.0K and 5.0K as listed on hooked.so, labels of the figures not shown, no date)",
+    "Golf TikTok ranking by Favikon (Jan 2026, outside 90 days): Bryce Cope instructional swing and technique content, Grant Lee short TPI drills"
+   ],
+   "evidence": "weak: instruction posts have smaller numbers than entertainment on the pages I could read",
+   "fits": [
+    "a practice drill",
+    "a range session",
+    "no talking"
+   ],
+   "length_s": [
+    8,
+    14
+   ],
+   "recipe": "python3 tools/montage.py out/<name>/montage.mp4 <rep-real-speed> <rep-again> --label \"<what it fixes>|<what to feel>\" --pre 1.5 --post 1.0 --music-volume 0.2",
+   "needs": [],
+   "buildable": true
+  },
+  {
+   "id": "challenge-score",
+   "name": "Range challenge with a running score",
+   "looks_like": "A simple challenge set up in the first second ('5 balls, hit the flag'), each attempt cut on the strike with the ball landing, a counter in the corner (1/5, 2/5...), the result held at the end. Head-to-head or against the clock if two people play.",
+   "seen_on": [
+    "Max and Harry Golf, TikTok, 'Golf Ball Vs' series of short head-to-head challenges and stunts (Favikon Jan 2026 ranking, views not shown, outside 90 days)",
+    "Bryson DeChambeau, 'Can I Break 50 with Bob Does Sports? (Explosive)': 403.8K and 17.9K as listed on hooked.so (labels of the two figures not shown, no date)",
+    "Jennifer Friday, short head-to-head golf stunts on TikTok and Instagram (search summary of a creator profile page, no views)"
+   ],
+   "evidence": "medium for the format on creator pages, weak for our size of account",
+   "fits": [
+    "a target game on the range",
+    "3 to 8 shots",
+    "no talking"
+   ],
+   "length_s": [
+    10,
+    20
+   ],
+   "recipe": "python3 tools/montage.py out/<name>/montage.mp4 <shot1> <shot2> ... --label \"<the challenge in a few words>\" --counter --end-card \"<made> of <tries>\" --music-volume 0.25",
+   "needs": [],
+   "buildable": true
+  },
+  {
+   "id": "mock-interview",
+   "name": "Mock post-round interview (putter as microphone)",
+   "looks_like": "A friend holds a putter like a microphone and interviews the golfer in a car trunk, a parking lot or a boat, with props and gags. Under a minute. Filmed on a phone and posted from team accounts.",
+   "seen_on": [
+    "High school golf teams in Central Massachusetts, Instagram team accounts, filmed Sep 16 to Oct 13 2026, 'latest rage' per Golfweek/USA TODAY article published 2026-10-15 via Yahoo Sports; one example is 51 seconds; no views given"
+   ],
+   "evidence": "in window and on Instagram, but no view counts; needs talking and a second person, so it does not fit a silent solo account",
+   "fits": [
+    "only if Aarav decides to talk on camera with a friend",
+    "not for a silent swing clip"
+   ],
+   "length_s": [
+    30,
+    50
+   ],
+   "recipe": "python3 tools/cut.py <clip> out/<name>/cut.mp4 --max 45 && python3 tools/captions.py out/<name>/cut.mp4 out/<name>/edit.mp4 && python3 tools/music.py out/<name>/edit.mp4 out/<name>/final.mp4 --mood funny",
+   "needs": [],
+   "buildable": true
   }
  ]
 }
